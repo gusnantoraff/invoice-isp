@@ -148,9 +148,16 @@ return [
     'quickbooks' => [
         'client_id' => env('QUICKBOOKS_CLIENT_ID', false),
         'client_secret' => env('QUICKBOOKS_CLIENT_SECRET', false),
-        'debug' => env('APP_DEBUG',false)
+        'debug' => env('APP_DEBUG', false)
     ],
     'quickbooks_webhook' => [
         'verifier_token' => env('QUICKBOOKS_VERIFIER_TOKEN', false),
     ],
+    'fonnte' => [
+        'account_token' => env('ACCOUNT_TOKEN'),
+    ],
+    'wa_service' => [
+        'url' => env('WA_SERVICE_URL'),
+    ],
+
 ];

@@ -51,39 +51,7 @@ class PingController extends BaseController
             200
         );
     }
-
-    /**
-     * Get a health check of the system.
-     *
-     * @return Response| \Illuminate\Http\JsonResponse
-     *
-     * @OA\Get(
-     *      path="/api/v1/health_check",
-     *      operationId="getHealthCheck",
-     *      tags={"health_check"},
-     *      summary="Attempts to get a health check from the API",
-     *      description="Attempts to get a health check from the API",
-     *      @OA\Parameter(ref="#/components/parameters/X-Requested-With"),
-     *      @OA\Response(
-     *          response=200,
-     *          description="A key/value map of the system health",
-     *          @OA\Header(header="X-MINIMUM-CLIENT-VERSION", ref="#/components/headers/X-MINIMUM-CLIENT-VERSION"),
-     *          @OA\Header(header="X-RateLimit-Remaining", ref="#/components/headers/X-RateLimit-Remaining"),
-     *          @OA\Header(header="X-RateLimit-Limit", ref="#/components/headers/X-RateLimit-Limit"),
-     *       )
-     *     )
-     */
-    public function health()
-    {
-        if (Ninja::isNinja()) {
-
-            return response()->json(['message' => '', 'errors' => []], 200);
-            // return response()->json(['message' => ctrans('texts.route_not_available'), 'errors' => []], 403);
-        }
-
-        return response()->json(SystemHealth::check(), 200);
-    }
-
+    
     /**
      * Get the last error from storage/logs/laravel.log
      *

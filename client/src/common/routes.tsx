@@ -27,6 +27,7 @@ import { purchaseOrderRoutes } from '$app/pages/purchase-orders/routes';
 import { reportRoutes } from '$app/pages/reports/routes';
 import { transactionRoutes } from '$app/pages/transactions/routes';
 import { recurringExpenseRoutes } from '$app/pages/recurring-expenses/routes';
+import { waGatewayRoutes } from '$app/pages/wa-gateway/routes';
 import { lazy } from 'react';
 import { Index } from '$app/pages/Index';
 import { TestingRoute } from '$app/components/TestingRoute';
@@ -69,6 +70,7 @@ export const routes = (
       {transactionRoutes}
       {settingsRoutes}
       {activityRoutes}
+      {waGatewayRoutes}
       <Route element={<TestingRoute />}>
         <Route path="/testing" element={<TestingPage />} />
       </Route>

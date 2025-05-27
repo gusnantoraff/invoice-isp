@@ -33,7 +33,7 @@ import { Breadcrumbs, Page } from '$app/components/Breadcrumbs';
 import { DesktopSidebar, NavigationItem } from './components/DesktopSidebar';
 import { MobileSidebar } from './components/MobileSidebar';
 import { useHasPermission } from '$app/common/hooks/permissions/useHasPermission';
-import { BiBuildings, BiWallet, BiFile } from 'react-icons/bi';
+import { BiLogoWhatsapp, BiBuildings, BiWallet, BiFile } from 'react-icons/bi';
 import { AiOutlineBank } from 'react-icons/ai';
 import { ModuleBitmask } from '$app/pages/settings/account-management/component';
 import { QuickCreatePopover } from '$app/components/QuickCreatePopover';
@@ -331,6 +331,15 @@ export function Default(props: Props) {
         label: t('new_recurring_expense'),
         visible: hasPermission('create_recurring_expense'),
       },
+    },
+    {
+      name: t('WA Gateway'),
+      href: '/wa-gateway',
+      icon: BiLogoWhatsapp,
+      current: location.pathname.startsWith('/wa-gateway'),
+      visible:
+        enabled(ModuleBitmask.RecurringExpenses) &&
+        (hasPermission('view_wa_gateway')),
     },
     {
       name: t('reports'),

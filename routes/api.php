@@ -124,6 +124,11 @@ use App\Http\Controllers\Reports\ClientContactReportController;
 use App\Http\Controllers\Reports\PurchaseOrderReportController;
 use App\Http\Controllers\Reports\RecurringInvoiceReportController;
 use App\Http\Controllers\Reports\PurchaseOrderItemReportController;
+use App\Http\Controllers\DevicesController;
+use App\Http\Controllers\MessagesController;
+use App\Http\Controllers\MessageTemplateController;
+use App\Http\Controllers\WhatsAppWebhookController;
+
 
 Route::group(['middleware' => ['throttle:api', 'api_secret_check']], function () {
     Route::post('api/v1/signup', [AccountController::class, 'store'])->name('signup.submit');
@@ -155,7 +160,6 @@ Route::group(['middleware' => ['throttle:api', 'api_db', 'token_auth', 'locale']
 
     Route::post('check_subdomain', [SubdomainController::class, 'index'])->name('check_subdomain');
     Route::get('ping', [PingController::class, 'index'])->name('ping');
-    Route::get('health_check', [PingController::class, 'health'])->name('health_check');
     Route::get('last_error', [PingController::class, 'lastError'])->name('last_error');
 
     Route::get('activities', [ActivityController::class, 'index']);
@@ -232,7 +236,7 @@ Route::group(['middleware' => ['throttle:api', 'api_db', 'token_auth', 'locale']
 
     Route::post('einvoice/validateEntity', [EInvoiceController::class, 'validateEntity'])->name('einvoice.validateEntity');
     Route::post('einvoice/configurations', [EInvoiceController::class, 'configurations'])->name('einvoice.configurations');
-    
+
     Route::post('einvoice/peppol/legal_entity', [EInvoicePeppolController::class, 'show'])->name('einvoice.peppol.legal_entity');
     Route::post('einvoice/peppol/setup', [EInvoicePeppolController::class, 'setup'])->name('einvoice.peppol.setup');
     Route::post('einvoice/peppol/disconnect', [EInvoicePeppolController::class, 'disconnect'])->name('einvoice.peppol.disconnect');
@@ -264,7 +268,7 @@ Route::group(['middleware' => ['throttle:api', 'api_db', 'token_auth', 'locale']
     Route::post('import', [ImportController::class, 'import'])->name('import.import');
     Route::post('import_json', [ImportJsonController::class, 'import'])->name('import.import_json');
     Route::post('preimport', [ImportController::class, 'preimport'])->name('import.preimport');
-    
+
     Route::resource('invoices', InvoiceController::class); // name = (invoices. index / create / show / update / destroy / edit
     Route::get('invoices/{invoice}/delivery_note', [InvoiceController::class, 'deliveryNote'])->name('invoices.delivery_note');
     Route::get('invoices/{invoice}/{action}', [InvoiceController::class, 'action'])->name('invoices.action');
@@ -306,20 +310,13 @@ Route::group(['middleware' => ['throttle:api', 'api_db', 'token_auth', 'locale']
     Route::resource('projects', ProjectController::class); // name = (projects. index / create / show / update / destroy / edit
     Route::post('projects/bulk', [ProjectController::class, 'bulk'])->name('projects.bulk');
     Route::put('projects/{project}/upload', [ProjectController::class, 'upload'])->name('projects.upload');
-    
+
     Route::resource('purchase_orders', PurchaseOrderController::class);
     Route::post('purchase_orders/bulk', [PurchaseOrderController::class, 'bulk'])->name('purchase_orders.bulk');
     Route::put('purchase_orders/{purchase_order}/upload', [PurchaseOrderController::class, 'upload']);
     Route::get('purchase_orders/{purchase_order}/{action}', [PurchaseOrderController::class, 'action'])->name('purchase_orders.action');
     Route::get('purchase_order/{invitation_key}/download', [PurchaseOrderController::class, 'downloadPdf'])->name('purchase_orders.downloadPdf');
     Route::get('purchase_order/{invitation_key}/download_e_purchase_order', [PurchaseOrderController::class, 'downloadEPurchaseOrder'])->name('purchase_orders.downloadEPurchaseOrder');
-
-    Route::resource('quotes', QuoteController::class); // name = (quotes. index / create / show / update / destroy / edit
-    Route::get('quotes/{quote}/{action}', [QuoteController::class, 'action'])->name('quotes.action');
-    Route::post('quotes/bulk', [QuoteController::class, 'bulk'])->name('quotes.bulk');
-    Route::put('quotes/{quote}/upload', [QuoteController::class, 'upload']);
-    Route::get('quote/{invitation_key}/download', [QuoteController::class, 'downloadPdf'])->name('quotes.downloadPdf');
-    Route::get('quote/{invitation_key}/download_e_quote', [QuoteController::class, 'downloadEQuote'])->name('quotes.downloadEQuote');
 
     Route::resource('recurring_expenses', RecurringExpenseController::class);
     Route::post('recurring_expenses/bulk', [RecurringExpenseController::class, 'bulk'])->name('recurring_expenses.bulk');
@@ -448,7 +445,31 @@ Route::group(['middleware' => ['throttle:api', 'api_db', 'token_auth', 'locale']
 
     Route::get('nordigen/institutions', [NordigenController::class, 'institutions'])->name('nordigen.institutions');
 
+
+    // WA GATEWAY
+    Route::prefix('devices')->controller(DevicesController::class)->group(function () {
+        Route::get('/', 'getAllDevices');
+        Route::post('/', 'addDevice');
+        Route::get('/status', 'getStatus');
+        Route::post('/{id}/connect', 'connectDevice');
+        Route::post('/{id}/disconnect', 'disconnectDevice');
+        Route::delete('/{id}', 'deleteDevice');
+    });
+    Route::prefix('templates')->group(function () {
+        Route::get('/', [MessageTemplateController::class, 'index']);
+        Route::post('/', [MessageTemplateController::class, 'store']);
+        Route::get('/{id}', [MessageTemplateController::class, 'show']);
+        Route::put('/{id}', [MessageTemplateController::class, 'update']);
+        Route::delete('/{id}', [MessageTemplateController::class, 'destroy']);
+    });
+
+    Route::get('wa/message', [WhatsAppWebhookController::class, 'getMessages']);
+    Route::post('wa/message', [MessagesController::class, 'sendMessage']);
+
 });
+
+Route::post('webhook/message', action: [WhatsAppWebhookController::class, 'handleMessage']);
+
 
 Route::post('api/v1/sms_reset', [TwilioController::class, 'generate2faResetCode'])->name('sms_reset.generate')->middleware('throttle:3,1');
 Route::post('api/v1/sms_reset/confirm', [TwilioController::class, 'confirm2faResetCode'])->name('sms_reset.confirm')->middleware('throttle:3,1');

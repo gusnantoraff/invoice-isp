@@ -36,15 +36,7 @@ import { PasswordConfirmation } from './PasswordConfirmation';
 import { useOnWrongPasswordEnter } from '$app/common/hooks/useOnWrongPasswordEnter';
 
 interface SystemInfo {
-  system_health: boolean;
   extensions: { [key: string]: string };
-  php_version: {
-    minimum_php_version: string;
-    current_php_version: string;
-    current_php_cli_version: string;
-    is_okay: boolean;
-    memory_limit: string;
-  };
   is_docker: boolean;
   env_writable: boolean;
   simple_db_check: boolean;
@@ -106,21 +98,6 @@ export function AboutModal(props: Props) {
     currentSystemInfo
   );
 
-  const handleHealthCheck = (allowAction?: boolean) => {
-    if (!isFormBusy || allowAction) {
-      toast.processing();
-      setIsFormBusy(true);
-
-      request('GET', endpoint('/api/v1/health_check'))
-        .then((response) => {
-          setSystemInfo(response.data);
-          setIsHealthCheckModalOpen(true);
-          toast.dismiss();
-        })
-        .finally(() => setIsFormBusy(false));
-    }
-  };
-
   const handleClearCache = () => {
     if (!isFormBusy) {
       toast.processing();
@@ -132,7 +109,6 @@ export function AboutModal(props: Props) {
             .then((response) => {
               dispatch(updateCompanyUsers(response.data.data));
               toast.dismiss();
-              handleHealthCheck(true);
             })
             .finally(() => setIsFormBusy(false));
         })
@@ -193,7 +169,6 @@ export function AboutModal(props: Props) {
           <Button
             behavior="button"
             className="flex items-center"
-            onClick={handleHealthCheck}
             disableWithoutIcon
             disabled={isFormBusy}
           >
@@ -283,11 +258,6 @@ export function AboutModal(props: Props) {
             </div>
 
             <div>
-              <Icon
-                element={systemInfo?.system_health ? CheckCircle : MdWarning}
-                color={systemInfo?.system_health ? 'green' : 'red'}
-                size={25}
-              />
             </div>
           </div>
 
@@ -305,30 +275,6 @@ export function AboutModal(props: Props) {
               <Icon
                 element={systemInfo?.simple_db_check ? CheckCircle : MdWarning}
                 color={systemInfo?.simple_db_check ? 'green' : 'red'}
-                size={25}
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-between items-center py-1 px-3">
-            <div className="flex flex-col">
-              <span className="font-medium text-base mb-1">PHP</span>
-              <span>
-                {t('web')}: {systemInfo?.php_version.current_php_version}
-              </span>
-              <span>
-                {t('cli')}: {systemInfo?.php_version.current_php_cli_version}
-              </span>
-              <span>Memory: {systemInfo?.php_version.memory_limit}</span>
-              <span>API: {systemInfo?.api_version}</span>
-            </div>
-
-            <div>
-              <Icon
-                element={
-                  systemInfo?.php_version.is_okay ? CheckCircle : MdWarning
-                }
-                color={systemInfo?.php_version.is_okay ? 'green' : 'red'}
                 size={25}
               />
             </div>
@@ -441,7 +387,6 @@ export function AboutModal(props: Props) {
 
           <Button
             behavior="button"
-            onClick={handleHealthCheck}
             disableWithoutIcon
             disabled={isFormBusy}
           >

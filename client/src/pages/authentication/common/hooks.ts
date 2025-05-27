@@ -37,11 +37,16 @@ export function useLogin() {
       currentIndex = 0;
     }
 
+    const token = response.data.data[currentIndex].token.token;
+
+    // Simpan token ke localStorage
+    localStorage.setItem('X-API-TOKEN', token);
+
     dispatch(
       authenticate({
         type: AuthenticationTypes.TOKEN,
         user: response.data.data[currentIndex].user,
-        token: response.data.data[currentIndex].token.token,
+        token,
       })
     );
 

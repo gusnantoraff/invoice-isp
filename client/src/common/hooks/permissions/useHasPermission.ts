@@ -39,6 +39,7 @@ type PurchaseOrderPermissions =
   | 'edit_purchase_order';
 type ReportPermissions = 'view_reports';
 type DashboardPermissions = 'view_dashboard';
+type WAGatewayPermissions = 'view_wa_gateway';
 
 export type Permissions =
   | AllPermissions
@@ -57,6 +58,7 @@ export type Permissions =
   | BankTransactionsPermissions
   | PurchaseOrderPermissions
   | ReportPermissions
+  | WAGatewayPermissions
   | DashboardPermissions;
 
 export function useHasPermission() {
