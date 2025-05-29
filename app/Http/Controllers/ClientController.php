@@ -101,6 +101,7 @@ class ClientController extends BaseController
         return $this->listResponse($clients);
     }
 
+
     /**
      * Display the specified resource.
      *
@@ -187,7 +188,7 @@ class ClientController extends BaseController
         $client->load('contacts', 'primary_contact');
 
         /* Set the client country to the company if none is set */
-        if (! $client->country_id && strlen($client->company->settings->country_id) > 1) {
+        if (!$client->country_id && strlen($client->company->settings->country_id) > 1) {
             $client->update(['country_id' => $client->company->settings->country_id]);
         }
 
@@ -228,9 +229,9 @@ class ClientController extends BaseController
         $user = auth()->user();
 
         $clients = Client::withTrashed()
-                         ->company()
-                         ->whereIn('id', $request->ids)
-                         ->get();
+            ->company()
+            ->whereIn('id', $request->ids)
+            ->get();
 
         if ($action == 'template' && $user->can('view', $clients->first())) {
 
@@ -261,8 +262,8 @@ class ClientController extends BaseController
         if ($action == 'bulk_update' && $user->can('edit', $clients->first())) {
 
             $clients = Client::withTrashed()
-                    ->company()
-                    ->whereIn('id', $request->ids);
+                ->company()
+                ->whereIn('id', $request->ids);
 
             $this->client_repo->bulkUpdate($clients, $request->column, $request->new_value);
 
@@ -289,7 +290,7 @@ class ClientController extends BaseController
      */
     public function upload(UploadClientRequest $request, Client $client)
     {
-        if (! $this->checkFeature(Account::FEATURE_DOCUMENTS)) {
+        if (!$this->checkFeature(Account::FEATURE_DOCUMENTS)) {
             return $this->featureFailure();
         }
 
@@ -328,14 +329,14 @@ class ClientController extends BaseController
     }
 
     /**
-         * Update the specified resource in storage.
-         *
-         * @param PurgeClientRequest $request
-         * @param Client $client
-         * @param string $mergeable_client
-         * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\Response
-         *
-         */
+     * Update the specified resource in storage.
+     *
+     * @param PurgeClientRequest $request
+     * @param Client $client
+     * @param string $mergeable_client
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\Response
+     *
+     */
 
     public function merge(PurgeClientRequest $request, Client $client, string $mergeable_client)
     {
@@ -343,9 +344,9 @@ class ClientController extends BaseController
         $user = auth()->user();
 
         $m_client = Client::withTrashed()
-                            ->where('id', $this->decodePrimaryKey($mergeable_client))
-                            ->where('company_id', $user->company()->id)
-                            ->first();
+            ->where('id', $this->decodePrimaryKey($mergeable_client))
+            ->where('company_id', $user->company()->id)
+            ->first();
 
         if (!$m_client) {
             return response()->json(['message' => "Client not found"], 400);
@@ -391,12 +392,12 @@ class ClientController extends BaseController
         if (stripos($bounce_id, '-') !== false) {
             $log =
                 SystemLog::query()
-                ->where('company_id', $user->company()->id)
-                ->where('type_id', SystemLog::TYPE_WEBHOOK_RESPONSE)
-                ->where('category_id', SystemLog::CATEGORY_MAIL)
-                ->whereJsonContains('log', ['MessageID' => $bounce_id])
-                ->orderBy('id', 'desc')
-                ->first();
+                    ->where('company_id', $user->company()->id)
+                    ->where('type_id', SystemLog::TYPE_WEBHOOK_RESPONSE)
+                    ->where('category_id', SystemLog::CATEGORY_MAIL)
+                    ->whereJsonContains('log', ['MessageID' => $bounce_id])
+                    ->orderBy('id', 'desc')
+                    ->first();
 
             $resolved_bounce_id = false;
 
@@ -427,11 +428,11 @@ class ClientController extends BaseController
         try {
 
             /** @var ?\Postmark\Models\DynamicResponseModel $response */
-            $response = $postmark->activateBounce((int)$bounce_id);
+            $response = $postmark->activateBounce((int) $bounce_id);
 
             if ($response && $response?->Message == 'OK' && !$response->Bounce->Inactive && $response->Bounce->Email) { // @phpstan-ignore-line
 
-                $email =  $response->Bounce->Email;
+                $email = $response->Bounce->Email;
                 //remove email from quarantine. //@TODO
             }
 

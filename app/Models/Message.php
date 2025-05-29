@@ -9,7 +9,6 @@ class Message extends Model
     protected $fillable = [
         'device_id',
         'client_id',
-        'chatbot_id',
         'message_template_id',
         'message',
         'file',
@@ -25,11 +24,6 @@ class Message extends Model
     public function client()
     {
         return $this->belongsTo(Client::class);
-    }
-
-    public function chatbot()
-    {
-        return $this->belongsTo(Chatbot::class);
     }
 
     public function template()

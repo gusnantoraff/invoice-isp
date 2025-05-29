@@ -12,9 +12,8 @@ class CreateMessagesTable extends Migration
             $table->id();
 
             $table->foreignId('device_id')->nullable()->constrained('devices')->onDelete('set null');
-            $table->unsignedInteger('client_id');
+            $table->unsignedInteger('client_id')->nullable();
             $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
-            $table->foreignId('chatbot_id')->nullable()->constrained('chatbots')->onDelete('set null');
             $table->foreignId('message_template_id')->nullable()->constrained('message_templates')->onDelete('set null');
 
             $table->text('message')->nullable();

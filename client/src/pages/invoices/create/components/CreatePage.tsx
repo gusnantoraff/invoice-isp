@@ -8,7 +8,6 @@
  * @license https://www.elastic.co/licensing/elastic-license
  */
 
-import { useReactSettings } from '$app/common/hooks/useReactSettings';
 import { Invoice } from '$app/common/interfaces/invoice';
 import { InvoiceItemType } from '$app/common/interfaces/invoice-item';
 import { Spinner } from '$app/components/Spinner';
@@ -23,7 +22,6 @@ import { useTaskColumns } from '../../common/hooks/useTaskColumns';
 import { useInvoiceUtilities } from '../hooks/useInvoiceUtilities';
 import { InvoiceFooter } from '../../common/components/InvoiceFooter';
 import { InvoiceTotals } from '../../common/components/InvoiceTotals';
-import { InvoicePreview } from '../../common/components/InvoicePreview';
 import { CreateInvoiceContext } from '../Create';
 import { useOutletContext, useSearchParams } from 'react-router-dom';
 
@@ -50,7 +48,6 @@ export default function CreatePage() {
   } = context;
 
   const taskColumns = useTaskColumns();
-  const reactSettings = useReactSettings();
   const productColumns = useProductColumns();
 
   const {
@@ -180,22 +177,6 @@ export default function CreatePage() {
           />
         )}
       </div>
-
-      {reactSettings?.show_pdf_preview && (
-        <div className="my-4">
-          {invoice && (
-            <InvoicePreview
-              for="create"
-              resource={invoice}
-              entity="invoice"
-              relationType="client_id"
-              endpoint="/api/v1/live_preview?entity=:entity"
-              observable={true}
-              initiallyVisible={false}
-            />
-          )}
-        </div>
-      )}
     </>
   );
 }

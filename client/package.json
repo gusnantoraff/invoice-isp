@@ -36,6 +36,7 @@
     "jotai": "^2.0.3",
     "js-sha256": "^0.11.0",
     "lodash": "^4.17.21",
+    "lucide-react": "^0.511.0",
     "mitt": "^3.0.1",
     "playwright": "^1.44.0",
     "pretty-bytes": "^6.0.0",

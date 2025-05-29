@@ -264,7 +264,6 @@ class Invoice extends BaseModel
             'po_number' => (string)$this->po_number,
         ];
     }
-
     public function getScoutKey()
     {
         return $this->hashed_id;

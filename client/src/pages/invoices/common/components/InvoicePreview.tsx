@@ -14,7 +14,7 @@ import { Invoice } from '$app/common/interfaces/invoice';
 import { PurchaseOrder } from '$app/common/interfaces/purchase-order';
 import { Quote } from '$app/common/interfaces/quote';
 import { RecurringInvoice } from '$app/common/interfaces/recurring-invoice';
-import { useEffect, useRef, useState } from 'react';
+import { useRef} from 'react';
 import { InvoiceViewer } from './InvoiceViewer';
 import { RelationType } from './ProductsTable';
 import { RemoveLogoCTA } from '$app/components/RemoveLogoCTA';
@@ -45,57 +45,9 @@ interface Props {
 }
 
 export function InvoicePreview(props: Props) {
-  const [isIntersecting, setIsIntersecting] = useState(false);
-
-  const endpoint = props.endpoint || '/api/v1/live_preview?entity=:entity';
   const divRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!props.observable) {
-      return;
-    }
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(
-        (entry) => {
-          if (entry.isIntersecting) {
-            setIsIntersecting(true);
-          } else {
-            setIsIntersecting(false);
-          }
-        },
-        { threshold: 0.1 }
-      );
-    });
-
-    if (divRef.current) {
-      observer.observe(divRef.current!);
-    }
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [divRef.current]);
-
-  useEffect(() => {
-    if (!props.observable) {
-      return;
-    }
-  }, [props.resource]);
-
-  if (props.resource?.[props.relationType] && props.for === 'create') {
-    return (
-      <div ref={divRef}>
-        <InvoiceViewer
-          link={previewEndpoint(endpoint, {
-            entity: props.entity,
-          })}
-          resource={props.resource}
-          method="POST"
-        />
-      </div>
-    );
-  }
+ 
 
   if (
     props.resource?.id &&
@@ -139,7 +91,7 @@ export function InvoicePreview(props: Props) {
             )}
             method="POST"
             resource={props.resource}
-            enabled={props.observable ? isIntersecting : true}
+            enabled={props.observable}
           />
         </div>
 

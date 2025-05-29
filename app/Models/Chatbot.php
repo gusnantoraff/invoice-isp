@@ -9,13 +9,10 @@ class Chatbot extends Model
     protected $fillable = [
         'question',
         'answer',
-        'client_id',
         'device_id'
     ];
-
-    public function messages()
+     public function device()
     {
-        return $this->hasMany(Message::class);
+        return $this->belongsTo(Device::class);
     }
-
 }

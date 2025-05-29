@@ -22,7 +22,6 @@ import { useActions } from './edit/components/Actions';
 import { useHandleSave } from './edit/hooks/useInvoiceSave';
 import { invoiceAtom } from './common/atoms';
 import { useEffect, useRef, useState } from 'react';
-import { CommonActions } from './edit/components/CommonActions';
 import { InvoiceStatus } from '$app/common/enums/invoice-status';
 import { ValidationBag } from '$app/common/interfaces/validation-bag';
 import { useTabs } from './common/hooks/useTabs';
@@ -192,7 +191,6 @@ export default function Invoice() {
                 rightSide={
                   invoice && (
                     <div className="flex items-center">
-                      <CommonActions resource={invoice} entity="invoice" />
                     </div>
                   )
                 }

@@ -167,7 +167,7 @@ export default function WAGateway() {
       <div style={{ padding: "20px" }}>
         <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: "12px" }}>
           <button className="primary-btn" onClick={() => setIsModalOpen(true)}>
-            + Add Device
+            Add Device
           </button>
         </div>
 

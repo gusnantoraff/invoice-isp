@@ -8,7 +8,6 @@
  * @license https://www.elastic.co/licensing/elastic-license
  */
 
-import { useReactSettings } from '$app/common/hooks/useReactSettings';
 import { InvoiceItemType } from '$app/common/interfaces/invoice-item';
 import { Spinner } from '$app/components/Spinner';
 import { TabGroup } from '$app/components/TabGroup';
@@ -24,7 +23,6 @@ import { invoiceSumAtom } from '../common/atoms';
 import { ClientSelector } from '../common/components/ClientSelector';
 import { InvoiceDetails } from '../common/components/InvoiceDetails';
 import { InvoiceFooter } from '../common/components/InvoiceFooter';
-import { InvoicePreview } from '../common/components/InvoicePreview';
 import { InvoiceTotals } from '../common/components/InvoiceTotals';
 import { ProductsTable } from '../common/components/ProductsTable';
 import { useProductColumns } from '../common/hooks/useProductColumns';
@@ -75,7 +73,6 @@ export default function Edit() {
   } = context;
 
   const taskColumns = useTaskColumns();
-  const reactSettings = useReactSettings();
   const productColumns = useProductColumns();
 
   const [invoiceSum] = useAtom(invoiceSumAtom);
@@ -234,23 +231,6 @@ export default function Edit() {
           />
         )}
       </div>
-
-      {reactSettings?.show_pdf_preview && (
-        <div className="my-4">
-          {invoice && (
-            <InvoicePreview
-              for="invoice"
-              resource={invoice}
-              entity="invoice"
-              relationType="client_id"
-              endpoint="/api/v1/live_preview?entity=:entity"
-              observable={true}
-              initiallyVisible={false}
-              withRemoveLogoCTA
-            />
-          )}
-        </div>
-      )}
 
       {invoice ? (
         <ChangeTemplateModal<IInvoice>

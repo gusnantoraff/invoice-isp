@@ -31,6 +31,7 @@ use App\Helpers\Mail\Office365MailTransport;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Symfony\Component\Mailer\Bridge\Brevo\Transport\BrevoTransportFactory;
 use Symfony\Component\Mailer\Transport\Dsn;
+use App\Services\WhatsApp\WhatsappService;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -147,7 +148,12 @@ class AppServiceProvider extends ServiceProvider
 
     }
 
-    public function register(): void
+
+    public function register()
     {
+        $this->app->singleton('wa', function ($app) {
+            return new WhatsappService();
+        });
     }
+
 }

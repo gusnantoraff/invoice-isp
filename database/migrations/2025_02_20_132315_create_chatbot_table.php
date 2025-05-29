@@ -12,8 +12,6 @@ return new class extends Migration {
             $table->text('question');
             $table->text('answer');
 
-            $table->unsignedInteger('client_id');
-            $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade');
             $table->foreignId('device_id')->nullable()->constrained('devices')->onDelete('set null');
 
             $table->timestamps();

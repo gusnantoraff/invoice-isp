@@ -128,6 +128,9 @@ use App\Http\Controllers\DevicesController;
 use App\Http\Controllers\MessagesController;
 use App\Http\Controllers\MessageTemplateController;
 use App\Http\Controllers\WhatsAppWebhookController;
+use App\Http\Controllers\ChatbotController;
+use App\Http\Controllers\ScheduledMessageController;
+
 
 
 Route::group(['middleware' => ['throttle:api', 'api_secret_check']], function () {
@@ -462,8 +465,26 @@ Route::group(['middleware' => ['throttle:api', 'api_db', 'token_auth', 'locale']
         Route::put('/{id}', [MessageTemplateController::class, 'update']);
         Route::delete('/{id}', [MessageTemplateController::class, 'destroy']);
     });
+    Route::prefix('chatbots')->group(function () {
+        Route::get('/', [ChatbotController::class, 'index']);
+        Route::post('/', [ChatbotController::class, 'store']);
+        Route::get('/{id}', [ChatbotController::class, 'show']);
+        Route::put('/{id}', [ChatbotController::class, 'update']);
+        Route::delete('/{id}', [ChatbotController::class, 'destroy']);
+    });
 
-    Route::get('wa/message', [WhatsAppWebhookController::class, 'getMessages']);
+    Route::prefix('wa/schedules')->group(function () {
+        Route::get('/', [ScheduledMessageController::class, 'index']);
+        Route::get('/device/{deviceId}', [ScheduledMessageController::class, 'getByDevice']);
+        Route::post('/', [ScheduledMessageController::class, 'store']);
+        Route::get('/{scheduledMessage}', [ScheduledMessageController::class, 'show']);
+        Route::put('/{scheduledMessage}', [ScheduledMessageController::class, 'update']);
+        Route::delete('/{scheduledMessage}', [ScheduledMessageController::class, 'destroy']);
+    });
+
+    Route::get('wa/message', [MessagesController::class, 'getMessages']);
+    Route::get('wa/message/{id}', action: [MessagesController::class, 'showMessages']);
+    Route::get('/wa/messages/device/{deviceId}', [MessagesController::class, 'getMessagesByDevice']);
     Route::post('wa/message', [MessagesController::class, 'sendMessage']);
 
 });
