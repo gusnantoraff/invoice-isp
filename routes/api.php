@@ -132,7 +132,13 @@ use App\Http\Controllers\WhatsAppWebhookController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\ScheduledMessageController;
 
-
+use App\Http\Controllers\FoLokasiController;
+use App\Http\Controllers\FoOdcController;
+use App\Http\Controllers\FoKabelOdcController;
+use App\Http\Controllers\FoKabelTubeOdcController;
+use App\Http\Controllers\FoKabelCoreOdcController;
+use App\Http\Controllers\FoOdpController;
+use App\Http\Controllers\FoClientFtthController;
 
 Route::group(['middleware' => ['throttle:api', 'api_secret_check']], function () {
     Route::post('api/v1/signup', [AccountController::class, 'store'])->name('signup.submit');
