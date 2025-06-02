@@ -19,92 +19,95 @@ import { useInjectUserChanges } from '$app/common/hooks/useInjectUserChanges';
 import classNames from 'classnames';
 
 export interface NavigationItem {
-  name: string;
-  href: string;
-  icon: Icon;
-  current: boolean;
-  visible: boolean;
-  rightButton?: {
+    name: string;
+    href: string;
     icon: Icon;
-    to: string;
-    label: string;
+    current: boolean;
     visible: boolean;
-  };
+    rightButton?: {
+        icon: Icon;
+        to: string;
+        label: string;
+        visible: boolean;
+    };
+    /** Tambahan: children untuk dropdown */
+    children?: NavigationItem[];
 }
 
 interface Props {
-  navigation: NavigationItem[];
-  docsLink?: string;
+    navigation: NavigationItem[];
+    docsLink?: string;
 }
 
 export function DesktopSidebar(props: Props) {
-  const user = useInjectUserChanges();
+    const user = useInjectUserChanges();
+    const isMiniSidebar = Boolean(
+        user?.company_user?.react_settings.show_mini_sidebar
+    );
+    const logo = useLogo();
+    const colors = useColorScheme();
 
-  const isMiniSidebar = Boolean(
-    user?.company_user?.react_settings.show_mini_sidebar
-  );
-
-  const logo = useLogo();
-  const colors = useColorScheme();
-
-  return (
-    <div
-      className={classNames(
-        'hidden md:flex z-10 md:flex-col md:fixed md:inset-y-0',
-        {
-          'md:w-16': isMiniSidebar,
-          'md:w-64': !isMiniSidebar,
-        }
-      )}
-    >
-      <div
-        style={{ backgroundColor: colors.$6, borderColor: colors.$4 }}
-        className="flex flex-col flex-grow overflow-y-auto border-r"
-      >
+    return (
         <div
-          style={{
-            borderColor: colors.$5,
-            backgroundColor: colors.$1,
-            color: colors.$3,
-          }}
-          className={classNames(
-            'flex items-center flex-shrink-0 h-16 border-b',
-            {
-              'pl-3 pr-6': !isMiniSidebar,
-              'justify-center': isMiniSidebar,
-            }
-          )}
-        >
-          {isMiniSidebar ? (
-            <img className="w-8" src={logo} alt="Company logo" />
-          ) : (
-            <CompanySwitcher />
-          )}
-        </div>
-
-        <div className="flex-grow flex flex-col mt-4">
-          <nav className="flex-1 pb-4 space-y-1" data-cy="navigationBar">
-            {props.navigation.map((item, index) =>
-              isMiniSidebar ? (
-                <Tooltip
-                  key={index}
-                  message={item.name as string}
-                  width="auto"
-                  placement="right"
-                  withoutArrow={true}
-                  withoutWrapping
-                >
-                  <SidebarItem key={index} item={item} />
-                </Tooltip>
-              ) : (
-                <SidebarItem key={index} item={item} />
-              )
+            className={classNames(
+                'hidden md:flex z-10 md:flex-col md:fixed md:inset-y-0',
+                {
+                    'md:w-16': isMiniSidebar,
+                    'md:w-64': !isMiniSidebar,
+                }
             )}
-          </nav>
+        >
+            <div
+                style={{ backgroundColor: colors.$6, borderColor: colors.$4 }}
+                className="flex flex-col flex-grow overflow-y-auto border-r"
+            >
+                <div
+                    style={{
+                        borderColor: colors.$5,
+                        backgroundColor: colors.$1,
+                        color: colors.$3,
+                    }}
+                    className={classNames(
+                        'flex items-center flex-shrink-0 h-16 border-b',
+                        {
+                            'pl-3 pr-6': !isMiniSidebar,
+                            'justify-center': isMiniSidebar,
+                        }
+                    )}
+                >
+                    {isMiniSidebar ? (
+                        <img className="w-8" src={logo} alt="Company logo" />
+                    ) : (
+                        <CompanySwitcher />
+                    )}
+                </div>
 
-          <HelpSidebarIcons docsLink={props.docsLink} />
+                <div className="flex flex-col flex-grow mt-4">
+                    <nav
+                        className="flex-1 pb-4 space-y-1"
+                        data-cy="navigationBar"
+                    >
+                        {props.navigation.map((item, index) =>
+                            isMiniSidebar ? (
+                                <Tooltip
+                                    key={index}
+                                    message={item.name as string}
+                                    width="auto"
+                                    placement="right"
+                                    withoutArrow={true}
+                                    withoutWrapping
+                                >
+                                    <SidebarItem key={index} item={item} />
+                                </Tooltip>
+                            ) : (
+                                <SidebarItem key={index} item={item} />
+                            )
+                        )}
+                    </nav>
+
+                    <HelpSidebarIcons docsLink={props.docsLink} />
+                </div>
+            </div>
         </div>
-      </div>
-    </div>
-  );
+    );
 }

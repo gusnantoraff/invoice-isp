@@ -25,15 +25,15 @@ import { Inline } from './Inline';
 import { Modal } from './Modal';
 import { MdDragHandle, MdClose } from 'react-icons/md';
 import {
-  DragDropContext,
-  Draggable,
-  Droppable,
-  DropResult,
+    DragDropContext,
+    Draggable,
+    Droppable,
+    DropResult,
 } from '@hello-pangea/dnd';
 import { arrayMoveImmutable } from 'array-move';
 import {
-  ReactTableColumns,
-  useReactSettings,
+    ReactTableColumns,
+    useReactSettings,
 } from '$app/common/hooks/useReactSettings';
 import { useInjectUserChanges } from '$app/common/hooks/useInjectUserChanges';
 import { $refetch } from '$app/common/hooks/useRefetch';
@@ -41,209 +41,236 @@ import { Icon } from './icons/Icon';
 import { createPortal } from 'react-dom';
 
 interface Props {
-  columns: string[];
-  defaultColumns: string[];
-  table: ReactTableColumns;
+    columns: string[];
+    defaultColumns: string[];
+    table: ReactTableColumns;
 }
 
 export function DataTableColumnsPicker(props: Props) {
-  const currentUser = useSelector((state: RootState) => state.user.user) as
-    | User
-    | undefined;
+    const currentUser = useSelector((state: RootState) => state.user.user) as
+        | User
+        | undefined;
 
-  const dispatch = useDispatch();
+    const dispatch = useDispatch();
 
-  const { t } = useTranslation();
-  const { table, defaultColumns } = props;
+    const { t } = useTranslation();
+    const { table, defaultColumns } = props;
 
-  useInjectUserChanges();
+    useInjectUserChanges();
 
-  const reactSettings = useReactSettings();
+    const reactSettings = useReactSettings();
 
-  const [filteredColumns, setFilteredColumns] = useState(props.columns);
+    const [filteredColumns, setFilteredColumns] = useState(props.columns);
 
-  const [currentColumns, setCurrentColumns] = useState<string[]>(
-    reactSettings?.react_table_columns?.[table as ReactTableColumns] ||
-      defaultColumns
-  );
-
-  const [isModalVisible, setIsModalVisible] = useState(false);
-
-  useEffect(() => {
-    setFilteredColumns((current) =>
-      current.filter((column) => !currentColumns.includes(column))
-    );
-  }, [currentColumns]);
-
-  const handleSelectChange = useCallback((value: string) => {
-    value.length > 1 && setCurrentColumns((current) => [...current, value]);
-  }, []);
-
-  const onSave = () => {
-    const user = cloneDeep(currentUser) as User;
-
-    set(
-      user,
-      `company_user.react_settings.react_table_columns.${table}`,
-      currentColumns
+    const [currentColumns, setCurrentColumns] = useState<string[]>(
+        reactSettings?.react_table_columns?.[table as ReactTableColumns] ||
+            defaultColumns
     );
 
-    toast.processing();
+    const [isModalVisible, setIsModalVisible] = useState(false);
 
-    request(
-      'PUT',
-      endpoint('/api/v1/company_users/:id', { id: user.id }),
-      user
-    ).then((response: GenericSingleResourceResponse<CompanyUser>) => {
-      set(user, 'company_user', response.data.data);
-      setIsModalVisible(false);
+    useEffect(() => {
+        setFilteredColumns((current) =>
+            current.filter((column) => !currentColumns.includes(column))
+        );
+    }, [currentColumns]);
 
-      $refetch(['company_users']);
+    const handleSelectChange = useCallback((value: string) => {
+        value.length > 1 && setCurrentColumns((current) => [...current, value]);
+    }, []);
 
-      dispatch(updateUser(user));
+    const onSave = () => {
+        const user = cloneDeep(currentUser) as User;
 
-      toast.success('saved_settings');
-    });
-  };
+        set(
+            user,
+            `company_user.react_settings.react_table_columns.${table}`,
+            currentColumns
+        );
 
-  const handleDelete = (columnKey: string) => {
-    const updatedCurrentColumns = currentColumns.filter(
-      (column) => column !== columnKey
-    );
+        toast.processing();
 
-    setCurrentColumns(updatedCurrentColumns);
+        request(
+            'PUT',
+            endpoint('/api/v1/company_users/:id', { id: user.id }),
+            user
+        ).then((response: GenericSingleResourceResponse<CompanyUser>) => {
+            set(user, 'company_user', response.data.data);
+            setIsModalVisible(false);
 
-    const updatedFilteredColumns = props.columns.filter((column) =>
-      Boolean(
-        !updatedCurrentColumns.find((currentColumn) => currentColumn === column)
-      )
-    );
+            $refetch(['company_users']);
 
-    setFilteredColumns(updatedFilteredColumns);
-  };
+            dispatch(updateUser(user));
 
-  const onDragEnd = (result: DropResult) => {
-    const sorted = arrayMoveImmutable(
-      currentColumns,
-      result.source.index,
-      result.destination?.index as unknown as number
-    );
+            toast.success('saved_settings');
+        });
+    };
 
-    setCurrentColumns(sorted);
-  };
+    const handleDelete = (columnKey: string) => {
+        const updatedCurrentColumns = currentColumns.filter(
+            (column) => column !== columnKey
+        );
 
-  const handleReset = useCallback(() => {
-    setCurrentColumns(defaultColumns);
+        setCurrentColumns(updatedCurrentColumns);
 
-    setFilteredColumns(props.columns);
-  }, []);
+        const updatedFilteredColumns = props.columns.filter((column) =>
+            Boolean(
+                !updatedCurrentColumns.find(
+                    (currentColumn) => currentColumn === column
+                )
+            )
+        );
 
-  return (
-    <>
-      {createPortal(
-        <Modal
-          title={t('edit_columns')}
-          visible={isModalVisible}
-          onClose={setIsModalVisible}
-        >
-          <SelectField
-            label={t('add_column')}
-            onValueChange={handleSelectChange}
-            value=""
-            withBlank
-            cypressRef="columSelector"
-          >
-            {filteredColumns
-              .sort((a, b) => t(a).localeCompare(t(b)))
-              .map((column, index) => (
-                <option key={index} value={column}>
-                  {t(column)}
-                </option>
-              ))}
-          </SelectField>
+        setFilteredColumns(updatedFilteredColumns);
+    };
 
-          <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable
-              droppableId="columns"
-              renderClone={(provided, _, rubric) => {
-                const column = currentColumns[rubric.source.index];
+    const onDragEnd = (result: DropResult) => {
+        const sorted = arrayMoveImmutable(
+            currentColumns,
+            result.source.index,
+            result.destination?.index as unknown as number
+        );
 
-                return (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.draggableProps}
-                    className="flex items-center justify-between py-2 text-sm"
-                  >
-                    <div className="flex space-x-2 items-center">
-                      <Icon element={MdClose} size={20} />
+        setCurrentColumns(sorted);
+    };
 
-                      <p>{t(column)}</p>
-                    </div>
+    const handleReset = useCallback(() => {
+        setCurrentColumns(defaultColumns);
 
-                    <div {...provided.dragHandleProps}>
-                      <Icon element={MdDragHandle} size={23} />
-                    </div>
-                  </div>
-                );
-              }}
-            >
-              {(provided) => (
-                <div {...provided.droppableProps} ref={provided.innerRef}>
-                  {currentColumns.map((column, index) => (
-                    <Draggable
-                      key={index}
-                      draggableId={`item-${index}`}
-                      index={index}
+        setFilteredColumns(props.columns);
+    }, []);
+
+    return (
+        <>
+            {createPortal(
+                <Modal
+                    title={t('edit_columns')}
+                    visible={isModalVisible}
+                    onClose={setIsModalVisible}
+                >
+                    <SelectField
+                        label={t('add_column')}
+                        onValueChange={handleSelectChange}
+                        value=""
+                        withBlank
+                        cypressRef="columSelector"
                     >
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          className="flex items-center justify-between py-2"
+                        {filteredColumns
+                            .sort((a, b) => t(a).localeCompare(t(b)))
+                            .map((column, index) => (
+                                <option key={index} value={column}>
+                                    {t(column)}
+                                </option>
+                            ))}
+                    </SelectField>
+
+                    <DragDropContext onDragEnd={onDragEnd}>
+                        <Droppable
+                            droppableId="columns"
+                            renderClone={(provided, _, rubric) => {
+                                const column =
+                                    currentColumns[rubric.source.index];
+
+                                return (
+                                    <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        className="flex items-center justify-between py-2 text-sm"
+                                    >
+                                        <div className="flex items-center space-x-2">
+                                            <Icon element={MdClose} size={20} />
+
+                                            <p>{t(column)}</p>
+                                        </div>
+
+                                        <div {...provided.dragHandleProps}>
+                                            <Icon
+                                                element={MdDragHandle}
+                                                size={23}
+                                            />
+                                        </div>
+                                    </div>
+                                );
+                            }}
                         >
-                          <div className="flex space-x-2 items-center">
-                            <Icon
-                              className="cursor-pointer"
-                              element={MdClose}
-                              size={20}
-                              onClick={() => handleDelete(column)}
-                            />
+                            {(provided) => (
+                                <div
+                                    {...provided.droppableProps}
+                                    ref={provided.innerRef}
+                                >
+                                    {currentColumns.map((column, index) => (
+                                        <Draggable
+                                            key={index}
+                                            draggableId={`item-${index}`}
+                                            index={index}
+                                        >
+                                            {(provided) => (
+                                                <div
+                                                    ref={provided.innerRef}
+                                                    {...provided.draggableProps}
+                                                    className="flex items-center justify-between py-2"
+                                                >
+                                                    <div className="flex items-center space-x-2">
+                                                        <Icon
+                                                            className="cursor-pointer"
+                                                            element={MdClose}
+                                                            size={20}
+                                                            onClick={() =>
+                                                                handleDelete(
+                                                                    column
+                                                                )
+                                                            }
+                                                        />
 
-                            <p>{t(column)}</p>
-                          </div>
+                                                        <p>{t(column)}</p>
+                                                    </div>
 
-                          <div {...provided.dragHandleProps}>
-                            <Icon element={MdDragHandle} size={23} />
-                          </div>
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
+                                                    <div
+                                                        {...provided.dragHandleProps}
+                                                    >
+                                                        <Icon
+                                                            element={
+                                                                MdDragHandle
+                                                            }
+                                                            size={23}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </Draggable>
+                                    ))}
 
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
+                                    {provided.placeholder}
+                                </div>
+                            )}
+                        </Droppable>
+                    </DragDropContext>
 
-          <div className="flex lg:flex-row lg:justify-end">
-            <Inline>
-              <Button type="secondary" className="mx-2" onClick={handleReset}>
-                {t('reset')}
-              </Button>
+                    <div className="flex lg:flex-row lg:justify-end">
+                        <Inline>
+                            <Button
+                                type="secondary"
+                                className="mx-2"
+                                onClick={handleReset}
+                            >
+                                {t('reset')}
+                            </Button>
 
-              <Button onClick={onSave}>{t('save')}</Button>
-            </Inline>
-          </div>
-        </Modal>,
-        document.body
-      )}
+                            <Button onClick={onSave}>{t('save')}</Button>
+                        </Inline>
+                    </div>
+                </Modal>,
+                document.body
+            )}
 
-      <div className="mr-2">
-        <Button type="secondary" onClick={() => setIsModalVisible(true)}>
-          {t('columns')}
-        </Button>
-      </div>
-    </>
-  );
+            <div className="mr-2">
+                <Button
+                    type="secondary"
+                    onClick={() => setIsModalVisible(true)}
+                >
+                    {t('columns')}
+                </Button>
+            </div>
+        </>
+    );
 }

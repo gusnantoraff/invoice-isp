@@ -27,14 +27,14 @@ import { permission } from '$app/common/guards/guards/permission';
 import { useCustomBulkActions } from '../common/hooks/useCustomBulkActions';
 import { useHasPermission } from '$app/common/hooks/permissions/useHasPermission';
 
-export default function Products() {
-    useTitle('products');
+export default function FoLokasis() {
+    useTitle('FO Lokasi'); //on browser tab
 
     const [t] = useTranslation();
 
     const hasPermission = useHasPermission();
 
-    const pages: Page[] = [{ name: t('products'), href: '/products' }];
+    const pages: Page[] = [{ name: t('FO Lokasi'), href: '/fo-lokasis' }];
 
     const productColumns = useAllProductColumns();
 
@@ -46,16 +46,16 @@ export default function Products() {
 
     return (
         <Default
-            title={t('products')}
+            title={t('FO Lokasi')}
             breadcrumbs={pages}
-            docsLink="en/products"
+            // docsLink="en/products"
         >
             <DataTable
                 resource="product"
                 columns={columns}
                 endpoint="/api/v1/products?include=company&sort=id|desc"
                 bulkRoute="/api/v1/products/bulk"
-                linkToCreate="/products/create"
+                linkToCreate="/fo-lokasis/create"
                 linkToEdit="/products/:id/edit"
                 withResourcefulActions
                 customActions={actions}

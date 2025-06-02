@@ -24,6 +24,7 @@ import {
     Clock,
     PieChart,
     Info,
+    Radio,
 } from 'react-feather';
 import CommonProps from '../../common/interfaces/common-props.interface';
 import { useTranslation } from 'react-i18next';
@@ -107,6 +108,7 @@ export function Default(props: Props) {
 
     const [sidebarOpen, setSidebarOpen] = useState<boolean>(false);
 
+    // ==== Bagian navigation dengan FIBER OPTIK dropdown ====
     const navigation: NavigationItem[] = [
         {
             name: t('dashboard'),
@@ -342,6 +344,152 @@ export function Default(props: Props) {
                 enabled(ModuleBitmask.RecurringExpenses) &&
                 hasPermission('view_wa_gateway'),
         },
+
+        // ===== DI SINI DITAMBAHKAN PARENT “FIBER OPTIK” dengan dua children =====
+        {
+            name: t('FIBER OPTIK'),
+            href: '', // kosong karena hanya toggle
+            icon: Radio,
+            current:
+                location.pathname.startsWith('/fo-lokasis') ||
+                location.pathname.startsWith('/fo-odc'),
+            visible:
+                hasPermission('view_product') ||
+                hasPermission('create_product') ||
+                hasPermission('edit_product'),
+            children: [
+                {
+                    name: t('Lokasi'),
+                    href: '/fo-lokasis',
+                    icon: Radio,
+                    current: location.pathname.startsWith('/fo-lokasis'),
+                    visible:
+                        hasPermission('view_product') ||
+                        hasPermission('create_product') ||
+                        hasPermission('edit_product'),
+                    rightButton: {
+                        icon: PlusCircle,
+                        to: '/fo-lokasis/create',
+                        label: t('new_product'),
+                        visible: hasPermission('create_product'),
+                    },
+                },
+                // {
+                //     name: t('Lokasi'),
+                //     href: '/fo-lokasis',
+                //     icon: Radio,
+                //     current: location.pathname.startsWith('/fo-lokasis'),
+                //     visible:
+                //         hasPermission('view_product') ||
+                //         hasPermission('create_product') ||
+                //         hasPermission('edit_product'),
+                //     rightButton: {
+                //         icon: PlusCircle,
+                //         to: '/fo-lokasis/create',
+                //         label: t('new_product'),
+                //         visible: hasPermission('create_product'),
+                //     },
+                // },
+                {
+                    name: t('ODC'),
+                    href: '/fo-odc',
+                    icon: Radio,
+                    current: location.pathname.startsWith('/fo-odc'),
+                    visible:
+                        hasPermission('view_product') ||
+                        hasPermission('create_product') ||
+                        hasPermission('edit_product'),
+                    rightButton: {
+                        icon: PlusCircle,
+                        to: '/fo-odc/create',
+                        label: t('new_product'),
+                        visible: hasPermission('create_product'),
+                    },
+                },
+                {
+                    name: t('Kabel ODC'),
+                    href: '/fo-odc',
+                    icon: Radio,
+                    current: location.pathname.startsWith('/fo-odc'),
+                    visible:
+                        hasPermission('view_product') ||
+                        hasPermission('create_product') ||
+                        hasPermission('edit_product'),
+                    rightButton: {
+                        icon: PlusCircle,
+                        to: '/fo-odc/create',
+                        label: t('new_product'),
+                        visible: hasPermission('create_product'),
+                    },
+                },
+                {
+                    name: t('Tube Kabel ODC'),
+                    href: '/fo-odc',
+                    icon: Radio,
+                    current: location.pathname.startsWith('/fo-odc'),
+                    visible:
+                        hasPermission('view_product') ||
+                        hasPermission('create_product') ||
+                        hasPermission('edit_product'),
+                    rightButton: {
+                        icon: PlusCircle,
+                        to: '/fo-odc/create',
+                        label: t('new_product'),
+                        visible: hasPermission('create_product'),
+                    },
+                },
+                {
+                    name: t('Core Kabel ODC'),
+                    href: '/fo-odc',
+                    icon: Radio,
+                    current: location.pathname.startsWith('/fo-odc'),
+                    visible:
+                        hasPermission('view_product') ||
+                        hasPermission('create_product') ||
+                        hasPermission('edit_product'),
+                    rightButton: {
+                        icon: PlusCircle,
+                        to: '/fo-odc/create',
+                        label: t('new_product'),
+                        visible: hasPermission('create_product'),
+                    },
+                },
+                {
+                    name: t('ODP'),
+                    href: '/fo-odc',
+                    icon: Radio,
+                    current: location.pathname.startsWith('/fo-odc'),
+                    visible:
+                        hasPermission('view_product') ||
+                        hasPermission('create_product') ||
+                        hasPermission('edit_product'),
+                    rightButton: {
+                        icon: PlusCircle,
+                        to: '/fo-odc/create',
+                        label: t('new_product'),
+                        visible: hasPermission('create_product'),
+                    },
+                },
+                {
+                    name: t('Client FTTH'),
+                    href: '/fo-odc',
+                    icon: Radio,
+                    current: location.pathname.startsWith('/fo-odc'),
+                    visible:
+                        hasPermission('view_product') ||
+                        hasPermission('create_product') ||
+                        hasPermission('edit_product'),
+                    rightButton: {
+                        icon: PlusCircle,
+                        to: '/fo-odc/create',
+                        label: t('new_product'),
+                        visible: hasPermission('create_product'),
+                    },
+                },
+            ],
+        },
+        // =======================================================================
+
         {
             name: t('reports'),
             href: '/reports',
@@ -479,12 +627,12 @@ export function Default(props: Props) {
                                     className="items-center justify-center hidden px-4 py-2 text-sm text-white bg-green-500 rounded sm:inline-flex hover:bg-green-600"
                                     onClick={() =>
                                         preventNavigation({
-                                            url: (isSelfHosted()
+                                            url: isSelfHosted()
                                                 ? import.meta.env
                                                       .VITE_WHITELABEL_INVOICE_URL ||
                                                   'https://invoiceninja.invoicing.co/client/subscriptions/O5xe7Rwd7r/purchase'
-                                                : user?.company_user
-                                                      ?.ninja_portal_url) as string,
+                                                : (user?.company_user
+                                                      ?.ninja_portal_url as string),
                                             externalLink: true,
                                         })
                                     }
