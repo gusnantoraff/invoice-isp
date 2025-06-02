@@ -8,6 +8,7 @@ const WAGateway = lazy(() => import('$app/pages/wa-gateway/WaGateway'));
 const WAChat = lazy(() => import('$app/pages/wa-gateway/chat/WaChat'));
 const WaChatCreate = lazy(() => import('$app/pages/wa-gateway/chat/WaChatCreate'));
 const WaChatDetail = lazy(() => import('$app/pages/wa-gateway/chat/WaChatDetail'));
+const WaChatSend = lazy(() => import('$app/pages/wa-gateway/chat/WaChatSend'));
 
 const WaChatTemplate = lazy(() => import('$app/pages/wa-gateway/template/WaChatTemplate'));
 const WaChatTemplateDetail = lazy(() => import('$app/pages/wa-gateway/template/WaChatTemplateDetail'));
@@ -32,6 +33,12 @@ export const waGatewayRoutes = (
       path="chat/:deviceId"
       element={
         <Guard guards={[permission('view_wa_gateway')]} component={<WAChat />} />
+      }
+    />
+    <Route
+      path="chat"
+      element={
+        <Guard guards={[permission('view_wa_gateway')]} component={<WaChatSend />} />
       }
     />
     <Route

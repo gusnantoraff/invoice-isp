@@ -57,7 +57,6 @@ export default function WaChatCreate() {
             .then((res) => {
                 setTemplates(res.data || []);
             });
-            console.log('clients',clients);
     }, [deviceId]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {

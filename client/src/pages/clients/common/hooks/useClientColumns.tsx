@@ -44,8 +44,7 @@ export const defaultColumns: string[] = [
   'balance',
   'paid_to_date',
   'created_at',
-  'last_login_at',
-  'website',
+  'invoice_status'
 ];
 
 export function useAllClientColumns() {
@@ -62,6 +61,7 @@ export function useAllClientColumns() {
     'contact_name',
     'contact_email',
     'last_login_at',
+    'invoice_status',
     'address2',
     'archived_at',
     //   'assigned_to',
@@ -170,6 +170,26 @@ export function useClientColumns() {
           resource?.country_id,
           resource?.settings.currency_id
         ),
+    },
+    {
+      column: 'invoice_status',
+      id: 'invoices',
+      label: 'Status Invoice',
+      format: (_value, client) => {
+        if (!client.invoices || client.invoices.length === 0) return '-';
+
+        const invoice = client.invoices.find(inv => inv.client_id === client.id);
+        if (!invoice) return '-';
+
+        switch (invoice.status_id) {
+          case '1':
+            return 'UNPAID';
+          case '4':
+            return 'PAID';
+          default:
+            return '-';
+        }
+      },
     },
     {
       column: 'contact_name',
@@ -384,7 +404,7 @@ export function useClientColumns() {
       format: (value, client) =>
         formatMoney(
           client.settings.default_task_rate ||
-            company.settings.default_task_rate,
+          company.settings.default_task_rate,
           client?.country_id,
           client?.settings.currency_id
         ),

@@ -14,15 +14,18 @@ import { CustomBulkAction } from '$app/components/DataTable';
 import { DropdownElement } from '$app/components/dropdown/DropdownElement';
 import { Icon } from '$app/components/icons/Icon';
 import { useTranslation } from 'react-i18next';
-import { MdDesignServices, MdDownload } from 'react-icons/md';
+import { MdDesignServices, MdDownload, MdOutlineWhatsapp  } from 'react-icons/md';
 import { useDocumentsBulk } from '$app/common/queries/documents';
 import { Dispatch, SetStateAction } from 'react';
 import { useChangeTemplate } from '$app/pages/settings/invoice-design/pages/custom-designs/components/ChangeTemplate';
 import { AssignToGroupBulkAction } from '../components/AssignToGroupBulkAction';
 import { BulkUpdatesAction } from '../components/BulkUpdatesAction';
+import { useNavigate } from 'react-router-dom';
 
 export const useCustomBulkActions = () => {
   const [t] = useTranslation();
+  const navigate = useNavigate();
+
 
   const documentsBulk = useDocumentsBulk();
 
@@ -72,6 +75,19 @@ export const useCustomBulkActions = () => {
           {t('documents')}
         </DropdownElement>
       ),
+    ({ selectedResources }) => {
+      return (
+        <DropdownElement
+          onClick={() => {
+            const ids = selectedResources.map(client => client.id).join(',');
+            navigate(`/wa-gateway/chat?clients=${ids}`);
+          }}
+          icon={<Icon element={MdOutlineWhatsapp } />}
+        >
+          Kirim Pesan WA
+        </DropdownElement>
+      );
+    },
     ({ selectedResources }) => (
       <DropdownElement
         onClick={() => {

@@ -51,10 +51,10 @@ export function Actions(props: Props) {
 
   const customFilterDropdowns = props.customFilters
     ? collect(props.customFilters)
-        .pluck('dropdownKey')
-        .unique()
-        .toArray()
-        .map((dropdownKey) => (dropdownKey as string) ?? '0')
+      .pluck('dropdownKey')
+      .unique()
+      .toArray()
+      .map((dropdownKey) => (dropdownKey as string) ?? '0')
     : [];
 
   const onStatusChange = (

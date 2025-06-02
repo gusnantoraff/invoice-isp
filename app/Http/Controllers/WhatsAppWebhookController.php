@@ -57,11 +57,11 @@ class WhatsAppWebhookController extends Controller
             return response()->json(['status' => 'complaint_received']);
         }
 
-        if (trim($message) === '3') {
+        if (strtolower(trim($message)) === 'hubungi admin') {
             $wa->sendMessage([
                 'session' => $session,
                 'to' => $from,
-                'text' => "Silakan sampaikan keluhan Anda.",
+                'text' => "Silakan sampaikan keluhan Anda secara detail.",
             ]);
 
             Cache::put("complaint:$from", 'waiting', now()->addMinutes(10));
@@ -105,11 +105,9 @@ class WhatsAppWebhookController extends Controller
                 $answer = "Halo Pelanggan, Anda tidak memiliki tagihan/sudah melunasinya bulan ini.";
             }
         } else {
-            $answer = "Halo, selamat datang. Ini adalah *balasan otomatis* dari sistem kami.\n\n" .
-                "Silakan pilih menu berikut:\n" .
-                "[1] Cek tagihan\n" .
-                "[2] Status pembayaran\n" .
-                "[3] Hubungi admin";
+            $answer = "Halo, selamat datang. Ini adalah *balasan otomatis* dari sistem kami.\n" .
+                "Ada yang bisa kami bantu?\n\n" .
+                "Ketik *menu* untuk melihat pilihan layanan.";
         }
 
 

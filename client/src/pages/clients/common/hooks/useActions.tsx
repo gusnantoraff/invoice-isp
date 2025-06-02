@@ -27,6 +27,7 @@ import {
   MdPictureAsPdf,
   MdRestore,
   MdSettings,
+  MdOutlineWhatsapp,
 } from 'react-icons/md';
 import { useEntityPageIdentifier } from '$app/common/hooks/useEntityPageIdentifier';
 import { useConfigureClientSettings } from './useConfigureClientSettings';
@@ -115,6 +116,15 @@ export function useActions(params?: Params) {
           icon={<Icon element={MdSettings} />}
         >
           {t('settings')}
+        </DropdownElement>
+      ),
+    (client) =>
+      !client.is_deleted && (
+        <DropdownElement
+          to={route('/wa-gateway/chat?clients=:id', { id: client.id })}
+          icon={<Icon element={MdOutlineWhatsapp } />}
+        >
+          {t('Kirim Pesan WA')}
         </DropdownElement>
       ),
     (client) =>
