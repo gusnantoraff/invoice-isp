@@ -10,6 +10,7 @@
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+
 use App\Http\Controllers\EInvoicePeppolController;
 use App\Http\Controllers\EInvoiceTokenController;
 use App\Http\Controllers\SubscriptionStepsController;
@@ -144,6 +145,89 @@ Route::group(['middleware' => ['throttle:login', 'api_secret_check', 'email_db']
 });
 
 Route::group(['middleware' => ['throttle:api', 'api_db', 'token_auth', 'locale'], 'prefix' => 'api/v1', 'as' => 'api.'], function () {
+
+    /**
+     *
+     *  FIBER OPTIK
+     *
+     */
+
+    // Route::resource('fo-lokasis', FoLokasiController::class);
+    Route::get('/fo-lokasis',             [FoLokasiController::class, 'index']);
+    Route::post('/fo-lokasis',            [FoLokasiController::class, 'store']);
+    Route::get('/fo-lokasis/{id}',        [FoLokasiController::class, 'show']);
+    Route::put('/fo-lokasis/{id}',        [FoLokasiController::class, 'update']);
+    Route::patch('/fo-lokasis/{id}',      [FoLokasiController::class, 'update']);
+    Route::delete('/fo-lokasis/{id}',     [FoLokasiController::class, 'destroy']);
+    Route::patch('/fo-lokasis/{id}/archive',   [FoLokasiController::class, 'archive']);
+    Route::patch('/fo-lokasis/{id}/unarchive', [FoLokasiController::class, 'unarchive']);
+    Route::patch('/fo-lokasis/{id}/restore',   [FoLokasiController::class, 'restore']);
+
+    // Route::resource('fo-odcs', FoOdcController::class);
+    Route::get('/fo-odcs',          [FoOdcController::class, 'index']);    // GET    api/v1/fo-odcs
+    Route::post('/fo-odcs',         [FoOdcController::class, 'store']);    // POST   api/v1/fo-odcs
+    Route::get('/fo-odcs/{id}',     [FoOdcController::class, 'show']);     // GET    api/v1/fo-odcs/{id}
+    Route::put('/fo-odcs/{id}',     [FoOdcController::class, 'update']);   // PUT    api/v1/fo-odcs/{id}
+    Route::patch('/fo-odcs/{id}',   [FoOdcController::class, 'update']);   // PATCH  api/v1/fo-odcs/{id}
+    Route::delete('/fo-odcs/{id}',  [FoOdcController::class, 'destroy']);  // DELETE api/v1/fo-odcs/{id}
+    Route::patch('/fo-odcs/{id}/archive',   [FoOdcController::class, 'archive']);     // PATCH api/v1/fo-odcs/{id}/archive
+    Route::patch('/fo-odcs/{id}/unarchive', [FoOdcController::class, 'unarchive']);   // PATCH api/v1/fo-odcs/{id}/unarchive
+    Route::patch('/fo-odcs/{id}/restore',   [FoOdcController::class, 'restore']);     // PATCH api/v1/fo-odcs/{id}/restore
+
+    // Route::resource('fo-kabel-odcs', FoKabelOdcController::class);
+    Route::get('/fo-kabel-odcs',         [FoKabelOdcController::class, 'index']);    // GET    api/v1/fo-kabel-odcs
+    Route::post('/fo-kabel-odcs',        [FoKabelOdcController::class, 'store']);    // POST   api/v1/fo-kabel-odcs
+    Route::get('/fo-kabel-odcs/{id}',    [FoKabelOdcController::class, 'show']);     // GET    api/v1/fo-kabel-odcs/{id}
+    Route::put('/fo-kabel-odcs/{id}',    [FoKabelOdcController::class, 'update']);   // PUT    api/v1/fo-kabel-odcs/{id}
+    Route::patch('/fo-kabel-odcs/{id}',  [FoKabelOdcController::class, 'update']);   // PATCH  api/v1/fo-kabel-odcs/{id}
+    Route::delete('/fo-kabel-odcs/{id}', [FoKabelOdcController::class, 'destroy']);  // DELETE api/v1/fo-kabel-odcs/{id}
+    Route::patch('/fo-kabel-odcs/{id}/archive',   [FoKabelOdcController::class, 'archive']);    // PATCH api/v1/fo-kabel-odcs/{id}/archive
+    Route::patch('/fo-kabel-odcs/{id}/unarchive', [FoKabelOdcController::class, 'unarchive']);  // PATCH api/v1/fo-kabel-odcs/{id}/unarchive
+    Route::patch('/fo-kabel-odcs/{id}/restore',   [FoKabelOdcController::class, 'restore']);    // PATCH api/v1/fo-kabel-odcs/{id}/restore
+
+    // Route::resource('fo-kabel-tube-odcs', FoKabelTubeOdcController::class);
+    Route::get('/fo-kabel-tube-odcs',         [FoKabelTubeOdcController::class, 'index']);
+    Route::post('/fo-kabel-tube-odcs',        [FoKabelTubeOdcController::class, 'store']);
+    Route::get('/fo-kabel-tube-odcs/{id}',    [FoKabelTubeOdcController::class, 'show']);
+    Route::put('/fo-kabel-tube-odcs/{id}',    [FoKabelTubeOdcController::class, 'update']);
+    Route::patch('/fo-kabel-tube-odcs/{id}',  [FoKabelTubeOdcController::class, 'update']);
+    Route::delete('/fo-kabel-tube-odcs/{id}', [FoKabelTubeOdcController::class, 'destroy']);
+    Route::patch('/fo-kabel-tube-odcs/{id}/archive',   [FoKabelTubeOdcController::class, 'archive']);
+    Route::patch('/fo-kabel-tube-odcs/{id}/unarchive', [FoKabelTubeOdcController::class, 'unarchive']);
+    Route::patch('/fo-kabel-tube-odcs/{id}/restore',   [FoKabelTubeOdcController::class, 'restore']);
+
+    // Route::resource('fo-kabel-core-odcs', FoKabelCoreOdcController::class);
+    Route::get('/fo-kabel-core-odcs',          [FoKabelCoreOdcController::class, 'index']);    // GET    api/v1/fo-kabel-core-odcs
+    Route::post('/fo-kabel-core-odcs',         [FoKabelCoreOdcController::class, 'store']);    // POST   api/v1/fo-kabel-core-odcs
+    Route::get('/fo-kabel-core-odcs/{id}',     [FoKabelCoreOdcController::class, 'show']);     // GET    api/v1/fo-kabel-core-odcs/{id}
+    Route::put('/fo-kabel-core-odcs/{id}',     [FoKabelCoreOdcController::class, 'update']);   // PUT    api/v1/fo-kabel-core-odcs/{id}
+    Route::patch('/fo-kabel-core-odcs/{id}',   [FoKabelCoreOdcController::class, 'update']);   // PATCH  api/v1/fo-kabel-core-odcs/{id}
+    Route::delete('/fo-kabel-core-odcs/{id}',  [FoKabelCoreOdcController::class, 'destroy']);  // DELETE api/v1/fo-kabel-core-odcs/{id}
+    Route::patch('/fo-kabel-core-odcs/{id}/archive',   [FoKabelCoreOdcController::class, 'archive']);    // PATCH api/v1/fo-kabel-core-odcs/{id}/archive
+    Route::patch('/fo-kabel-core-odcs/{id}/unarchive', [FoKabelCoreOdcController::class, 'unarchive']);  // PATCH api/v1/fo-kabel-core-odcs/{id}/unarchive
+    Route::patch('/fo-kabel-core-odcs/{id}/restore',   [FoKabelCoreOdcController::class, 'restore']);    // PATCH api/v1/fo-kabel-core-odcs/{id}/restore
+
+    // Route::resource('fo-odps', FoOdpController::class);
+    Route::get('/fo-odps',           [FoOdpController::class, 'index']);      // GET    api/v1/fo-odps
+    Route::post('/fo-odps',          [FoOdpController::class, 'store']);      // POST   api/v1/fo-odps
+    Route::get('/fo-odps/{id}',      [FoOdpController::class, 'show']);       // GET    api/v1/fo-odps/{id}
+    Route::put('/fo-odps/{id}',      [FoOdpController::class, 'update']);     // PUT    api/v1/fo-odps/{id}
+    Route::patch('/fo-odps/{id}',    [FoOdpController::class, 'update']);     // PATCH  api/v1/fo-odps/{id}
+    Route::delete('/fo-odps/{id}',   [FoOdpController::class, 'destroy']);    // DELETE api/v1/fo-odps/{id}
+    Route::patch('/fo-odps/{id}/archive',   [FoOdpController::class, 'archive']);    // PATCH api/v1/fo-odps/{id}/archive
+    Route::patch('/fo-odps/{id}/unarchive', [FoOdpController::class, 'unarchive']);  // PATCH api/v1/fo-odps/{id}/unarchive
+    Route::patch('/fo-odps/{id}/restore',   [FoOdpController::class, 'restore']);    // PATCH api/v1/fo-odps/{id}/restore
+
+    // Route::resource('fo-client-ftths', FoClientFtthController::class);
+    Route::get('/fo-client-ftths',           [FoClientFtthController::class, 'index']);     // GET    api/v1/fo-client-ftths
+    Route::post('/fo-client-ftths',          [FoClientFtthController::class, 'store']);     // POST   api/v1/fo-client-ftths
+    Route::get('/fo-client-ftths/{id}',      [FoClientFtthController::class, 'show']);      // GET    api/v1/fo-client-ftths/{id}
+    Route::put('/fo-client-ftths/{id}',      [FoClientFtthController::class, 'update']);    // PUT    api/v1/fo-client-ftths/{id}
+    Route::patch('/fo-client-ftths/{id}',    [FoClientFtthController::class, 'update']);    // PATCH  api/v1/fo-client-ftths/{id}
+    Route::delete('/fo-client-ftths/{id}',   [FoClientFtthController::class, 'destroy']);   // DELETE api/v1/fo-client-ftths/{id}
+    Route::patch('/fo-client-ftths/{id}/archive',   [FoClientFtthController::class, 'archive']);    // PATCH api/v1/fo-client-ftths/{id}/archive
+    Route::patch('/fo-client-ftths/{id}/unarchive', [FoClientFtthController::class, 'unarchive']);  // PATCH api/v1/fo-client-ftths/{id}/unarchive
+    Route::patch('/fo-client-ftths/{id}/restore',   [FoClientFtthController::class, 'restore']);    // PATCH api/v1/fo-client-ftths/{id}/restore
 
     Route::post('password_timeout', PasswordTimeoutController::class)->name('password_timeout');
     Route::put('accounts/{account}', [AccountController::class, 'update'])->name('account.update');
@@ -486,7 +570,6 @@ Route::group(['middleware' => ['throttle:api', 'api_db', 'token_auth', 'locale']
     Route::get('wa/message/{id}', action: [MessagesController::class, 'showMessages']);
     Route::get('/wa/messages/device/{deviceId}', [MessagesController::class, 'getMessagesByDevice']);
     Route::post('wa/message', [MessagesController::class, 'sendMessage']);
-
 });
 
 Route::post('webhook/message', action: [WhatsAppWebhookController::class, 'handleMessage']);
