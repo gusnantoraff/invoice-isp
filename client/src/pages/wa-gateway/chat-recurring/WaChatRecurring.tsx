@@ -132,7 +132,7 @@ export default function WaChatRecurring() {
                             onClick={() => navigate(`/wa-gateway/chat/${deviceId}/recurring/create`)}
                             className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                         >
-                            Buat Pesan Berulang
+                            Tambah Pesan Berulang
                         </button>
                     </div>
                     <h2 className="text-lg font-semibold">{t("Daftar Pesan Berulang")}</h2>
@@ -154,7 +154,6 @@ export default function WaChatRecurring() {
                                         <th className="p-3">Pesan</th>
                                         <th className="p-3">Frekuensi</th>
                                         <th className="p-3">Next Run</th>
-                                        <th className="p-3">Dibuat</th>
                                         <th className="p-3">Aksi</th>
                                     </tr>
                                 </thead>
@@ -175,7 +174,6 @@ export default function WaChatRecurring() {
                                             </td>
                                             <td className="p-3">{frequencyLabel(schedule.frequency)}</td>
                                             <td className="p-3">{schedule.next_run_date ? formatDate(schedule.next_run_date) : "-"}</td>
-                                            <td className="p-3">{schedule.created_at ? formatDate(schedule.created_at) : "-"}</td>
                                             <td className="p-3 space-x-1">
                                                 <button
                                                     onClick={() => navigate(`/wa-gateway/chat/${deviceId}/recurring/detail/${schedule.id}`)}

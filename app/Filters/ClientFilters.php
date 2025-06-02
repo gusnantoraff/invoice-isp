@@ -30,7 +30,7 @@ class ClientFilters extends QueryFilters
             return $this->builder;
         }
 
-        return $this->builder->where('name', 'like', '%'.$name.'%');
+        return $this->builder->where('name', 'like', '%' . $name . '%');
     }
 
     /**
@@ -39,6 +39,14 @@ class ClientFilters extends QueryFilters
      * @param string $balance
      * @return Builder
      */
+
+    public function status_invoice($value)
+    {
+        return $this->builder->whereHas('invoices', function (Builder $query) use ($value) {
+            $query->where('status_id', $value);
+        });
+    }
+
     public function balance(string $balance = ''): Builder
     {
         if (strlen($balance) == 0 || count(explode(":", $balance)) < 2) {
@@ -134,19 +142,19 @@ class ClientFilters extends QueryFilters
         return $this->builder->where(function ($query) use ($searchTerms) {
             foreach ($searchTerms as $term) {
                 $query->where(function ($subQuery) use ($term) {
-                    $subQuery->where('name', 'like', '%'.$term.'%')
-                        ->orWhere('id_number', 'like', '%'.$term.'%')
-                        ->orWhere('number', 'like', '%'.$term.'%')
+                    $subQuery->where('name', 'like', '%' . $term . '%')
+                        ->orWhere('id_number', 'like', '%' . $term . '%')
+                        ->orWhere('number', 'like', '%' . $term . '%')
                         ->orWhereHas('contacts', function ($contactQuery) use ($term) {
-                            $contactQuery->where('first_name', 'like', '%'.$term.'%')
-                                ->orWhere('last_name', 'like', '%'.$term.'%')
-                                ->orWhere('email', 'like', '%'.$term.'%')
-                                ->orWhere('phone', 'like', '%'.$term.'%');
+                            $contactQuery->where('first_name', 'like', '%' . $term . '%')
+                                ->orWhere('last_name', 'like', '%' . $term . '%')
+                                ->orWhere('email', 'like', '%' . $term . '%')
+                                ->orWhere('phone', 'like', '%' . $term . '%');
                         })
-                        ->orWhere('custom_value1', 'like', '%'.$term.'%')
-                        ->orWhere('custom_value2', 'like', '%'.$term.'%')
-                        ->orWhere('custom_value3', 'like', '%'.$term.'%')
-                        ->orWhere('custom_value4', 'like', '%'.$term.'%');
+                        ->orWhere('custom_value1', 'like', '%' . $term . '%')
+                        ->orWhere('custom_value2', 'like', '%' . $term . '%')
+                        ->orWhere('custom_value3', 'like', '%' . $term . '%')
+                        ->orWhere('custom_value4', 'like', '%' . $term . '%');
                 });
             }
         });

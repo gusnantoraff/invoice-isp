@@ -16,8 +16,6 @@ import { Totals } from '$app/pages/dashboard/components/Totals';
 import { UpcomingInvoices } from '$app/pages/dashboard/components/UpcomingInvoices';
 import { useTranslation } from 'react-i18next';
 import { Default } from '../../components/layouts/Default';
-import { ExpiredQuotes } from './components/ExpiredQuotes';
-import { UpcomingQuotes } from './components/UpcomingQuotes';
 import { useEnabled } from '$app/common/guards/guards/enabled';
 import { ModuleBitmask } from '../settings';
 import { UpcomingRecurringInvoices } from './components/UpcomingRecurringInvoices';
@@ -57,18 +55,6 @@ export default function Dashboard() {
         {enabled(ModuleBitmask.Invoices) && (
           <div className="col-span-12 xl:col-span-6">
             <PastDueInvoices />
-          </div>
-        )}
-
-        {enabled(ModuleBitmask.Quotes) && (
-          <div className="col-span-12 xl:col-span-6">
-            <ExpiredQuotes />
-          </div>
-        )}
-
-        {enabled(ModuleBitmask.Quotes) && (
-          <div className="col-span-12 xl:col-span-6">
-            <UpcomingQuotes />
           </div>
         )}
 

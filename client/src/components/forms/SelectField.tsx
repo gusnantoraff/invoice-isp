@@ -29,6 +29,7 @@ export interface SelectProps extends CommonProps {
   dismissable?: boolean;
   clearAfterSelection?: boolean;
   menuPosition?: 'fixed';
+  placeholder?: string | null;
 }
 
 export function SelectField(props: SelectProps) {
@@ -47,6 +48,7 @@ export function SelectField(props: SelectProps) {
     cypressRef,
     dismissable = true,
     clearAfterSelection,
+    placeholder = null,
   } = props;
 
   const blankEntry: ReactNode = (
@@ -137,6 +139,12 @@ export function SelectField(props: SelectProps) {
           }}
           data-cy={props.cypressRef}
         >
+          {placeholder && (
+            <option value="" disabled hidden>
+              {placeholder}
+            </option>
+          )}
+
           {props.withBlank && (
             <option value={props.blankOptionValue ?? ''}></option>
           )}
@@ -168,6 +176,7 @@ export function SelectField(props: SelectProps) {
               selectedEntry?.value &&
               selectedEntry?.value !== blankOptionValue
           )}
+          placeholder={placeholder ?? undefined} 
           data-cy={cypressRef}
         />
       )}

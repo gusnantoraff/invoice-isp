@@ -31,12 +31,17 @@ import {
   useChangeTemplate,
 } from '$app/pages/settings/invoice-design/pages/custom-designs/components/ChangeTemplate';
 import { Client } from '$app/common/interfaces/client';
+import { useState } from 'react';
+import { SelectField } from '$app/components/forms';
+
 
 export default function Clients() {
   useTitle('clients');
 
   const [t] = useTranslation();
   const hasPermission = useHasPermission();
+  const [statusInvoice, setStatusInvoice] = useState<string | undefined>();
+
 
   const pages: Page[] = [{ name: t('clients'), href: '/clients' }];
 
@@ -51,11 +56,15 @@ export default function Clients() {
     changeTemplateResources,
   } = useChangeTemplate();
 
+  const endpoint = `/api/v1/clients?include=invoices,group_settings&sort=id|desc${statusInvoice ?
+    `&status_invoice=${statusInvoice}` : ''}`;
+
   return (
     <Default breadcrumbs={pages} title={t('clients')} docsLink="en/clients">
       <DataTable
+        key={`client-${statusInvoice ?? 'all'}`}
         resource="client"
-        endpoint="/api/v1/clients?include=group_settings&sort=id|desc"
+        endpoint={endpoint}
         bulkRoute="/api/v1/clients/bulk"
         columns={columns}
         linkToCreate="/clients/create"
@@ -65,13 +74,27 @@ export default function Clients() {
         bottomActionsKeys={['purge']}
         customBulkActions={customBulkActions}
         rightSide={
-          <Guard
-            type="component"
-            guards={[
-              or(permission('create_client'), permission('edit_client')),
-            ]}
-            component={<ImportButton route="/clients/import" />}
-          />
+          <div className="flex items-center space-x-4">
+            <SelectField
+              label={null}
+              value={statusInvoice}
+              onValueChange={(value) => setStatusInvoice(value)}
+              withBlank
+              customSelector
+              placeholder="Status Invoice"
+            >
+              <option value="4">{t('paid')}</option>
+              <option value="1">{t('unpaid')}</option>
+            </SelectField>
+
+            <Guard
+              type="component"
+              guards={[
+                or(permission('create_client'), permission('edit_client')),
+              ]}
+              component={<ImportButton route="/clients/import" />}
+            />
+          </div>
         }
         leftSideChevrons={
           <DataTableColumnsPicker

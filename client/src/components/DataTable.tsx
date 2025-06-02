@@ -371,22 +371,22 @@ export function DataTable<T extends object>(props: Props<T>) {
   const showCustomBulkActionDivider = useMemo(() => {
     return props.customBulkActions
       ? props.customBulkActions.some((action) =>
-          React.isValidElement(
-            action({
-              selectedIds: selected,
-              selectedResources,
-              setSelected,
-            })
-          )
+        React.isValidElement(
+          action({
+            selectedIds: selected,
+            selectedResources,
+            setSelected,
+          })
         )
+      )
       : false;
   }, [props.customBulkActions, selected, selectedResources]);
 
   const showCustomActionDivider = (resource: T) => {
     return props.customActions
       ? props.customActions.some((action: ResourceAction<T>) =>
-          React.isValidElement(action(resource))
-        )
+        React.isValidElement(action(resource))
+      )
       : false;
   };
 
@@ -419,7 +419,7 @@ export function DataTable<T extends object>(props: Props<T>) {
   }, [apiEndpoint.pathname]);
 
   useEffect(() => {
-    if (data) {
+    if (Array.isArray(data?.data?.data)) {
       const filteredSelectedResources = data.data.data.filter((resource: any) =>
         selected.includes(resource.id)
       );
@@ -430,16 +430,14 @@ export function DataTable<T extends object>(props: Props<T>) {
         (resource: any) => !selected.includes(resource.id)
       );
 
-      if (shouldDeselectMainCheckbox && mainCheckbox.current) {
-        mainCheckbox.current.checked = false;
-      } else if (mainCheckbox.current && data.data.data.length) {
-        mainCheckbox.current.checked = true;
+      if (mainCheckbox.current) {
+        mainCheckbox.current.checked =
+          !shouldDeselectMainCheckbox && data.data.data.length > 0;
       }
     }
-  }, [selected]);
-
+  }, [selected, data]);
   useEffect(() => {
-    if (data && !data.data.data.length) {
+    if (Array.isArray(data?.data?.data) && data.data.data.length === 0) {
       setCurrentPage(1);
     }
   }, [data]);
@@ -554,19 +552,19 @@ export function DataTable<T extends object>(props: Props<T>) {
                   {(showRestoreBulk
                     ? showRestoreBulk(selectedResources)
                     : showRestoreBulkAction()) && (
-                    <DropdownElement
-                      onClick={() => {
-                        if (onBulkActionCall) {
-                          onBulkActionCall(selected, 'restore');
-                        } else {
-                          bulk('restore');
-                        }
-                      }}
-                      icon={<Icon element={MdRestore} />}
-                    >
-                      {t('restore')}
-                    </DropdownElement>
-                  )}
+                      <DropdownElement
+                        onClick={() => {
+                          if (onBulkActionCall) {
+                            onBulkActionCall(selected, 'restore');
+                          } else {
+                            bulk('restore');
+                          }
+                        }}
+                        icon={<Icon element={MdRestore} />}
+                      >
+                        {t('restore')}
+                      </DropdownElement>
+                    )}
                 </>
               )}
             </Dropdown>
@@ -641,11 +639,11 @@ export function DataTable<T extends object>(props: Props<T>) {
                     {dateRangeColumns.some(
                       (dateRangeColumn) => column.id === dateRangeColumn.column
                     ) && (
-                      <DateRangePicker
-                        setDateRange={setDateRange}
-                        onClick={() => handleDateRangeColumnClick(column.id)}
-                      />
-                    )}
+                        <DateRangePicker
+                          setDateRange={setDateRange}
+                          onClick={() => handleDateRangeColumnClick(column.id)}
+                        />
+                      )}
                     <span>{column.label}</span>
                   </div>
                 </Th>
@@ -682,7 +680,8 @@ export function DataTable<T extends object>(props: Props<T>) {
             </Tr>
           )}
 
-          {data && data.data.data.length === 0 && (
+          {data?.data?.data?.length === 0 && (
+
             <Tr
               className={classNames({
                 'border-b border-gray-200': styleOptions?.addRowSeparator,
@@ -711,8 +710,8 @@ export function DataTable<T extends object>(props: Props<T>) {
                     onClick={() =>
                       selected.includes(resource.id)
                         ? setSelected((current) =>
-                            current.filter((v) => v !== resource.id)
-                          )
+                          current.filter((v) => v !== resource.id)
+                        )
                         : setSelected((current) => [...current, resource.id])
                     }
                   >
@@ -871,7 +870,7 @@ export function DataTable<T extends object>(props: Props<T>) {
           )}
       </Table>
 
-      {data && !props.withoutPagination && (
+      {data?.data?.meta?.pagination && !props.withoutPagination && (
         <Pagination
           currentPerPage={perPage}
           currentPage={currentPage}
@@ -882,6 +881,7 @@ export function DataTable<T extends object>(props: Props<T>) {
           leftSideChevrons={props.leftSideChevrons}
         />
       )}
+
     </div>
   );
 }

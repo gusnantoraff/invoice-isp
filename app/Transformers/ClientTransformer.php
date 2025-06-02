@@ -16,6 +16,7 @@ use App\Models\Client;
 use App\Models\ClientContact;
 use App\Models\ClientGatewayToken;
 use App\Models\CompanyLedger;
+use App\Models\Invoice;
 use App\Models\Document;
 use App\Models\GroupSetting;
 use App\Models\SystemLog;
@@ -33,6 +34,7 @@ class ClientTransformer extends EntityTransformer
         'contacts',
         'documents',
         'gateway_tokens',
+        'invoices',
     ];
 
     /**
@@ -43,6 +45,7 @@ class ClientTransformer extends EntityTransformer
         'ledger',
         'system_logs',
         'group_settings',
+        'invoices',
     ];
 
     /**
@@ -64,6 +67,7 @@ class ClientTransformer extends EntityTransformer
         return $this->includeCollection($client->documents, $transformer, Document::class);
     }
 
+
     /**
      * @param Client $client
      *
@@ -74,6 +78,12 @@ class ClientTransformer extends EntityTransformer
         $transformer = new ClientContactTransformer($this->serializer);
 
         return $this->includeCollection($client->contacts, $transformer, ClientContact::class);
+    }
+    public function includeInvoices(Client $client)
+    {
+        $transformer = new ClientInvoiceTransformer($this->serializer);
+
+        return $this->includeCollection($client->invoices, $transformer, Invoice::class);
     }
 
     public function includeGatewayTokens(Client $client)
