@@ -72,15 +72,7 @@ export function HelpSidebarIcons(props: Props) {
     staleTime: Infinity,
   });
 
-  const { data: currentSystemInfo } = useQuery({
-    queryKey: ['/api/v1/health_check'],
-    queryFn: () =>
-      request('GET', endpoint('/api/v1/health_check')).then(
-        (response) => response.data
-      ),
-    staleTime: Infinity,
-    enabled: isSelfHosted(),
-  });
+  const currentSystemInfo: any = {};
 
   const [isContactVisible, setIsContactVisible] = useState<boolean>(false);
   const [isAboutVisible, setIsAboutVisible] = useState<boolean>(false);
@@ -137,7 +129,7 @@ export function HelpSidebarIcons(props: Props) {
       user &&
       typeof showMiniSidebar !== 'undefined' &&
       currentUser?.company_user?.react_settings?.show_mini_sidebar !==
-        showMiniSidebar
+      showMiniSidebar
     ) {
       updateCompanyUser(user);
     }
@@ -208,7 +200,7 @@ export function HelpSidebarIcons(props: Props) {
       <UpdateAppModal
         isVisible={isUpdateModalVisible}
         setIsVisible={setIsUpdateModalVisible}
-        installedVersion={currentSystemInfo?.api_version}
+        installedVersion={currentSystemInfo}
         latestVersion={latestVersion}
       />
 

@@ -36,6 +36,7 @@ import {
   sanitizeHTML,
 } from '$app/common/helpers/html-string';
 import classNames from 'classnames';
+import { Invoice } from '$app/common/interfaces/invoice';
 
 export const defaultColumns: string[] = [
   'name',
@@ -95,6 +96,12 @@ export function useAllClientColumns() {
   ] as const;
 
   return clientColumns;
+}
+
+
+interface ClientWithInvoices {
+  id: string;
+  invoices?: Invoice[];
 }
 
 export function useClientColumns() {
@@ -175,19 +182,26 @@ export function useClientColumns() {
       column: 'invoice_status',
       id: 'invoices',
       label: 'Status Invoice',
-      format: (_value, client) => {
+      format: (_value: unknown, client: ClientWithInvoices) => {
         if (!client.invoices || client.invoices.length === 0) return '-';
 
-        const invoice = client.invoices.find(inv => inv.client_id === client.id);
-        if (!invoice) return '-';
+        const clientInvoices = client.invoices.filter(inv => inv.client_id === client.id);
+        if (clientInvoices.length === 0) return '-';
 
-        switch (invoice.status_id) {
-          case '1':
-            return 'UNPAID';
-          case '4':
-            return 'PAID';
-          default:
-            return '-';
+        const latestInvoice = clientInvoices.reduce<Invoice | null>(
+          (latest: Invoice | null, current: Invoice) => {
+            if (!latest) return current;
+            return new Date(current.created_at) > new Date(latest.created_at) ? current : latest;
+          },
+          null
+        );
+
+        if (!latestInvoice) return '-';
+
+        switch (latestInvoice.status_id) {
+          case '1': return 'UNPAID';
+          case '4': return 'PAID';
+          default: return '-';
         }
       },
     },

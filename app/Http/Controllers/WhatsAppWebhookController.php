@@ -86,6 +86,8 @@ class WhatsAppWebhookController extends Controller
 
         if ($matchedChatbot) {
             $template = $matchedChatbot->answer;
+            
+            $menuOption1= $matchedChatbot->question;
 
             if ($client) {
                 $invoice = Invoice::where('client_id', $client->id)->latest()->first();
@@ -93,16 +95,27 @@ class WhatsAppWebhookController extends Controller
                 if ($invoice) {
                     $status = ($invoice->status_id == 4) ? 'Sudah Lunas' : 'Belum Lunas';
 
-                    $answer = str_replace('{{name}}', $client->name, $template);
-                    $answer = str_replace('{{bulan}}', Carbon::parse($invoice->due_date)->translatedFormat('F Y'), $answer);
-                    $answer = str_replace('{{amount}}', number_format($invoice->amount, 0, ',', '.'), $answer);
-                    $answer = str_replace('{{due_date}}', Carbon::parse($invoice->due_date)->translatedFormat('j F Y'), $answer);
-                    $answer = str_replace('{{status}}', $status, $answer);
+                    if ($menuOption1 === '1') {
+                        if ($invoice->status_id == 4) {
+                            $answer = "Halo {$client->name}, Anda tidak memiliki tagihan atau sudah melunasinya bulan ini.";
+                        } else {
+                            $answer = str_replace('{{name}}', $client->name, $template);
+                            $answer = str_replace('{{bulan}}', Carbon::parse($invoice->due_date)->translatedFormat('F Y'), $answer);
+                            $answer = str_replace('{{amount}}', number_format($invoice->amount, 0, ',', '.'), $answer);
+                            $answer = str_replace('{{due_date}}', Carbon::parse($invoice->due_date)->translatedFormat('j F Y'), $answer);
+                        }
+                    } else {
+                        $answer = str_replace('{{name}}', $client->name, $template);
+                        $answer = str_replace('{{bulan}}', Carbon::parse($invoice->due_date)->translatedFormat('F Y'), $answer);
+                        $answer = str_replace('{{amount}}', number_format($invoice->amount, 0, ',', '.'), $answer);
+                        $answer = str_replace('{{due_date}}', Carbon::parse($invoice->due_date)->translatedFormat('j F Y'), $answer);
+                        $answer = str_replace('{{status}}', $status, $answer);
+                    }
                 } else {
-                    $answer = "Halo {$client->name}, Anda tidak memiliki tagihan/sudah melunasinya bulan ini.";
+                    $answer = "Halo {$client->name}, Anda tidak memiliki tagihan atau sudah melunasinya bulan ini.";
                 }
             } else {
-                $answer = "Halo Pelanggan, Anda tidak memiliki tagihan/sudah melunasinya bulan ini.";
+                $answer = "Halo Pelanggan, Anda tidak memiliki tagihan atau sudah melunasinya bulan ini.";
             }
         } else {
             $answer = "Halo, selamat datang. Ini adalah *balasan otomatis* dari sistem kami.\n" .
