@@ -13,6 +13,7 @@ class FoKabelOdc extends Model
 
     protected $table = 'fo_kabel_odcs';
 
+    // Remove jumlah_total_core from fillable
     protected $fillable = [
         'odc_id',
         'nama_kabel',
@@ -20,27 +21,30 @@ class FoKabelOdc extends Model
         'panjang_kabel',
         'jumlah_tube',
         'jumlah_core_in_tube',
-        'jumlah_total_core',
-        'status',    // allow "active" or "archived"
+        'status',
     ];
 
     protected $casts = [
-        'panjang_kabel'        => 'float',
-        'status'               => 'string',
-        'deleted_at'           => 'datetime',
+        'panjang_kabel' => 'float',
+        'status'        => 'string',
+        'deleted_at'    => 'datetime',
     ];
 
-    /**
-     * Each KabelOdc belongs to one ODC.
-     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Before every save (create or update), recalc jumlah_total_core
+        static::saving(function (FoKabelOdc $model) {
+            $model->jumlah_total_core = $model->jumlah_tube * $model->jumlah_core_in_tube;
+        });
+    }
+
     public function odc()
     {
         return $this->belongsTo(FoOdc::class, 'odc_id');
     }
 
-    /**
-     * Each KabelOdc can have many KabelTubeOdcs.
-     */
     public function kabelTubeOdcs()
     {
         return $this->hasMany(FoKabelTubeOdc::class, 'kabel_odc_id');

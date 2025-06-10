@@ -1,121 +1,89 @@
-/**
- * Invoice Ninja (https://invoiceninja.com).
- *
- * @link https://github.com/invoiceninja/invoiceninja source repository
- *
- * @copyright Copyright (c) 2022. Invoice Ninja LLC (https://invoiceninja.com)
- *
- * @license https://www.elastic.co/licensing/elastic-license
- */
+// client/src/pages/fo-lokasis/create/Create.tsx
 
-import { AxiosError } from 'axios';
+import React, { FormEvent, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useTitle } from '$app/common/hooks/useTitle';
+import { Default } from '$app/components/layouts/Default';
+import { Container } from '$app/components/Container';
+import { Spinner } from '$app/components/Spinner';
+import { toast } from '$app/common/helpers/toast/toast';
 import { endpoint } from '$app/common/helpers';
 import { request } from '$app/common/helpers/request';
 import { route } from '$app/common/helpers/route';
-import { toast } from '$app/common/helpers/toast/toast';
-import { GenericSingleResourceResponse } from '$app/common/interfaces/generic-api-response';
+import { useNavigate } from 'react-router-dom';
 import { ValidationBag } from '$app/common/interfaces/validation-bag';
-import { useBlankProductQuery } from '$app/common/queries/products';
-import { Container } from '$app/components/Container';
-import { Default } from '$app/components/layouts/Default';
-import { Spinner } from '$app/components/Spinner';
-import { useAtom } from 'jotai';
-import { cloneDeep } from 'lodash';
-import { ProductTableResource } from '$app/pages/invoices/common/components/ProductsTable';
-import { FormEvent, useEffect, useState } from 'react';
-import { useTranslation } from 'react-i18next';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { productAtom } from '../common/atoms';
-import { CreateProduct } from '../common/components/CreateProduct';
-import { useTitle } from '$app/common/hooks/useTitle';
-import { $refetch } from '$app/common/hooks/useRefetch';
+import { GenericSingleResourceResponse } from '$app/common/interfaces/generic-api-response';
+import { CreateFoLokasi } from '../common/components/CreateFoLokasi';
+
+interface FoLokasi {
+    nama_lokasi: string;
+    deskripsi?: string;
+    latitude: number;
+    longitude: number;
+}
 
 export default function Create() {
-    const { documentTitle } = useTitle('new_product');
-
+    useTitle('New FO Lokasi');
     const [t] = useTranslation();
-
-    const [product, setProduct] = useAtom(productAtom);
     const navigate = useNavigate();
 
-    const { data } = useBlankProductQuery({
-        enabled: typeof product === 'undefined',
-    });
-
     const pages = [
-        { name: t('products'), href: '/products' },
-        { name: t('new_product'), href: '/products/create' },
+        { name: t('FO Lokasi')!, href: '/fo-lokasis' },
+        { name: t('New FO Lokasi')!, href: '/fo-lokasis/create' },
     ];
-
-    const [isFormBusy, setIsFormBusy] = useState<boolean>(false);
+    const [foLokasi, setFoLokasi] = useState<FoLokasi>({
+        nama_lokasi: '',
+        deskripsi: '',
+        latitude: 0,
+        longitude: 0,
+    });
     const [errors, setErrors] = useState<ValidationBag>();
-    const [searchParams] = useSearchParams();
+    const [isBusy, setIsBusy] = useState(false);
 
-    const handleSave = (event: FormEvent<HTMLFormElement>) => {
+    const handleSave = (event: FormEvent) => {
         event.preventDefault();
+        if (isBusy) return;
 
-        if (!isFormBusy) {
-            setIsFormBusy(true);
-
-            request('POST', endpoint('/api/v1/products'), product)
-                .then(
-                    (
-                        response: GenericSingleResourceResponse<ProductTableResource>
-                    ) => {
-                        $refetch(['products']);
-
-                        toast.success('created_product');
-
-                        navigate(
-                            route('/products/:id/edit', {
-                                id: response.data.data.id,
-                            })
-                        );
-                    }
-                )
-                .catch((error: AxiosError<ValidationBag>) => {
-                    if (error.response?.status === 422) {
-                        setErrors(error.response.data);
-                        toast.dismiss();
-                    }
-                })
-                .finally(() => setIsFormBusy(false));
-        }
+        setIsBusy(true);
+        request('POST', endpoint('/api/v1/fo-lokasis'), foLokasi)
+            .then((response: GenericSingleResourceResponse<any>) => {
+                toast.success('created_fo_lokasi');
+                navigate(
+                    route('/fo-lokasis/:id/edit', {
+                        id: response.data.data.id,
+                    }),
+                    //adding this for pop up info
+                    { state: { toast: 'created_fo_lokasi' } }
+                );
+            })
+            .catch((error) => {
+                if (error.response?.status === 422) {
+                    setErrors(error.response.data);
+                    toast.dismiss();
+                } else {
+                    toast.error('error_refresh_page');
+                }
+            })
+            .finally(() => setIsBusy(false));
     };
-
-    useEffect(() => {
-        setProduct((current) => {
-            let value = current;
-
-            if (searchParams.get('action') !== 'clone') {
-                value = undefined;
-            }
-
-            if (
-                typeof data !== 'undefined' &&
-                typeof value === 'undefined' &&
-                searchParams.get('action') !== 'clone'
-            ) {
-                value = cloneDeep(data);
-            }
-
-            return value;
-        });
-    }, [data]);
 
     return (
         <Default
-            title={documentTitle}
+            title={t('New FO Lokasi')}
             breadcrumbs={pages}
-            disableSaveButton={!product || isFormBusy}
+            disableSaveButton={isBusy}
             onSaveClick={handleSave}
         >
             <Container breadcrumbs={[]}>
-                {product ? (
-                    <CreateProduct errors={errors} setErrors={setErrors} />
-                ) : (
-                    <Spinner />
-                )}
+                <form onSubmit={handleSave}>
+                    <CreateFoLokasi
+                        foLokasi={foLokasi}
+                        setFoLokasi={setFoLokasi}
+                        errors={errors}
+                        setErrors={setErrors}
+                    />
+                </form>
+                {isBusy && <Spinner />}
             </Container>
         </Default>
     );

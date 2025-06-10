@@ -12,7 +12,7 @@ import { toast } from '$app/common/helpers/toast/toast';
 import { useTranslation } from 'react-i18next';
 import { Dispatch, SetStateAction } from 'react';
 import { DropdownElement } from '$app/components/dropdown/DropdownElement';
-import { Divider } from '$app/components/cards/Divider';
+// import { Divider } from '$app/components/cards/Divider';
 import { Icon } from '$app/components/icons/Icon';
 import { MdArchive, MdDelete, MdRestore, MdEdit } from 'react-icons/md';
 import { useNavigate } from 'react-router-dom';
@@ -71,7 +71,7 @@ export function useFoLokasiColumns() {
     const { t } = useTranslation();
     const { dateFormat } = useCurrentCompanyDateFormats();
     const reactSettings = useReactSettings();
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
 
     const columns: Array<{
         column: string;

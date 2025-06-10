@@ -10,7 +10,7 @@ const Show = lazy(() => import('$app/pages/fo-lokasis/show/Show'));
 const Documents = lazy(
     () => import('$app/pages/fo-lokasis/documents/Documents')
 );
-const ProductFields = lazy(
+const FoLokasiFields = lazy(
     () => import('$app/pages/fo-lokasis/edit/ProductFields')
 );
 
@@ -24,10 +24,11 @@ export const foLokasiRoutes = (
             <Route path="documents" element={<Documents />} />
         </Route>
         <Route path=":id" element={<FoLokasi />}>
-            <Route path="product_fields" element={<ProductFields />} />
+            <Route path="product_fields" element={<FoLokasiFields />} />
         </Route>
-        <Route path=":id/edit" element={<FoLokasi />}>
+        {/* <Route path=":id/edit" element={<FoLokasi />}>
             <Route path="" element={<Edit />} />
-        </Route>
+        </Route> */}
+        <Route path=":id/edit" element={<Edit />} />
     </Route>
 );

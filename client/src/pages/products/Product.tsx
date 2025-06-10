@@ -33,106 +33,109 @@ import { useEntityAssigned } from '$app/common/hooks/useEntityAssigned';
 import { PreviousNextNavigation } from '$app/components/PreviousNextNavigation';
 
 export default function Product() {
-  const [t] = useTranslation();
+    const [t] = useTranslation();
 
-  const saveCompany = useHandleCompanySave();
+    const saveCompany = useHandleCompanySave();
 
-  const { id } = useParams();
+    const { id } = useParams();
 
-  const hasPermission = useHasPermission();
-  const entityAssigned = useEntityAssigned();
+    const hasPermission = useHasPermission();
+    const entityAssigned = useEntityAssigned();
 
-  const { data: productData } = useProductQuery({ id });
+    const { data: productData } = useProductQuery({ id });
 
-  const actions = useActions();
+    const actions = useActions();
 
-  const [productValue, setProductValue] = useState<ProductInterface>();
+    const [productValue, setProductValue] = useState<ProductInterface>();
 
-  const [errors, setErrors] = useState<ValidationBag>();
+    const [errors, setErrors] = useState<ValidationBag>();
 
-  const [isFormBusy, setIsFormBusy] = useState<boolean>(false);
+    const [isFormBusy, setIsFormBusy] = useState<boolean>(false);
 
-  const pages: Page[] = [
-    { name: t('products'), href: '/products' },
-    {
-      name: t('edit_product'),
-      href: route('/products/:id', { id }),
-    },
-  ];
+    const pages: Page[] = [
+        { name: t('products'), href: '/products' },
+        {
+            name: t('edit_product'),
+            href: route('/products/:id', { id }),
+        },
+    ];
 
-  const tabs = useTabs({ product: productData?.data.data });
+    const tabs = useTabs({ product: productData?.data.data });
 
-  const [searchParams, setSearchParams] = useSearchParams();
+    const [searchParams, setSearchParams] = useSearchParams();
 
-  const handleSave = async () => {
-    if (!isFormBusy) {
-      setErrors(undefined);
-      setIsFormBusy(true);
+    const handleSave = async () => {
+        if (!isFormBusy) {
+            setErrors(undefined);
+            setIsFormBusy(true);
 
-      toast.processing();
+            toast.processing();
 
-      await saveCompany(true);
+            await saveCompany(true);
 
-      const url = searchParams.has('update_in_stock_quantity')
-        ? endpoint('/api/v1/products/:id?update_in_stock_quantity=true', { id })
-        : endpoint('/api/v1/products/:id', { id });
+            const url = searchParams.has('update_in_stock_quantity')
+                ? endpoint(
+                      '/api/v1/products/:id?update_in_stock_quantity=true',
+                      { id }
+                  )
+                : endpoint('/api/v1/products/:id', { id });
 
-      request('PUT', url, productValue)
-        .then(() => {
-          toast.success('updated_product');
+            request('PUT', url, productValue)
+                .then(() => {
+                    toast.success('updated_product');
 
-          $refetch(['products']);
+                    $refetch(['products']);
 
-          searchParams.delete('update_in_stock_quantity');
-          setSearchParams(searchParams);
-        })
-        .catch((error: AxiosError<ValidationBag>) => {
-          if (error.response?.status === 422) {
-            setErrors(error.response.data);
-            toast.dismiss();
-          }
-        })
-        .finally(() => setIsFormBusy(false));
-    }
-  };
+                    searchParams.delete('update_in_stock_quantity');
+                    setSearchParams(searchParams);
+                })
+                .catch((error: AxiosError<ValidationBag>) => {
+                    if (error.response?.status === 422) {
+                        setErrors(error.response.data);
+                        toast.dismiss();
+                    }
+                })
+                .finally(() => setIsFormBusy(false));
+        }
+    };
 
-  useEffect(() => {
-    if (productData) {
-      setProductValue(productData.data.data);
-    }
-  }, [productData]);
+    useEffect(() => {
+        if (productData) {
+            setProductValue(productData.data.data);
+        }
+    }, [productData]);
 
-  return (
-    <Default
-      title={t('edit_product')}
-      breadcrumbs={pages}
-      disableSaveButton={!productData || isFormBusy}
-      {...(productData &&
-        (hasPermission('edit_product') ||
-          entityAssigned(productData.data.data)) && {
-          navigationTopRight: (
-            <ResourceActions
-              onSaveClick={handleSave}
-              resource={productData.data.data}
-              actions={actions}
-              cypressRef="productActionDropdown"
-            />
-          ),
-        })}
-      afterBreadcrumbs={<PreviousNextNavigation entity="product" />}
-    >
-      <Container breadcrumbs={[]}>
-        <Tabs tabs={tabs} />
+    return (
+        <Default
+            title={t('edit_product')}
+            breadcrumbs={pages}
+            disableSaveButton={!productData || isFormBusy}
+            {...(productData &&
+                (hasPermission('edit_product') ||
+                    entityAssigned(productData.data.data)) && {
+                    navigationTopRight: (
+                        <ResourceActions
+                            onSaveClick={handleSave}
+                            resource={productData.data.data}
+                            actions={actions}
+                            cypressRef="productActionDropdown"
+                        />
+                    ),
+                })}
+            afterBreadcrumbs={<PreviousNextNavigation entity="product" />}
+        >
+            <Container breadcrumbs={[]}>
+                <Tabs tabs={tabs} />
 
-        <Outlet
-          context={{
-            errors,
-            setErrors,
-            product: productValue,
-            setProduct: setProductValue,
-          }}
-        />
-      </Container>
-    </Default>
-  );
+                <Outlet
+                    context={{
+                        errors,
+                        setErrors,
+                        product: productValue,
+                        setProduct: setProductValue,
+                    }}
+                />
+            </Container>
+        </Default>
+    );
 }

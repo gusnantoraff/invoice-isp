@@ -1,4 +1,4 @@
-// client/src/pages/FoLokasis.tsx
+// client/src/pages/fo-lokasis/index/FoLokasis.tsx
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
@@ -6,6 +6,8 @@ import { useTitle } from '$app/common/hooks/useTitle';
 import { Page } from '$app/components/Breadcrumbs';
 import { Default } from '$app/components/layouts/Default';
 import { DataTable2, DataTableColumns } from '$app/components/DataTable2';
+import { useFoLokasiBulkActions } from '../common/hooks/useFoLokasiBulkActions';
+import { useFoLokasiActions } from '../common/hooks/useFoLokasiActions';
 
 interface FoLokasi {
     id: string;
@@ -16,10 +18,13 @@ interface FoLokasi {
     odcs?: { id: string; nama_odc: string }[];
     odps?: { id: string; nama_odp: string }[];
     clients?: { id: string; nama_client: string }[];
+    //this
+    status: 'active' | 'archived';
     created_at: string;
     updated_at: string;
-    archived_at?: number;
-    is_deleted?: boolean;
+    // archived_at?: number;
+    // is_deleted?: boolean;
+    deleted_at?: string | null;
 }
 
 export default function FoLokasis() {
@@ -64,13 +69,16 @@ export default function FoLokasis() {
     return (
         <Default title={t('FO Lokasi')} breadcrumbs={pages}>
             <DataTable2<FoLokasi>
-                resource="fo_lokasi"
+                // resource="fo_lokasi"
+                resource="FO Lokasi"
                 columns={columns}
                 endpoint="/api/v1/fo-lokasis"
                 linkToCreate="/fo-lokasis/create"
                 linkToEdit="/fo-lokasis/:id/edit"
                 withResourcefulActions
-                bulkRoute="/api/v1/fo-lokasis"
+                bulkRoute="/api/v1/fo-lokasis/bulk"
+                customBulkActions={useFoLokasiBulkActions()}
+                customActions={useFoLokasiActions()}
             />
         </Default>
     );

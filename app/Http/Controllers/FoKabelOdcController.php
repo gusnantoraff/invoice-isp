@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 
 class FoKabelOdcController extends Controller
 {
+    protected $model = FoKabelOdc::class;
     /**
      * List all Kabel ODC entries with pagination, filtering, sorting, and status.
      *
@@ -159,7 +160,7 @@ class FoKabelOdcController extends Controller
             'panjang_kabel'        => 'required|numeric',
             'jumlah_tube'          => 'required|integer',
             'jumlah_core_in_tube'  => 'required|integer',
-            'jumlah_total_core'    => 'required|integer',
+            // 'jumlah_total_core'    => 'required|integer',
             'status'               => 'sometimes|in:active,archived',
         ]);
 
@@ -252,7 +253,7 @@ class FoKabelOdcController extends Controller
             'panjang_kabel'        => 'sometimes|numeric',
             'jumlah_tube'          => 'sometimes|integer',
             'jumlah_core_in_tube'  => 'sometimes|integer',
-            'jumlah_total_core'    => 'sometimes|integer',
+            // 'jumlah_total_core'    => 'sometimes|integer',
             'status'               => 'sometimes|in:active,archived',
         ]);
 
@@ -348,6 +349,66 @@ class FoKabelOdcController extends Controller
         return response()->json([
             'status'  => 'success',
             'message' => 'Kabel ODC restored from deletion.',
+        ], 200);
+    }
+
+    /**
+     * Bulk operation: archive | delete | restore.
+     *
+     * POST /api/v1/…/bulk
+     * {
+     *   "action":  "archive"|"delete"|"restore",
+     *   "ids":      [1,2,3]
+     * }
+     */
+    public function bulk(Request $request)
+    {
+        $data = $request->validate([
+            'action' => 'required|in:archive,delete,restore',
+            'ids'    => 'required|array|min:1',
+            'ids.*'  => 'integer|distinct',
+        ]);
+
+        $ids    = $data['ids'];
+        $action = $data['action'];
+
+        switch ($action) {
+            case 'archive':
+                // Set status = 'archived'
+                $this->model::withTrashed()
+                    ->whereIn('id', $ids)
+                    ->update(['status' => 'archived']);
+                $message = 'Items archived.';
+                break;
+
+            case 'delete':
+                // Soft‐delete all (mark deleted_at)
+                $this->model::whereIn('id', $ids)->delete();
+                $message = 'Items soft‐deleted.';
+                break;
+
+            case 'restore':
+                // First restore soft‐deleted
+                $this->model::onlyTrashed()
+                    ->whereIn('id', $ids)
+                    ->restore();
+                // Then set status back to 'active'
+                $this->model::whereIn('id', $ids)
+                    ->update(['status' => 'active']);
+                $message = 'Items restored to active.';
+                break;
+
+            default:
+                // Should never happen due to validation
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'Invalid action.',
+                ], 422);
+        }
+
+        return response()->json([
+            'status'  => 'success',
+            'message' => $message,
         ], 200);
     }
 }

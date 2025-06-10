@@ -19,62 +19,64 @@ import { useHasPermission } from '$app/common/hooks/permissions/useHasPermission
 import { Params } from './common/params.interface';
 
 interface ProductsParams extends Params {
-  include?: string;
+    include?: string;
 }
 
 export function useProductsQuery(params?: ProductsParams) {
-  return useQuery<Product[]>(
-    ['/api/v1/products'],
-    () =>
-      request(
-        'GET',
-        endpoint(
-          '/api/v1/products?per_page=500&include=:include&status=:status',
-          {
-            include: params?.include || '',
-            status: params?.status ?? 'all',
-          }
-        )
-      ).then(
-        (response: GenericSingleResourceResponse<Product[]>) =>
-          response.data.data
-      ),
-    { staleTime: Infinity }
-  );
+    return useQuery<Product[]>(
+        ['/api/v1/products'],
+        () =>
+            request(
+                'GET',
+                endpoint(
+                    '/api/v1/products?per_page=500&include=:include&status=:status',
+                    {
+                        include: params?.include || '',
+                        status: params?.status ?? 'all',
+                    }
+                )
+            ).then(
+                (response: GenericSingleResourceResponse<Product[]>) =>
+                    response.data.data
+            ),
+        { staleTime: Infinity }
+    );
 }
 
 export function useProductQuery(params: { id: string | undefined }) {
-  return useQuery(
-    ['/api/v1/products', params.id],
-    () => request('GET', endpoint('/api/v1/products/:id', { id: params.id })),
-    { staleTime: Infinity }
-  );
+    return useQuery(
+        ['/api/v1/products', params.id],
+        () =>
+            request('GET', endpoint('/api/v1/products/:id', { id: params.id })),
+        { staleTime: Infinity }
+    );
 }
 export function useBlankProductQuery(options?: GenericQueryOptions) {
-  const hasPermission = useHasPermission();
+    const hasPermission = useHasPermission();
 
-  return useQuery(
-    ['/api/v1/products/create'],
-    () =>
-      request('GET', endpoint('/api/v1/products/create')).then(
-        (response: GenericSingleResourceResponse<Product>) => response.data.data
-      ),
-    {
-      ...options,
-      staleTime: Infinity,
-      enabled: hasPermission('create_product')
-        ? options?.enabled ?? true
-        : false,
-    }
-  );
+    return useQuery(
+        ['/api/v1/products/create'],
+        () =>
+            request('GET', endpoint('/api/v1/products/create')).then(
+                (response: GenericSingleResourceResponse<Product>) =>
+                    response.data.data
+            ),
+        {
+            ...options,
+            staleTime: Infinity,
+            enabled: hasPermission('create_product')
+                ? options?.enabled ?? true
+                : false,
+        }
+    );
 }
 
 export function bulk(
-  id: string[],
-  action: 'archive' | 'restore' | 'delete'
+    id: string[],
+    action: 'archive' | 'restore' | 'delete'
 ): Promise<AxiosResponse> {
-  return request('POST', endpoint('/api/v1/products/bulk'), {
-    action,
-    ids: Array.from(id),
-  });
+    return request('POST', endpoint('/api/v1/products/bulk'), {
+        action,
+        ids: Array.from(id),
+    });
 }

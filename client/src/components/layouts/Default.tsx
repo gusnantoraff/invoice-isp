@@ -388,63 +388,49 @@ export function Default(props: Props) {
                     rightButton: {
                         icon: PlusCircle,
                         to: '/fo-lokasis/create',
-                        label: t('new_product'),
+                        label: t('new_fo_lokasi'),
                         visible: hasPermission('create_product'),
                     },
                 },
-                // {
-                //     name: t('Lokasi'),
-                //     href: '/fo-lokasis',
-                //     icon: Radio,
-                //     current: location.pathname.startsWith('/fo-lokasis'),
-                //     visible:
-                //         hasPermission('view_product') ||
-                //         hasPermission('create_product') ||
-                //         hasPermission('edit_product'),
-                //     rightButton: {
-                //         icon: PlusCircle,
-                //         to: '/fo-lokasis/create',
-                //         label: t('new_product'),
-                //         visible: hasPermission('create_product'),
-                //     },
-                // },
                 {
                     name: t('ODC'),
-                    href: '/fo-odc',
+                    href: '/fo-odcs',
                     icon: Radio,
-                    current: location.pathname.startsWith('/fo-odc'),
+                    current: location.pathname.startsWith('/fo-odcs'),
                     visible:
                         hasPermission('view_product') ||
                         hasPermission('create_product') ||
                         hasPermission('edit_product'),
                     rightButton: {
                         icon: PlusCircle,
-                        to: '/fo-odc/create',
-                        label: t('new_product'),
+                        to: '/fo-odcs/create',
+                        label: t('new_fo_odc'),
                         visible: hasPermission('create_product'),
                     },
                 },
                 {
                     name: t('Kabel ODC'),
-                    href: '/fo-odc',
+                    href: '/fo-kabel-odcs',
                     icon: Radio,
-                    current: location.pathname.startsWith('/fo-odc'),
+                    current: location.pathname.startsWith('/fo-kabel-odcs'),
                     visible:
                         hasPermission('view_product') ||
                         hasPermission('create_product') ||
                         hasPermission('edit_product'),
                     rightButton: {
                         icon: PlusCircle,
-                        to: '/fo-odc/create',
+                        to: '/fo-kabel-odcs/create',
                         label: t('new_product'),
                         visible: hasPermission('create_product'),
                     },
                 },
                 {
                     name: t('Tube Kabel ODC'),
-                    href: '/fo-odc',
+                    href: '/fo-kabel-tube-odcs',
                     icon: Radio,
-                    current: location.pathname.startsWith('/fo-odc'),
+                    current: location.pathname.startsWith(
+                        '/fo-kabel-tube-odcs'
+                    ),
                     visible:
                         hasPermission('view_product') ||
                         hasPermission('create_product') ||
@@ -458,48 +444,50 @@ export function Default(props: Props) {
                 },
                 {
                     name: t('Core Kabel ODC'),
-                    href: '/fo-odc',
+                    href: '/fo-kabel-core-odcs',
                     icon: Radio,
-                    current: location.pathname.startsWith('/fo-odc'),
+                    current: location.pathname.startsWith(
+                        '/fo-kabel-core-odcs'
+                    ),
                     visible:
                         hasPermission('view_product') ||
                         hasPermission('create_product') ||
                         hasPermission('edit_product'),
                     rightButton: {
                         icon: PlusCircle,
-                        to: '/fo-odc/create',
+                        to: '/fo-kabel-core-odcs/create',
                         label: t('new_product'),
                         visible: hasPermission('create_product'),
                     },
                 },
                 {
                     name: t('ODP'),
-                    href: '/fo-odc',
+                    href: '/fo-odps',
                     icon: Radio,
-                    current: location.pathname.startsWith('/fo-odc'),
+                    current: location.pathname.startsWith('/fo-odps'),
                     visible:
                         hasPermission('view_product') ||
                         hasPermission('create_product') ||
                         hasPermission('edit_product'),
                     rightButton: {
                         icon: PlusCircle,
-                        to: '/fo-odc/create',
+                        to: '/fo-odps/create',
                         label: t('new_product'),
                         visible: hasPermission('create_product'),
                     },
                 },
                 {
                     name: t('Client FTTH'),
-                    href: '/fo-odc',
+                    href: '/fo-client-ftths',
                     icon: Radio,
-                    current: location.pathname.startsWith('/fo-odc'),
+                    current: location.pathname.startsWith('/fo-client-ftths'),
                     visible:
                         hasPermission('view_product') ||
                         hasPermission('create_product') ||
                         hasPermission('edit_product'),
                     rightButton: {
                         icon: PlusCircle,
-                        to: '/fo-odc/create',
+                        to: '/fo-client-ftths/create',
                         label: t('new_product'),
                         visible: hasPermission('create_product'),
                     },
@@ -602,8 +590,9 @@ export function Default(props: Props) {
             <DesktopSidebar navigation={navigation} docsLink={props.docsLink} />
 
             <div
-                className={`${isMiniSidebar ? 'md:pl-16' : 'md:pl-64'
-                    } flex flex-col flex-1`}
+                className={`${
+                    isMiniSidebar ? 'md:pl-16' : 'md:pl-64'
+                } flex flex-col flex-1`}
             >
                 <div
                     style={{
@@ -646,10 +635,10 @@ export function Default(props: Props) {
                                         preventNavigation({
                                             url: isSelfHosted()
                                                 ? import.meta.env
-                                                    .VITE_WHITELABEL_INVOICE_URL ||
-                                                'https://invoiceninja.invoicing.co/client/subscriptions/O5xe7Rwd7r/purchase'
+                                                      .VITE_WHITELABEL_INVOICE_URL ||
+                                                  'https://invoiceninja.invoicing.co/client/subscriptions/O5xe7Rwd7r/purchase'
                                                 : (user?.company_user
-                                                    ?.ninja_portal_url as string),
+                                                      ?.ninja_portal_url as string),
                                             externalLink: true,
                                         })
                                     }
@@ -742,11 +731,11 @@ export function Default(props: Props) {
 
                             {(navigationTopRightElement ||
                                 props.navigationTopRight) && (
-                                    <div className="flex items-center space-x-3">
-                                        {navigationTopRightElement?.element ||
-                                            props.navigationTopRight}
-                                    </div>
-                                )}
+                                <div className="flex items-center space-x-3">
+                                    {navigationTopRightElement?.element ||
+                                        props.navigationTopRight}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

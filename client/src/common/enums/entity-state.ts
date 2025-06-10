@@ -9,7 +9,7 @@
  */
 
 export const enum EntityState {
-  Active = 'active',
-  Archived = 'archived',
-  Deleted = 'deleted',
+    Active = 'active',
+    Archived = 'archived',
+    Deleted = 'deleted',
 }

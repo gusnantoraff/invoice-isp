@@ -13,7 +13,7 @@ import React, {
     useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import { endpoint, getEntityState, isProduction } from '$app/common/helpers';
+import { endpoint, getEntityState, isProduction } from '$app/common/helpers2';
 import { request } from '$app/common/helpers/request';
 import { toast } from '$app/common/helpers/toast/toast';
 import { route } from '$app/common/helpers/route';

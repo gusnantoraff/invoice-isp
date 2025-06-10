@@ -35,8 +35,10 @@ import { TestingPage } from '$app/components/TestingPage';
 import { activityRoutes } from '$app/pages/activities/routes';
 import { Guard } from './guards/Guard';
 import { permission } from './guards/guards/permission';
-import { foLokasiRoutes } from '$app/pages/fo-lokasis/routes';
 import { mappingRoutes } from '$app/pages/mapping/routes';
+import { foLokasiRoutes } from '$app/pages/fo-lokasis/routes';
+import { foOdcRoutes } from '$app/pages/fo-odcs/routes';
+import { foKabelOdcRoutes } from '$app/pages/fo-kabel-odcs/routes';
 
 const Dashboard = lazy(() => import('$app/pages/dashboard/Dashboard'));
 const NotFound = lazy(() => import('$app/components/NotFound'));
@@ -73,7 +75,10 @@ export const routes = (
             {settingsRoutes}
             {activityRoutes}
             {waGatewayRoutes}
+            {/*FIBER OPTIK*/}
             {foLokasiRoutes}
+            {foOdcRoutes}
+            {foKabelOdcRoutes}
             {mappingRoutes}
             <Route element={<TestingRoute />}>
                 <Route path="/testing" element={<TestingPage />} />
