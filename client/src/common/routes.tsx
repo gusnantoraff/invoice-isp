@@ -36,6 +36,7 @@ import { activityRoutes } from '$app/pages/activities/routes';
 import { Guard } from './guards/Guard';
 import { permission } from './guards/guards/permission';
 import { foLokasiRoutes } from '$app/pages/fo-lokasis/routes';
+import { mappingRoutes } from '$app/pages/mapping/routes';
 
 const Dashboard = lazy(() => import('$app/pages/dashboard/Dashboard'));
 const NotFound = lazy(() => import('$app/components/NotFound'));
@@ -73,6 +74,7 @@ export const routes = (
             {activityRoutes}
             {waGatewayRoutes}
             {foLokasiRoutes}
+            {mappingRoutes}
             <Route element={<TestingRoute />}>
                 <Route path="/testing" element={<TestingPage />} />
             </Route>
