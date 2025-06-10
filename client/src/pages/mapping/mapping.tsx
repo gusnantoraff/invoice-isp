@@ -305,7 +305,7 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
                 <option value="">Pilih Kabel Core ODC</option>
                 {odcCoreList.map((core) => (
                   <option key={core.id} value={core.id}>
-                    {core.nama}
+                    {core.warna_core}
                   </option>
                 ))}
               </select>
