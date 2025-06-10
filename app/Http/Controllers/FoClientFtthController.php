@@ -107,6 +107,8 @@ class FoClientFtthController extends Controller
                 'lokasi'       => [
                     'id'           => $c->lokasi->id,
                     'nama_lokasi'  => $c->lokasi->nama_lokasi,
+                    'latitude'     => $c->lokasi->latitude,
+                    'longitude'    => $c->lokasi->longitude,
                 ],
                 // Nested ODP
                 'odp'          => [

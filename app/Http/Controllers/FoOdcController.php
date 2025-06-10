@@ -99,6 +99,8 @@ class FoOdcController extends Controller
                 'lokasi'        => [
                     'id'           => $o->lokasi->id,
                     'nama_lokasi'  => $o->lokasi->nama_lokasi,
+                    'latitude'     => $o->lokasi->latitude,
+                    'longitude'    => $o->lokasi->longitude,
                 ],
                 'nama_odc'      => $o->nama_odc,
                 'tipe_splitter' => $o->tipe_splitter,

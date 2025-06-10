@@ -25,12 +25,12 @@ interface MarkerData {
   // client specific
   nama_client?: string;
   alamat?: string;
-  kabel_odp_id?: string;
+  odp_id?: string;
   // odp specific
   nama_odp?: string;
   tipe_splitter?: string;
 
-  kabel_odc_id?: string;
+  kabel_core_odc_id?: string;
   nama_odc?: string;
 }
 
@@ -55,8 +55,8 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
     deskripsi: initialData?.deskripsi || '',
     nama: initialData?.nama_client || initialData?.nama_odp || initialData?.nama_odc || '',
     alamat: initialData?.alamat || '',
-    kabel_odp_id: initialData?.kabel_odp_id || '',
-    kabel_odc_id: initialData?.kabel_odc_id || '',
+    odp_id: initialData?.odp_id || '',
+    kabel_core_odc_id: initialData?.kabel_core_odc_id || '',
     tipe_splitter: initialData?.tipe_splitter || '1:8',
     latitude: initialData?.latitude || '',
     longitude: initialData?.longitude || '',
@@ -106,7 +106,7 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
 
       if (editingId) {
         await axios.put(
-          `http://localhost:8000/api/v1/fo_lokasis/${initialData?.lokasi_id}`,
+          `http://localhost:8000/api/v1/fo-lokasis/${initialData?.lokasi_id}`,
           {
             nama_lokasi: form.nama_lokasi,
             deskripsi: form.deskripsi,
@@ -118,10 +118,10 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
 
         if (mode === 'client') {
           await axios.put(
-            `http://localhost:8000/api/v1/fo_client_ftths/${editingId}`,
+            `http://localhost:8000/api/v1/fo-client-ftths/${editingId}`,
             {
               lokasi_id: initialData?.lokasi_id,
-              kabel_odp_id: form.kabel_odp_id,
+              odp_id: form.odp_id,
               nama_client: form.nama,
               alamat: form.alamat,
             },
@@ -129,10 +129,10 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
           );
         } else if (mode === 'odp') {
           await axios.put(
-            `http://localhost:8000/api/v1/fo_odps/${editingId}`,
+            `http://localhost:8000/api/v1/fo-odps/${editingId}`,
             {
               lokasi_id: initialData?.lokasi_id,
-              kabel_odc_id: form.kabel_odc_id,
+              kabel_core_odc_id: form.kabel_core_odc_id,
               nama_odp: form.nama,
               tipe_splitter: form.tipe_splitter,
             },
@@ -140,7 +140,7 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
           );
         } else if (mode === 'odc') {
           await axios.put(
-            `http://localhost:8000/api/v1/fo_odcs/${editingId}`,
+            `http://localhost:8000/api/v1/fo-odcs/${editingId}`,
             {
               lokasi_id: initialData?.lokasi_id,
               nama_odc: form.nama,
@@ -153,7 +153,7 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
         window.alert('Data berhasil diperbarui.');
       } else {
         const lokasiRes = await axios.post(
-          'http://localhost:8000/api/v1/fo_lokasis',
+          'http://localhost:8000/api/v1/fo-lokasis',
           {
             nama_lokasi: form.nama_lokasi,
             deskripsi: form.deskripsi,
@@ -167,10 +167,10 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
 
         if (mode === 'client') {
           await axios.post(
-            'http://localhost:8000/api/v1/fo_client_ftths',
+            'http://localhost:8000/api/v1/fo-client-ftths',
             {
               lokasi_id,
-              kabel_odp_id: form.kabel_odp_id,
+              odp_id: form.odp_id,
               nama_client: form.nama,
               alamat: form.alamat,
             },
@@ -178,10 +178,10 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
           );
         } else if (mode === 'odp') {
           await axios.post(
-            'http://localhost:8000/api/v1/fo_odps',
+            'http://localhost:8000/api/v1/fo-odps',
             {
               lokasi_id,
-              kabel_odc_id: form.kabel_odc_id,
+              kabel_core_odc_id: form.kabel_core_odc_id,
               nama_odp: form.nama,
               tipe_splitter: form.tipe_splitter,
             },
@@ -189,7 +189,7 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
           );
         } else if (mode === 'odc') {
           await axios.post(
-            'http://localhost:8000/api/v1/fo_odcs',
+            'http://localhost:8000/api/v1/fo-odcs',
             {
               lokasi_id,
               nama_odc: form.nama,
@@ -257,9 +257,9 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
               <input
                 type="number"
                 className="w-full border p-1"
-                placeholder="ID Kabel ODP"
-                value={form.kabel_odp_id}
-                onChange={(e) => setForm({ ...form, kabel_odp_id: e.target.value })}
+                placeholder="ID ODP"
+                value={form.odp_id}
+                onChange={(e) => setForm({ ...form, odp_id: e.target.value })}
                 required
               />
             </>
@@ -270,9 +270,9 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
               <input
                 type="number"
                 className="w-full border p-1"
-                placeholder="ID Kabel ODC"
-                value={form.kabel_odc_id}
-                onChange={(e) => setForm({ ...form, kabel_odc_id: e.target.value })}
+                placeholder="ID Kabel Core ODC"
+                value={form.kabel_core_odc_id}
+                onChange={(e) => setForm({ ...form, kabel_core_odc_id: e.target.value })}
                 required
               />
               <select
@@ -353,14 +353,14 @@ const MappingPage: React.FC = () => {
       const headers = { headers: { 'X-API-TOKEN': token || '' } };
 
       const [clientsRes, odpsRes, odcsRes] = await Promise.all([
-        axios.get('http://localhost:8000/api/v1/fo_client_ftths', headers),
-        axios.get('http://localhost:8000/api/v1/fo_odps', headers),
-        axios.get('http://localhost:8000/api/v1/fo_odcs', headers),
+        axios.get('http://localhost:8000/api/v1/fo-client-ftths', headers),
+        axios.get('http://localhost:8000/api/v1/fo-odps', headers),
+        axios.get('http://localhost:8000/api/v1/fo-odcs', headers),
       ]);
 
-      setClients(clientsRes.data.data);
-      setOdps(odpsRes.data.data);
-      setOdcs(odcsRes.data.data);
+      setClients(clientsRes.data.data ?? []);
+      setOdps(odpsRes.data.data ?? []);
+      setOdcs(odcsRes.data.data ?? []);
     } catch (error) {
       console.error('Gagal mengambil data client/odp:', error);
     }
@@ -379,15 +379,15 @@ const MappingPage: React.FC = () => {
 
       // Hapus data client/odp
       if (mode === 'client') {
-        await axios.delete(`http://localhost:8000/api/v1/fo_client_ftths/${id}`, headers);
+        await axios.delete(`http://localhost:8000/api/v1/fo-client-ftths/${id}`, headers);
       } else if (mode === 'odp') {
-        await axios.delete(`http://localhost:8000/api/v1/fo_odps/${id}`, headers);
+        await axios.delete(`http://localhost:8000/api/v1/fo-odps/${id}`, headers);
       } else if (mode === 'odc') {
-        await axios.delete(`http://localhost:8000/api/v1/fo_odcs/${id}`, headers);
+        await axios.delete(`http://localhost:8000/api/v1/fo-odcs/${id}`, headers);
       }
 
       // Hapus lokasi terkait
-      await axios.delete(`http://localhost:8000/api/v1/fo_lokasis/${lokasi_id}`, headers);
+      await axios.delete(`http://localhost:8000/api/v1/fo-lokasis/${lokasi_id}`, headers);
 
       alert('Data berhasil dihapus.');
       fetchData();
@@ -399,7 +399,7 @@ const MappingPage: React.FC = () => {
 
 
   const clientIcon = L.icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png', // ganti dengan url/icon yang kamu mau
+    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],
@@ -481,7 +481,7 @@ const MappingPage: React.FC = () => {
                               longitude: client.lokasi.longitude,
                               nama_client: client.nama_client,
                               alamat: client.alamat,
-                              kabel_odp_id: client.kabel_odp_id,
+                              odp_id: client.odp_id,
                             }
                           })}
                         >
@@ -531,7 +531,7 @@ const MappingPage: React.FC = () => {
                               longitude: odp.lokasi.longitude,
                               nama_odp: odp.nama_odp,
                               tipe_splitter: odp.tipe_splitter,
-                              kabel_odc_id: odp.kabel_odc_id,
+                              kabel_core_odc_id: odp.kabel_core_odc_id,
                             }
                           })}
                         >

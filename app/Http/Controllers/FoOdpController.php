@@ -103,6 +103,8 @@ class FoOdpController extends Controller
                 'lokasi'             => [
                     'id'            => $o->lokasi->id,
                     'nama_lokasi'   => $o->lokasi->nama_lokasi,
+                    'latitude'      => $o->lokasi->latitude,
+                    'longitude'     => $o->lokasi->longitude,
                 ],
                 // Nested Kabel Core ODC
                 'kabel_core_odc'     => [
