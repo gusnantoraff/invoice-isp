@@ -11,7 +11,10 @@ import {
 import L, { LatLng } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import axios from 'axios';
+import Select from 'react-select';
 import { useTranslation } from 'react-i18next';
+import { Daerah, daerahJawa } from './utils/daerah';
+import { MapCenterUpdater } from './utils/MapZoomer';
 
 type FormMode = 'client' | 'odp' | 'odc' | null;
 
@@ -378,6 +381,8 @@ const MappingPage: React.FC = () => {
   const [odcs, setOdcs] = useState<any[]>([]);
   const [editData, setEditData] = useState<{ mode: 'client' | 'odp' | 'odc'; data: MarkerData; } | null>(null);
   const [t] = useTranslation();
+  const [selectedDaerah, setSelectedDaerah] = useState<Daerah | null>(null);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([-7.56526, 110.81653]);
 
   const pages: Page[] = [{ name: t('Mapping'), href: '/map' }];
 
@@ -459,32 +464,58 @@ const MappingPage: React.FC = () => {
     shadowSize: [41, 41],
   });
 
+  const options = daerahJawa.map((d) => ({
+    value: d.nama,
+    label: d.nama
+  }));
+
   return (
     <Default title={t('Mapping')} breadcrumbs={pages}>
-      <div className="flex gap-2 mb-4">
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-          onClick={() => setFormMode('client')}
-        >
-          Add Client
-        </button>
-        <button
-          className="bg-green-500 text-white px-4 py-2 rounded"
-          onClick={() => setFormMode('odp')}
-        >
-          Add ODP
-        </button>
-        <button
-          className="bg-purple-600 text-white px-4 py-2 rounded"
-          onClick={() => setFormMode('odc' as FormMode)}
-        >
-          Add ODC
-        </button>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-x-2">
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+            onClick={() => setFormMode('client')}
+          >
+            Add Client
+          </button>
+          <button
+            className="bg-green-500 text-white px-4 py-2 rounded"
+            onClick={() => setFormMode('odp')}
+          >
+            Add ODP
+          </button>
+          <button
+            className="bg-purple-600 text-white px-4 py-2 rounded"
+            onClick={() => setFormMode('odc' as FormMode)}
+          >
+            Add ODC
+          </button>
+        </div>
 
+        <div className="w-48">
+          <Select
+            options={options}
+            value={selectedDaerah ? { value: selectedDaerah.nama, label: selectedDaerah.nama } : null}
+            onChange={(selectedOption) => {
+              const daerah = daerahJawa.find(d => d.nama === selectedOption?.value) || null;
+              setSelectedDaerah(daerah);
+
+              if (daerah) {
+                const centerLat = (daerah.zona_latitude[0] + daerah.zona_latitude[1]) / 2;
+                const centerLng = (daerah.zona_longitude[0] + daerah.zona_longitude[1]) / 2;
+                setMapCenter([centerLat, centerLng]);
+              }
+            }}
+            placeholder="Pilih Daerah..."
+            isClearable
+          />
+        </div>
       </div>
 
       <div className="h-[80vh] relative z-0">
-        <MapContainer center={[-7.56526, 110.81653]} zoom={13} className="h-full w-full">
+        <MapContainer center={mapCenter} zoom={13} className="h-full w-full">
+          <MapCenterUpdater center={mapCenter} />
           <TileLayer
             attribution="&copy; OpenStreetMap contributors"
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -549,7 +580,6 @@ const MappingPage: React.FC = () => {
                   <Popup>
                     <div className="text-sm">
                       <strong>ODP:</strong> {odp.nama_odp}<br />
-                      <strong>Tipe Splitter:</strong> {odp.tipe_splitter}<br />
                       <strong>Lokasi:</strong> {odp.lokasi.nama_lokasi}<br />
                       <strong>Deskripsi:</strong> {odp.lokasi.deskripsi}<br />
                       <div className="mt-2 flex gap-2">
