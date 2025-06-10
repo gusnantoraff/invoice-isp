@@ -63,6 +63,7 @@ import { useSocketEvent } from '$app/common/queries/sockets';
 import { Invoice } from '$app/common/interfaces/invoice';
 import toast from 'react-hot-toast';
 import { EInvoiceCredits } from '../banners/EInvoiceCredits';
+import { LuMapPin } from 'react-icons/lu';
 
 export interface SaveOption {
     label: string;
@@ -336,6 +337,23 @@ export function Default(props: Props) {
             },
         },
         {
+            name: t('Mapping'),
+            href: '/mapping',
+            icon: LuMapPin,
+            current: location.pathname.startsWith('/mapping'),
+            visible:
+                enabled(ModuleBitmask.Vendors) &&
+                (hasPermission('view_vendor') ||
+                    hasPermission('create_vendor') ||
+                    hasPermission('edit_vendor')),
+            rightButton: {
+                icon: PlusCircle,
+                to: '/vendors/create',
+                label: t('new_vendor'),
+                visible: hasPermission('create_vendor'),
+            },
+        },
+        {
             name: t('WA Gateway'),
             href: '/wa-gateway',
             icon: BiLogoWhatsapp,
@@ -584,9 +602,8 @@ export function Default(props: Props) {
             <DesktopSidebar navigation={navigation} docsLink={props.docsLink} />
 
             <div
-                className={`${
-                    isMiniSidebar ? 'md:pl-16' : 'md:pl-64'
-                } flex flex-col flex-1`}
+                className={`${isMiniSidebar ? 'md:pl-16' : 'md:pl-64'
+                    } flex flex-col flex-1`}
             >
                 <div
                     style={{
@@ -629,10 +646,10 @@ export function Default(props: Props) {
                                         preventNavigation({
                                             url: isSelfHosted()
                                                 ? import.meta.env
-                                                      .VITE_WHITELABEL_INVOICE_URL ||
-                                                  'https://invoiceninja.invoicing.co/client/subscriptions/O5xe7Rwd7r/purchase'
+                                                    .VITE_WHITELABEL_INVOICE_URL ||
+                                                'https://invoiceninja.invoicing.co/client/subscriptions/O5xe7Rwd7r/purchase'
                                                 : (user?.company_user
-                                                      ?.ninja_portal_url as string),
+                                                    ?.ninja_portal_url as string),
                                             externalLink: true,
                                         })
                                     }
@@ -725,11 +742,11 @@ export function Default(props: Props) {
 
                             {(navigationTopRightElement ||
                                 props.navigationTopRight) && (
-                                <div className="flex items-center space-x-3">
-                                    {navigationTopRightElement?.element ||
-                                        props.navigationTopRight}
-                                </div>
-                            )}
+                                    <div className="flex items-center space-x-3">
+                                        {navigationTopRightElement?.element ||
+                                            props.navigationTopRight}
+                                    </div>
+                                )}
                         </div>
                     </div>
                 </div>
