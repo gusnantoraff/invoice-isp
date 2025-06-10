@@ -28,6 +28,7 @@ export default function WAChatbot() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
+  const [isListModalOpen, setIsListModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
 
@@ -99,6 +100,14 @@ export default function WAChatbot() {
     setEditingId(null);
   };
 
+  const placeholders = [
+    "{{name}}     = Nama client",
+    "{{bulan}}    = Bulan pada tanggal tagihan",
+    "{{amount}}   = Jumlah tagihan",
+    "{{due_date}} = Tanggal tagihan",
+    "{{status}}   = Status pembayaran",
+  ];
+
   const pages: Page[] = [
     { name: t("WhatsApp Gateway"), href: "/wa-gateway" },
     { name: t("Chatbot"), href: `/wa-gateway/chatbot/${deviceId}` },
@@ -107,7 +116,10 @@ export default function WAChatbot() {
   return (
     <Default title={t("Daftar Chat")} breadcrumbs={pages}>
       <div className="p-4">
-        <div className="mb-4 flex justify-end">
+        <div className="mb-4 flex justify-end gap-2">
+          <button onClick={() => setIsListModalOpen(true)} className="primary-btn">
+            List Placeholder
+          </button>
           <button onClick={openModal} className="primary-btn">
             Tambah Template Chatbot
           </button>
@@ -241,6 +253,27 @@ export default function WAChatbot() {
                     setSelectedChat(null);
                     setIsDetailModalOpen(false);
                   }}
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+                >
+                  Tutup
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isListModalOpen && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
+            <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+              <h2 className="text-lg font-semibold mb-4 text-gray-800">Daftar Placeholder</h2>
+              <ul className="list-disc pl-5 text-gray-700 mb-4">
+                {placeholders.map((ph, index) => (
+                  <li key={index}>{ph}</li>
+                ))}
+              </ul>
+              <div className="flex justify-end">
+                <button
+                  onClick={() => setIsListModalOpen(false)}
                   className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
                 >
                   Tutup
