@@ -64,6 +64,30 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
 
   const allowMapClick = !position && form.nama_lokasi.trim() === '' && form.nama.trim() === '';
 
+  const [odpList, setOdpList] = useState<any[]>([]);
+  const [odcCoreList, setOdcCoreList] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const token = localStorage.getItem('X-API-TOKEN');
+      const headers = { headers: { 'X-API-TOKEN': token || '' } };
+
+      try {
+        if (mode === 'client') {
+          const res = await axios.get('http://localhost:8000/api/v1/fo-odps', headers);
+          setOdpList(res.data.data);
+        } else if (mode === 'odp') {
+          const res = await axios.get('http://localhost:8000/api/v1/fo-kabel-core-odcs', headers);
+          setOdcCoreList(res.data.data);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchData();
+  }, [mode]);
+
   useMapEvents({
     click(e) {
       if (!allowMapClick) return;
@@ -254,27 +278,37 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
                 value={form.alamat}
                 onChange={(e) => setForm({ ...form, alamat: e.target.value })}
               />
-              <input
-                type="number"
+              <select
                 className="w-full border p-1"
-                placeholder="ID ODP"
                 value={form.odp_id}
                 onChange={(e) => setForm({ ...form, odp_id: e.target.value })}
                 required
-              />
+              >
+                <option value="">Pilih ODP</option>
+                {odpList.map((odp) => (
+                  <option key={odp.id} value={odp.id}>
+                    {odp.nama_odp}
+                  </option>
+                ))}
+              </select>
             </>
           )}
 
           {mode === 'odp' && (
             <>
-              <input
-                type="number"
+              <select
                 className="w-full border p-1"
-                placeholder="ID Kabel Core ODC"
                 value={form.kabel_core_odc_id}
                 onChange={(e) => setForm({ ...form, kabel_core_odc_id: e.target.value })}
                 required
-              />
+              >
+                <option value="">Pilih Kabel Core ODC</option>
+                {odcCoreList.map((core) => (
+                  <option key={core.id} value={core.id}>
+                    {core.nama}
+                  </option>
+                ))}
+              </select>
               <select
                 className="w-full border p-1"
                 value={form.tipe_splitter}
