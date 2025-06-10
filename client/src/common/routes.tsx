@@ -28,7 +28,6 @@ import { reportRoutes } from '$app/pages/reports/routes';
 import { transactionRoutes } from '$app/pages/transactions/routes';
 import { recurringExpenseRoutes } from '$app/pages/recurring-expenses/routes';
 import { waGatewayRoutes } from '$app/pages/wa-gateway/routes';
-import { mappingRoutes } from '$app/pages/mapping/routes';
 import { lazy } from 'react';
 import { Index } from '$app/pages/Index';
 import { TestingRoute } from '$app/components/TestingRoute';
@@ -74,7 +73,6 @@ export const routes = (
             {activityRoutes}
             {waGatewayRoutes}
             {foLokasiRoutes}
-            {mappingRoutes}
             <Route element={<TestingRoute />}>
                 <Route path="/testing" element={<TestingPage />} />
             </Route>

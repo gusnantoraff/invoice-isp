@@ -34,8 +34,7 @@ import { Breadcrumbs, Page } from '$app/components/Breadcrumbs';
 import { DesktopSidebar, NavigationItem } from './components/DesktopSidebar';
 import { MobileSidebar } from './components/MobileSidebar';
 import { useHasPermission } from '$app/common/hooks/permissions/useHasPermission';
-import { BiBuildings, BiWallet, BiFile, BiLogoWhatsapp } from 'react-icons/bi';
-import { LuMapPin } from "react-icons/lu";
+import { BiLogoWhatsapp, BiBuildings, BiWallet, BiFile } from 'react-icons/bi';
 import { AiOutlineBank } from 'react-icons/ai';
 import { ModuleBitmask } from '$app/pages/settings/account-management/component';
 import { QuickCreatePopover } from '$app/components/QuickCreatePopover';
@@ -337,23 +336,6 @@ export function Default(props: Props) {
             },
         },
         {
-            name: t('Mapping'),
-            href: '/mapping',
-            icon: LuMapPin,
-            current: location.pathname.startsWith('/mapping'),
-            visible:
-                enabled(ModuleBitmask.Vendors) &&
-                (hasPermission('view_vendor') ||
-                    hasPermission('create_vendor') ||
-                    hasPermission('edit_vendor')),
-            rightButton: {
-                icon: PlusCircle,
-                to: '/vendors/create',
-                label: t('new_vendor'),
-                visible: hasPermission('create_vendor'),
-            },
-        },
-        {
             name: t('WA Gateway'),
             href: '/wa-gateway',
             icon: BiLogoWhatsapp,
@@ -602,8 +584,9 @@ export function Default(props: Props) {
             <DesktopSidebar navigation={navigation} docsLink={props.docsLink} />
 
             <div
-                className={`${isMiniSidebar ? 'md:pl-16' : 'md:pl-64'
-                    } flex flex-col flex-1`}
+                className={`${
+                    isMiniSidebar ? 'md:pl-16' : 'md:pl-64'
+                } flex flex-col flex-1`}
             >
                 <div
                     style={{
@@ -646,10 +629,10 @@ export function Default(props: Props) {
                                         preventNavigation({
                                             url: isSelfHosted()
                                                 ? import.meta.env
-                                                    .VITE_WHITELABEL_INVOICE_URL ||
-                                                'https://invoiceninja.invoicing.co/client/subscriptions/O5xe7Rwd7r/purchase'
+                                                      .VITE_WHITELABEL_INVOICE_URL ||
+                                                  'https://invoiceninja.invoicing.co/client/subscriptions/O5xe7Rwd7r/purchase'
                                                 : (user?.company_user
-                                                    ?.ninja_portal_url as string),
+                                                      ?.ninja_portal_url as string),
                                             externalLink: true,
                                         })
                                     }
@@ -742,11 +725,11 @@ export function Default(props: Props) {
 
                             {(navigationTopRightElement ||
                                 props.navigationTopRight) && (
-                                    <div className="flex items-center space-x-3">
-                                        {navigationTopRightElement?.element ||
-                                            props.navigationTopRight}
-                                    </div>
-                                )}
+                                <div className="flex items-center space-x-3">
+                                    {navigationTopRightElement?.element ||
+                                        props.navigationTopRight}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

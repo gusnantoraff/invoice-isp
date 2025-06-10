@@ -10,6 +10,7 @@
 | is assigned the "api" middleware group. Enjoy building your API!
 |
 */
+
 use App\Http\Controllers\EInvoicePeppolController;
 use App\Http\Controllers\EInvoiceTokenController;
 use App\Http\Controllers\SubscriptionStepsController;
@@ -398,16 +399,6 @@ Route::group(['middleware' => ['throttle:api', 'api_db', 'token_auth', 'locale']
     Route::resource('products', ProductController::class); // name = (products. index / create / show / update / destroy / edit
     Route::post('products/bulk', [ProductController::class, 'bulk'])->name('products.bulk');
     Route::put('products/{product}/upload', [ProductController::class, 'upload']);
-
-    
- //fiber optics
-    Route::resource('fo_lokasis', FoLokasiController::class); // fo_lokasis. index/create/show/update/destroy/edit
-    Route::resource('fo_odcs', FoOdcController::class); // fo_odcs. index/create/show/update/destroy/edit
-    Route::resource('fo_kabel_odcs', FoKabelOdcController::class); // fo_kabel_odcs. index/create/show/update/destroy/edit
-    Route::resource('fo_odps', FoOdpController::class); // fo_odps. index/create/show/update/destroy/edit
-    Route::resource('fo_kabel_odps', FoKabelOdpController::class); // fo_kabel_odps. index/create/show/update/destroy/edit
-    Route::resource('fo_client_ftths', FoClientFtthController::class); // fo_client_ftths. index/create/show/update/destroy/edit
-
 
     Route::resource('projects', ProjectController::class); // name = (projects. index / create / show / update / destroy / edit
     Route::post('projects/bulk', [ProjectController::class, 'bulk'])->name('projects.bulk');

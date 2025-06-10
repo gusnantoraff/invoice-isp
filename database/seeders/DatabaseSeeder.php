@@ -46,7 +46,6 @@ class DatabaseSeeder extends Seeder
             GatewayTypesSeeder::class,
             DateFormatsSeeder::class,
             DesignSeeder::class,
-            FoTableSeeder::class,
         ]);
     }
 }
