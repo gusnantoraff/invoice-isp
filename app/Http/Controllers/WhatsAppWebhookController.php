@@ -11,6 +11,7 @@ use App\Models\Device;
 use App\Models\Message;
 use App\Models\Client;
 use App\Models\Invoice;
+use App\Models\AdminContact;
 use Carbon\Carbon;
 
 
@@ -46,12 +47,17 @@ class WhatsAppWebhookController extends Controller
                 'text' => "Terima kasih atas keluhan Anda.\nNomor tiket Anda: *$ticketNumber*.\nAdmin akan segera membalas anda.",
             ]);
 
-            $adminPhone = '6282290110155@s.whatsapp.net';
-            $wa->sendMessage([
-                'session' => $session,
-                'to' => $adminPhone,
-                'text' => "📨 *Keluhan Baru!*\nDari: *$phoneNumber*\nNomor Tiket: *$ticketNumber*\nIsi: $message",
-            ]);
+            $adminContacts = AdminContact::where('device_id', $device->id)->pluck('phone_number');
+
+            foreach ($adminContacts as $phone) {
+                $adminPhone = $phone . '@s.whatsapp.net';
+
+                $wa->sendMessage([
+                    'session' => $session,
+                    'to' => $adminPhone,
+                    'text' => "📨 *Keluhan Baru!*\nDari: *$phoneNumber*\nNomor Tiket: *$ticketNumber*\nIsi: $message",
+                ]);
+            }
 
             Cache::forget("complaint:$from");
             return response()->json(['status' => 'complaint_received']);
@@ -86,8 +92,8 @@ class WhatsAppWebhookController extends Controller
 
         if ($matchedChatbot) {
             $template = $matchedChatbot->answer;
-            
-            $menuOption1= $matchedChatbot->question;
+
+            $menuOption1 = $matchedChatbot->question;
 
             if ($client) {
                 $invoice = Invoice::where('client_id', $client->id)->latest()->first();

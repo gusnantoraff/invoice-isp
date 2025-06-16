@@ -19,6 +19,7 @@ const WaChatRecurringDetail = lazy(() => import('$app/pages/wa-gateway/chat-recu
 const WaChatRecurringEdit = lazy(() => import('$app/pages/wa-gateway/chat-recurring/WaChatRecurringEdit'));
 
 const WAChatbot = lazy(() => import('$app/pages/wa-gateway/chatbot/WaChatbot'));
+const WaChatbotAdmin = lazy(() => import('$app/pages/wa-gateway/chatbot/WaChatbotAdmin'));
 
 
 export const waGatewayRoutes = (
@@ -93,6 +94,12 @@ export const waGatewayRoutes = (
       path="chatbot/:deviceId"
       element={
         <Guard guards={[permission('view_wa_gateway')]} component={<WAChatbot />} />
+      }
+    />
+    <Route
+      path="chatbot/:deviceId/admin-contacts"
+      element={
+        <Guard guards={[permission('view_wa_gateway')]} component={<WaChatbotAdmin />} />
       }
     />
   </Route>

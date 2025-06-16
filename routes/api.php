@@ -125,12 +125,14 @@ use App\Http\Controllers\Reports\ClientContactReportController;
 use App\Http\Controllers\Reports\PurchaseOrderReportController;
 use App\Http\Controllers\Reports\RecurringInvoiceReportController;
 use App\Http\Controllers\Reports\PurchaseOrderItemReportController;
+
 use App\Http\Controllers\DevicesController;
 use App\Http\Controllers\MessagesController;
 use App\Http\Controllers\MessageTemplateController;
 use App\Http\Controllers\WhatsAppWebhookController;
 use App\Http\Controllers\ChatbotController;
 use App\Http\Controllers\ScheduledMessageController;
+use App\Http\Controllers\AdminContactController;
 
 use App\Http\Controllers\FoLokasiController;
 use App\Http\Controllers\FoOdcController;
@@ -582,6 +584,7 @@ Route::group(['middleware' => ['throttle:api', 'api_db', 'token_auth', 'locale']
     Route::get('wa/message/{id}', action: [MessagesController::class, 'showMessages']);
     Route::get('/wa/messages/device/{deviceId}', [MessagesController::class, 'getMessagesByDevice']);
     Route::post('wa/message', [MessagesController::class, 'sendMessage']);
+    Route::apiResource('admin-contacts', AdminContactController::class);
 });
 
 Route::post('webhook/message', action: [WhatsAppWebhookController::class, 'handleMessage']);

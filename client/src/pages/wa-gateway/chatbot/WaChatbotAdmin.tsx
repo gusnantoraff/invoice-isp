@@ -3,45 +3,42 @@ import axios from "axios";
 import { Default } from "$app/components/layouts/Default";
 import { Page } from "$app/components/Breadcrumbs";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
-interface Chat {
+interface AdminContact {
   id?: number;
   device_id: number;
+  phone_number: string;
   device?: {
     phone: string;
   };
-  question: string;
-  answer: string;
 }
 
-export default function WAChatbot() {
+export default function WAChatbotAdmin() {
   const [t] = useTranslation();
   const { deviceId } = useParams<{ deviceId: string }>();
-  const [chats, setChats] = useState<Chat[]>([]);
+  const [contacts, setContacts] = useState<AdminContact[]>([]);
   const [loading, setLoading] = useState(true);
-  const [form, setForm] = useState<Chat>({
-    question: "",
-    answer: "",
+  const [form, setForm] = useState<AdminContact>({
+    phone_number: "",
     device_id: Number(deviceId),
   });
   const [editingId, setEditingId] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
-  const [isListModalOpen, setIsListModalOpen] = useState(false);
+  const [selectedContact, setSelectedContact] = useState<AdminContact | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-  const navigate = useNavigate();
-
   const token = localStorage.getItem("X-API-TOKEN") ?? "";
-  const api = "http://localhost:8000/api/v1/chatbots";
+  const api = "http://localhost:8000/api/v1/admin-contacts";
   const headers = { headers: { "X-API-TOKEN": token } };
 
-  const fetchChats = async () => {
+  const fetchContacts = async () => {
     try {
       const res = await axios.get(api, headers);
-      const filtered = res.data.filter((chat: Chat) => String(chat.device_id) === deviceId);
-      setChats(filtered);
+      const filtered = res.data.filter(
+        (contact: AdminContact) => String(contact.device_id) === deviceId
+      );
+      setContacts(filtered);
     } catch (err) {
       console.error("Gagal mengambil data:", err);
     } finally {
@@ -50,7 +47,7 @@ export default function WAChatbot() {
   };
 
   useEffect(() => {
-    fetchChats();
+    fetchContacts();
   }, [deviceId]);
 
   const openModal = () => {
@@ -58,11 +55,10 @@ export default function WAChatbot() {
     setIsModalOpen(true);
   };
 
-  const openDetailModal = (chat: Chat) => {
-    setSelectedChat(chat);
+  const openDetailModal = (contact: AdminContact) => {
+    setSelectedContact(contact);
     setIsDetailModalOpen(true);
   };
-
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,62 +69,46 @@ export default function WAChatbot() {
         await axios.post(api, form, headers);
       }
       resetForm();
-      fetchChats();
+      fetchContacts();
       setIsModalOpen(false);
     } catch (err) {
       console.error("Gagal menyimpan data:", err);
     }
   };
 
-  const handleEdit = (chat: Chat) => {
-    setForm(chat);
-    setEditingId(chat.id || null);
+  const handleEdit = (contact: AdminContact) => {
+    setForm(contact);
+    setEditingId(contact.id || null);
     setIsModalOpen(true);
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Yakin ingin menghapus chatbot ini?")) return;
+    if (!confirm("Yakin ingin menghapus kontak ini?")) return;
     try {
       await axios.delete(`${api}/${id}`, headers);
-      fetchChats();
+      fetchContacts();
     } catch (err) {
       console.error("Gagal menghapus data:", err);
     }
   };
 
   const resetForm = () => {
-    setForm({ question: "", answer: "", device_id: Number(deviceId) });
+    setForm({ phone_number: "", device_id: Number(deviceId) });
     setEditingId(null);
   };
-
-  const placeholders = [
-    "{{name}}     = Nama client",
-    "{{bulan}}    = Bulan pada tanggal tagihan",
-    "{{amount}}   = Jumlah tagihan",
-    "{{due_date}} = Tanggal tagihan",
-    "{{status}}   = Status pembayaran",
-  ];
 
   const pages: Page[] = [
     { name: t("WhatsApp Gateway"), href: "/wa-gateway" },
     { name: t("Chatbot"), href: `/wa-gateway/chatbot/${deviceId}` },
+    { name: t("Admin Contact"), href: `/wa-gateway/chatbot/${deviceId}/admin-contacts` },
   ];
 
   return (
-    <Default title={t("Daftar Chat")} breadcrumbs={pages}>
+    <Default title="Admin Contact" breadcrumbs={pages}>
       <div className="p-4">
-        <div className="mb-4 flex justify-end gap-2">
-          <button
-            onClick={() => navigate(`/wa-gateway/chatbot/${deviceId}/admin-contacts`)}
-            className="primary-btn"
-          >
-            Admin Contact
-          </button>
-          <button onClick={() => setIsListModalOpen(true)} className="primary-btn">
-            List Placeholder
-          </button>
+        <div className="mb-4 flex justify-end">
           <button onClick={openModal} className="primary-btn">
-            Tambah Template Chatbot
+            Tambah Admin Contact
           </button>
         </div>
 
@@ -141,39 +121,33 @@ export default function WAChatbot() {
                 <tr>
                   <th className="p-3">#</th>
                   <th className="p-3">Device</th>
-                  <th className="p-3">Pertanyaan (kata kunci)</th>
-                  <th className="p-3">Balasan Chatbot</th>
+                  <th className="p-3">Nomor Admin</th>
                   <th className="p-3">Aksi</th>
                 </tr>
               </thead>
               <tbody>
-                {chats.length > 0 ? (
-                  chats.map((chat, index) => (
-                    <tr key={chat.id} className="border-t hover:bg-gray-50">
+                {contacts.length > 0 ? (
+                  contacts.map((contact, index) => (
+                    <tr key={contact.id} className="border-t hover:bg-gray-50">
                       <td className="p-3">{index + 1}</td>
-                      <td className="p-3">{chat.device?.phone || "-"}</td>
-                      <td className="p-3">{chat.question}</td>
-                      <td className="p-3">
-                        {chat.answer.length > 80
-                          ? `${chat.answer.substring(0, 80)}...`
-                          : chat.answer}
-                      </td>
+                      <td className="p-3">{contact.device?.phone || "-"}</td>
+                      <td className="p-3">{contact.phone_number}</td>
                       <td className="p-3">
                         <div className="flex gap-1">
                           <button
-                            onClick={() => openDetailModal(chat)}
+                            onClick={() => openDetailModal(contact)}
                             className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
                           >
                             Detail
                           </button>
                           <button
-                            onClick={() => handleEdit(chat)}
+                            onClick={() => handleEdit(contact)}
                             className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm"
                           >
                             Edit
                           </button>
                           <button
-                            onClick={() => handleDelete(chat.id!)}
+                            onClick={() => handleDelete(contact.id!)}
                             className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
                           >
                             Delete
@@ -184,8 +158,8 @@ export default function WAChatbot() {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={5} className="p-4 text-center text-gray-500">
-                      Tidak ada data chatbot untuk device ini.
+                    <td colSpan={4} className="p-4 text-center text-gray-500">
+                      Tidak ada data admin contact untuk device ini.
                     </td>
                   </tr>
                 )}
@@ -196,30 +170,23 @@ export default function WAChatbot() {
 
         {isModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg shadow-lg w-full max-w-lg p-6">
+            <div className="bg-white rounded-lg shadow-lg w-full max-w-md p-6">
               <h2 className="text-lg font-semibold mb-4">
-                {editingId ? "Edit Chatbot" : "Tambah Chatbot"}
+                {editingId ? "Edit Admin Contact" : "Tambah Admin Contact"}
               </h2>
-
               <form onSubmit={handleSubmit}>
                 <div className="mb-4">
-                  <label className="block text-sm font-medium mb-1">Pertanyaan</label>
+                  <label className="block text-sm font-medium mb-1">Nomor Admin</label>
                   <input
                     type="text"
-                    value={form.question}
-                    onChange={(e) => setForm({ ...form, question: e.target.value })}
+                    value={form.phone_number}
+                    onChange={(e) =>
+                      setForm({ ...form, phone_number: e.target.value })
+                    }
                     required
                     className="w-full border border-gray-300 rounded px-3 py-2"
                   />
                 </div>
-                <label className="block text-sm font-medium mb-1">Jawaban</label>
-                <textarea
-                  value={form.answer}
-                  onChange={(e) => setForm({ ...form, answer: e.target.value })}
-                  required
-                  rows={4}
-                  className="w-full border border-gray-300 rounded px-3 py-2 resize-y"
-                />
                 <div className="flex justify-end gap-2">
                   <button
                     type="button"
@@ -240,24 +207,18 @@ export default function WAChatbot() {
           </div>
         )}
 
-        {isDetailModalOpen && selectedChat && (
+        {isDetailModalOpen && selectedContact && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
-              <h2 className="text-lg font-semibold mb-4 text-gray-800">Detail Chatbot</h2>
+              <h2 className="text-lg font-semibold mb-4 text-gray-800">Detail Admin Contact</h2>
               <div className="mb-4">
-                <p className="text-sm font-semibold text-gray-600">Kata Kunci:</p>
-                <p className="text-gray-800">{selectedChat.question}</p>
-              </div>
-              <div className="mb-4">
-                <p className="text-sm font-semibold text-gray-600">Balasan:</p>
-                <div className="p-4 border rounded bg-gray-50 max-w-full break-words whitespace-pre-wrap text-gray-800 leading-relaxed">
-                  {selectedChat.answer}
-                </div>
+                <p className="text-sm font-semibold text-gray-600">Nomor Admin:</p>
+                <p className="text-gray-800">{selectedContact.phone_number}</p>
               </div>
               <div className="flex justify-end">
                 <button
                   onClick={() => {
-                    setSelectedChat(null);
+                    setSelectedContact(null);
                     setIsDetailModalOpen(false);
                   }}
                   className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
@@ -268,28 +229,6 @@ export default function WAChatbot() {
             </div>
           </div>
         )}
-
-        {isListModalOpen && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
-              <h2 className="text-lg font-semibold mb-4 text-gray-800">Daftar Placeholder</h2>
-              <ul className="list-disc pl-5 text-gray-700 mb-4">
-                {placeholders.map((ph, index) => (
-                  <li key={index}>{ph}</li>
-                ))}
-              </ul>
-              <div className="flex justify-end">
-                <button
-                  onClick={() => setIsListModalOpen(false)}
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-                >
-                  Tutup
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
 
         <style>
           {`

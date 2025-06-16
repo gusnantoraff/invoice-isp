@@ -20,4 +20,9 @@ class Device extends Model
         return $this->hasMany(Message::class);
     }
 
+    public function adminContacts()
+    {
+        return $this->hasMany(AdminContact::class);
+    }
+
 }
