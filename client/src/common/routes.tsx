@@ -39,6 +39,10 @@ import { mappingRoutes } from '$app/pages/mapping/routes';
 import { foLokasiRoutes } from '$app/pages/fo-lokasis/routes';
 import { foOdcRoutes } from '$app/pages/fo-odcs/routes';
 import { foKabelOdcRoutes } from '$app/pages/fo-kabel-odcs/routes';
+import { foKabelTubeOdcRoutes } from '$app/pages/fo-kabel-tube-odcs/routes';
+import { foKabelCoreOdcRoutes } from '$app/pages/fo-kabel-core-odcs/routes';
+import { foOdpRoutes } from '$app/pages/fo-odps/routes';
+// import { foClientFtthRoutes } from '$app/pages/fo-kabel-odcs/routes';
 
 const Dashboard = lazy(() => import('$app/pages/dashboard/Dashboard'));
 const NotFound = lazy(() => import('$app/components/NotFound'));
@@ -75,11 +79,15 @@ export const routes = (
             {settingsRoutes}
             {activityRoutes}
             {waGatewayRoutes}
+            {mappingRoutes}
             {/*FIBER OPTIK*/}
             {foLokasiRoutes}
             {foOdcRoutes}
             {foKabelOdcRoutes}
-            {mappingRoutes}
+            {foKabelTubeOdcRoutes}
+            {foKabelCoreOdcRoutes}
+            {foOdpRoutes}
+            {/* {foClientFtthRoutes} */}
             <Route element={<TestingRoute />}>
                 <Route path="/testing" element={<TestingPage />} />
             </Route>

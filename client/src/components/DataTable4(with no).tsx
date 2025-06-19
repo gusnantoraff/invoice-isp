@@ -13,11 +13,7 @@ import React, {
     useState,
 } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-    endpoint,
-    // getEntityState,
-    isProduction,
-} from '$app/common/helpers2';
+import { endpoint, getEntityState, isProduction } from '$app/common/helpers2';
 import { request } from '$app/common/helpers/request';
 import { toast } from '$app/common/helpers/toast/toast';
 import { route } from '$app/common/helpers/route';
@@ -46,7 +42,7 @@ import { invalidationQueryAtom } from '$app/common/atoms/data-table';
 import CommonProps from '$app/common/interfaces/common-props.interface';
 import classNames from 'classnames';
 import { Guard } from '$app/common/guards/Guard';
-// import { EntityState } from '$app/common/enums/entity-state';
+import { EntityState } from '$app/common/enums/entity-state';
 import { refetchByUrl } from '$app/common/hooks/useRefetch';
 import { useDataTableOptions } from '$app/common/hooks/useDataTableOptions';
 import { useDataTableUtilities } from '$app/common/hooks/useDataTableUtilities';
@@ -174,7 +170,7 @@ export function DataTable2<T extends { id: string }>(props: Props<T>) {
         withResourcefulActions,
         bulkRoute,
         customActions,
-        // bottomActionsKeys = [],
+        bottomActionsKeys = [],
         customBulkActions,
         customFilters,
         customFilterPlaceholder,
@@ -205,7 +201,7 @@ export function DataTable2<T extends { id: string }>(props: Props<T>) {
         footerColumns = [],
         withoutPerPageAsPreference = false,
         withoutSortQueryParameter = false,
-        // showRestoreBulk,
+        showRestoreBulk,
         enableSavingFilterPreference = false,
     } = props;
 
@@ -374,10 +370,10 @@ export function DataTable2<T extends { id: string }>(props: Props<T>) {
             });
     };
 
-    // const showRestoreBulkAction = () =>
-    //     selectedResources.every(
-    //         (r) => getEntityState(r as any) !== EntityState.Active
-    //     );
+    const showRestoreBulkAction = () =>
+        selectedResources.every(
+            (r) => getEntityState(r as any) !== EntityState.Active
+        );
 
     const showCustomBulkActionDivider = useMemo(() => {
         return customBulkActions
@@ -463,23 +459,6 @@ export function DataTable2<T extends { id: string }>(props: Props<T>) {
         emitter.on('bulk.completed', () => setSelected([]));
     }, []);
 
-    // show Archive/Delete if there’s at least one ACTIVE + not-deleted item
-    const showArchiveBulk = () =>
-        selectedResources.some(
-            (r: any) => r.status === 'active' && r.deleted_at == null
-        );
-
-    const showDeleteBulk = () =>
-        selectedResources.some(
-            (r: any) => r.status === 'active' && r.deleted_at == null
-        );
-
-    // show Restore if there’s at least one ARCHIVED or soft‑deleted item
-    const showRestoreBulk = () =>
-        selectedResources.some(
-            (r: any) => r.status === 'archived' || r.deleted_at != null
-        );
-
     return (
         <div data-cy="dataTable2">
             {/* === Action Bar: search / status filter / Create / Bulk === */}
@@ -538,48 +517,46 @@ export function DataTable2<T extends { id: string }>(props: Props<T>) {
 
                             {!withoutDefaultBulkActions && (
                                 <>
-                                    {showArchiveBulk() && (
-                                        <DropdownElement
-                                            onClick={() =>
-                                                onBulkActionCall
-                                                    ? onBulkActionCall(
-                                                          selected,
-                                                          'archive'
-                                                      )
-                                                    : bulk('archive')
-                                            }
-                                            icon={<Icon element={MdArchive} />}
-                                        >
-                                            {t('archive')}
-                                        </DropdownElement>
-                                    )}
+                                    <DropdownElement
+                                        onClick={() => {
+                                            onBulkActionCall
+                                                ? onBulkActionCall(
+                                                      selected,
+                                                      'archive'
+                                                  )
+                                                : bulk('archive');
+                                        }}
+                                        icon={<Icon element={MdArchive} />}
+                                    >
+                                        {t('archive')}
+                                    </DropdownElement>
 
-                                    {showDeleteBulk() && (
-                                        <DropdownElement
-                                            onClick={() =>
-                                                onBulkActionCall
-                                                    ? onBulkActionCall(
-                                                          selected,
-                                                          'delete'
-                                                      )
-                                                    : bulk('delete')
-                                            }
-                                            icon={<Icon element={MdDelete} />}
-                                        >
-                                            {t('delete')}
-                                        </DropdownElement>
-                                    )}
+                                    <DropdownElement
+                                        onClick={() => {
+                                            onBulkActionCall
+                                                ? onBulkActionCall(
+                                                      selected,
+                                                      'delete'
+                                                  )
+                                                : bulk('delete');
+                                        }}
+                                        icon={<Icon element={MdDelete} />}
+                                    >
+                                        {t('delete')}
+                                    </DropdownElement>
 
-                                    {showRestoreBulk() && (
+                                    {(showRestoreBulk
+                                        ? showRestoreBulk(selectedResources)
+                                        : showRestoreBulkAction()) && (
                                         <DropdownElement
-                                            onClick={() =>
+                                            onClick={() => {
                                                 onBulkActionCall
                                                     ? onBulkActionCall(
                                                           selected,
                                                           'restore'
                                                       )
-                                                    : bulk('restore')
-                                            }
+                                                    : bulk('restore');
+                                            }}
                                             icon={<Icon element={MdRestore} />}
                                         >
                                             {t('restore')}
@@ -881,7 +858,7 @@ export function DataTable2<T extends { id: string }>(props: Props<T>) {
                                                     )}
 
                                                 {/* Custom actions */}
-                                                {/* {customActions &&
+                                                {customActions &&
                                                     customActions.map(
                                                         (actionFn, aidx) =>
                                                             !bottomActionsKeys!.includes(
@@ -894,7 +871,7 @@ export function DataTable2<T extends { id: string }>(props: Props<T>) {
                                                                     )}
                                                                 </div>
                                                             )
-                                                    )} */}
+                                                    )}
 
                                                 {/* Divider sebelum archive/restore/delete */}
                                                 {customActions &&
@@ -906,8 +883,9 @@ export function DataTable2<T extends { id: string }>(props: Props<T>) {
                                                     )}
 
                                                 {/* Archive */}
-                                                {res.status === 'active' &&
-                                                    res.deleted_at == null &&
+                                                {typeof res.archived_at ===
+                                                    'number' &&
+                                                    res.archived_at === 0 &&
                                                     (showArchive?.(res) ??
                                                         true) && (
                                                         <DropdownElement
@@ -929,33 +907,10 @@ export function DataTable2<T extends { id: string }>(props: Props<T>) {
                                                         </DropdownElement>
                                                     )}
 
-                                                {/* Delete */}
-                                                {res.status === 'active' &&
-                                                    res.deleted_at == null &&
-                                                    (showDelete?.(res) ??
-                                                        true) && (
-                                                        <DropdownElement
-                                                            onClick={() =>
-                                                                bulk(
-                                                                    'delete',
-                                                                    res.id
-                                                                )
-                                                            }
-                                                            icon={
-                                                                <Icon
-                                                                    element={
-                                                                        MdDelete
-                                                                    }
-                                                                />
-                                                            }
-                                                        >
-                                                            {t('delete')}
-                                                        </DropdownElement>
-                                                    )}
-
                                                 {/* Restore */}
-                                                {(res.status === 'archived' ||
-                                                    res.deleted_at != null) &&
+                                                {typeof res.archived_at ===
+                                                    'number' &&
+                                                    res.archived_at > 0 &&
                                                     (showRestore?.(res) ??
                                                         true) && (
                                                         <DropdownElement
@@ -977,8 +932,31 @@ export function DataTable2<T extends { id: string }>(props: Props<T>) {
                                                         </DropdownElement>
                                                     )}
 
+                                                {/* Delete */}
+                                                {!res.is_deleted &&
+                                                    (showDelete?.(res) ??
+                                                        true) && (
+                                                        <DropdownElement
+                                                            onClick={() =>
+                                                                bulk(
+                                                                    'delete',
+                                                                    res.id
+                                                                )
+                                                            }
+                                                            icon={
+                                                                <Icon
+                                                                    element={
+                                                                        MdDelete
+                                                                    }
+                                                                />
+                                                            }
+                                                        >
+                                                            {t('delete')}
+                                                        </DropdownElement>
+                                                    )}
+
                                                 {/* Custom actions bawah */}
-                                                {/* {customActions &&
+                                                {customActions &&
                                                     customActions.map(
                                                         (actionFn, aidx) =>
                                                             bottomActionsKeys!.includes(
@@ -991,7 +969,7 @@ export function DataTable2<T extends { id: string }>(props: Props<T>) {
                                                                     )}
                                                                 </div>
                                                             )
-                                                    )} */}
+                                                    )}
                                             </Dropdown>
                                         </Td>
                                     )}

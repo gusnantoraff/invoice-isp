@@ -57,11 +57,26 @@ class FoClientFtthController extends Controller
         });
 
         // 4) Optional text filtering on nama_client OR alamat
+        // if ($request->filled('filter')) {
+        //     $term = $request->query('filter');
+        //     $query->where(function ($q) use ($term) {
+        //         $q->where('nama_client', 'LIKE', "%{$term}%")
+        //             ->orWhere('alamat', 'LIKE', "%{$term}%");
+        //     });
+        // }
+
+        // 4) Optional text filtering on nama_client OR alamat
         if ($request->filled('filter')) {
             $term = $request->query('filter');
             $query->where(function ($q) use ($term) {
+                // a) match on the Client name
                 $q->where('nama_client', 'LIKE', "%{$term}%")
-                    ->orWhere('alamat', 'LIKE', "%{$term}%");
+                    // b) match on the alamat
+                    ->orWhere('alamat', 'LIKE', "%{$term}%")
+                    // c) match on the ODP name
+                    ->orWhereHas('odp', function ($q2) use ($term) {
+                        $q2->where('nama_odp', 'LIKE', "%{$term}%");
+                    });
             });
         }
 

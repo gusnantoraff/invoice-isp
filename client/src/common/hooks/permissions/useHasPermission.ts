@@ -16,9 +16,9 @@ type ProductPermissions = 'create_product' | 'view_product' | 'edit_product';
 type InvoicePermissions = 'create_invoice' | 'view_invoice' | 'edit_invoice';
 type PaymentPermissions = 'create_payment' | 'view_payment' | 'edit_payment';
 type RecurringInvoicePermissions =
-  | 'create_recurring_invoice'
-  | 'view_recurring_invoice'
-  | 'edit_recurring_invoice';
+    | 'create_recurring_invoice'
+    | 'view_recurring_invoice'
+    | 'edit_recurring_invoice';
 type QuotePermissions = 'create_quote' | 'view_quote' | 'edit_quote';
 type CreditPermissions = 'create_credit' | 'view_credit' | 'edit_credit';
 type ProjectPermissions = 'create_project' | 'view_project' | 'edit_project';
@@ -26,64 +26,64 @@ type TaskPermissions = 'create_task' | 'view_task' | 'edit_task';
 type VendorPermissions = 'create_vendor' | 'view_vendor' | 'edit_vendor';
 type ExpensePermissions = 'create_expense' | 'view_expense' | 'edit_expense';
 type RecurringExpensePermissions =
-  | 'create_recurring_expense'
-  | 'view_recurring_expense'
-  | 'edit_recurring_expense';
+    | 'create_recurring_expense'
+    | 'view_recurring_expense'
+    | 'edit_recurring_expense';
 type BankTransactionsPermissions =
-  | 'create_bank_transaction'
-  | 'view_bank_transaction'
-  | 'edit_bank_transaction';
+    | 'create_bank_transaction'
+    | 'view_bank_transaction'
+    | 'edit_bank_transaction';
 type PurchaseOrderPermissions =
-  | 'create_purchase_order'
-  | 'view_purchase_order'
-  | 'edit_purchase_order';
+    | 'create_purchase_order'
+    | 'view_purchase_order'
+    | 'edit_purchase_order';
 type ReportPermissions = 'view_reports';
 type DashboardPermissions = 'view_dashboard';
 type WAGatewayPermissions = 'view_wa_gateway';
 
 export type Permissions =
-  | AllPermissions
-  | ClientPermissions
-  | ProductPermissions
-  | InvoicePermissions
-  | PaymentPermissions
-  | RecurringInvoicePermissions
-  | QuotePermissions
-  | CreditPermissions
-  | ProjectPermissions
-  | TaskPermissions
-  | VendorPermissions
-  | ExpensePermissions
-  | RecurringExpensePermissions
-  | BankTransactionsPermissions
-  | PurchaseOrderPermissions
-  | ReportPermissions
-  | WAGatewayPermissions
-  | DashboardPermissions;
+    | AllPermissions
+    | ClientPermissions
+    | ProductPermissions
+    | InvoicePermissions
+    | PaymentPermissions
+    | RecurringInvoicePermissions
+    | QuotePermissions
+    | CreditPermissions
+    | ProjectPermissions
+    | TaskPermissions
+    | VendorPermissions
+    | ExpensePermissions
+    | RecurringExpensePermissions
+    | BankTransactionsPermissions
+    | PurchaseOrderPermissions
+    | ReportPermissions
+    | WAGatewayPermissions
+    | DashboardPermissions;
 
 export function useHasPermission() {
-  const user = useCurrentCompanyUser();
+    const user = useCurrentCompanyUser();
 
-  return (permission: Permissions) => {
-    const permissions = user?.permissions ?? '';
-    const [action] = permission.split('_');
+    return (permission: Permissions) => {
+        const permissions = user?.permissions ?? '';
+        const [action] = permission.split('_');
 
-    return Boolean(
-      user?.is_admin ||
-        user?.is_owner ||
-        permissions.includes(permission) ||
-        (permissions.includes(`${action}_all`) &&
-          permission !== 'view_reports' &&
-          permission !== 'view_dashboard')
-    );
-  };
+        return Boolean(
+            user?.is_admin ||
+                user?.is_owner ||
+                permissions.includes(permission) ||
+                (permissions.includes(`${action}_all`) &&
+                    permission !== 'view_reports' &&
+                    permission !== 'view_dashboard')
+        );
+    };
 }
 
 export function useAdmin() {
-  const user = useCurrentCompanyUser();
+    const user = useCurrentCompanyUser();
 
-  return {
-    isAdmin: Boolean(user?.is_admin),
-    isOwner: Boolean(user?.is_owner || user?.is_owner),
-  };
+    return {
+        isAdmin: Boolean(user?.is_admin),
+        isOwner: Boolean(user?.is_owner || user?.is_owner),
+    };
 }

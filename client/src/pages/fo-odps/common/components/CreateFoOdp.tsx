@@ -1,21 +1,20 @@
-// client/src/pages/fo-odcs/common/components/CreateFoOdc.tsx
+// client/src/pages/fo-odps/common/components/CreateFoOdp.tsx
 
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { Card } from '$app/components/cards';
+import { Card, Element } from '$app/components/cards';
 import { ValidationBag } from '$app/common/interfaces/validation-bag';
-import { Element } from '$app/components/cards';
 import { InputField, SelectField, Checkbox } from '$app/components/forms';
 
-export interface FoOdcFormValues {
+export interface FoOdpFormValues {
     create_new_lokasi: boolean;
     lokasi_id: string;
     lokasi_name: string;
     lokasi_deskripsi: string;
     lokasi_latitude: string;
     lokasi_longitude: string;
-    nama_odc: string;
-    tipe_splitter: string;
+    kabel_core_odc_id: string;
+    nama_odp: string;
 }
 
 interface LokasiOption {
@@ -23,27 +22,40 @@ interface LokasiOption {
     nama_lokasi: string;
 }
 
+interface CoreOption {
+    id: number;
+    warna_tube?: string;
+    warna_core: string;
+}
+
 interface Props {
-    values: FoOdcFormValues;
-    setValues: React.Dispatch<React.SetStateAction<FoOdcFormValues>>;
+    values: FoOdpFormValues;
+    setValues: React.Dispatch<React.SetStateAction<FoOdpFormValues>>;
     lokasis: LokasiOption[];
+    cores: CoreOption[];
     errors?: ValidationBag;
 }
 
-export function CreateFoOdc({ values, setValues, lokasis, errors }: Props) {
+export function CreateFoOdp({
+    values,
+    setValues,
+    lokasis,
+    cores,
+    errors,
+}: Props) {
     const [t] = useTranslation();
-    const onChange = <K extends keyof FoOdcFormValues>(
+    const onChange = <K extends keyof FoOdpFormValues>(
         field: K,
-        value: FoOdcFormValues[K]
+        value: FoOdpFormValues[K]
     ) => setValues((v) => ({ ...v, [field]: value }));
 
     return (
         <Card
             title={t(
-                values.create_new_lokasi ? 'new_lokasi_and_odc' : 'new_odc'
+                values.create_new_lokasi ? 'new_lokasi_and_odp' : 'new_odp'
             )}
         >
-            {/* Create New Lokasi Toggle */}
+            {/* Toggle for creating new Lokasi */}
             <Element leftSide={t('create_new_lokasi')}>
                 <Checkbox
                     checked={values.create_new_lokasi}
@@ -53,9 +65,11 @@ export function CreateFoOdc({ values, setValues, lokasis, errors }: Props) {
                 />
             </Element>
 
-            {/* Lokasi Fields */}
+            {/* Lokasi selection or creation */}
             {values.create_new_lokasi ? (
                 <>
+                    {' '}
+                    {/* New Lokasi fields */}
                     <Element leftSide={t('nama_lokasi')} required>
                         <InputField
                             required
@@ -115,31 +129,33 @@ export function CreateFoOdc({ values, setValues, lokasis, errors }: Props) {
                 </Element>
             )}
 
-            {/* ODC Fields */}
-            <Element leftSide={t('nama_odc')} required>
-                <InputField
-                    required
-                    value={values.nama_odc}
-                    onValueChange={(v) => onChange('nama_odc', v)}
-                    errorMessage={errors?.errors.nama_odc}
-                />
-            </Element>
-
-            <Element leftSide={t('tipe_splitter')} required>
+            {/* Core ODC selection always visible */}
+            <Element leftSide={t('core_odc')} required>
                 <SelectField
                     required
-                    value={values.tipe_splitter}
-                    onValueChange={(v) => onChange('tipe_splitter', v)}
-                    errorMessage={errors?.errors.tipe_splitter}
+                    value={values.kabel_core_odc_id}
+                    onValueChange={(v) => onChange('kabel_core_odc_id', v)}
+                    errorMessage={errors?.errors.kabel_core_odc_id}
                 >
-                    {['1:2', '1:4', '1:8', '1:16', '1:32', '1:64', '1:128'].map(
-                        (opt) => (
-                            <option key={opt} value={opt}>
-                                {opt}
-                            </option>
-                        )
-                    )}
+                    <option value="">{t('select_core')}</option>
+                    {cores.map((c) => (
+                        <option key={c.id} value={c.id.toString()}>
+                            {c.warna_tube
+                                ? `${c.warna_tube} / ${c.warna_core}`
+                                : c.warna_core}
+                        </option>
+                    ))}
                 </SelectField>
+            </Element>
+
+            {/* Nama ODP */}
+            <Element leftSide={t('nama_odp')} required>
+                <InputField
+                    required
+                    value={values.nama_odp}
+                    onValueChange={(v) => onChange('nama_odp', v)}
+                    errorMessage={errors?.errors.nama_odp}
+                />
             </Element>
         </Card>
     );

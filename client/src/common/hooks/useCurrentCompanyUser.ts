@@ -13,8 +13,8 @@ import { RootState } from '$app/common/stores/store';
 import { useSelector } from 'react-redux';
 
 export function useCurrentCompanyUser(): CompanyUser | undefined {
-  return useSelector(
-    (state: RootState) =>
-      state.companyUsers.api[state.companyUsers.currentIndex]
-  );
+    return useSelector(
+        (state: RootState) =>
+            state.companyUsers.api[state.companyUsers.currentIndex]
+    );
 }

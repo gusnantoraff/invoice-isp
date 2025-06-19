@@ -8,23 +8,17 @@ use Illuminate\Http\Request;
 class FoKabelCoreOdcController extends Controller
 {
     protected $model = FoKabelCoreOdc::class;
+
     /**
-     * List all Kabel‐Core‐ODC entries with pagination, filtering, sorting, and status.
+     * List all Kabel-Core-ODC entries with pagination, filtering, sorting, and status.
      *
      * GET /api/v1/fo-kabel-core-odcs
-     *
-     * Query parameters (all optional):
-     *   • page (int)
-     *   • per_page (int)
-     *   • filter (string)           // matches warna_core
-     *   • sort (string)             // format "column|asc" or "column|dsc"
-     *   • status (string)           // comma-separated: "active,archived,deleted"
      */
     public function index(Request $request)
     {
         // 1) Parse the `status` parameter into an array
         $statusParam = $request->query('status', 'active');
-        $requested    = collect(explode(',', $statusParam))
+        $requested   = collect(explode(',', $statusParam))
             ->map(fn($s) => trim(strtolower($s)))
             ->filter()
             ->unique()
@@ -42,7 +36,7 @@ class FoKabelCoreOdcController extends Controller
 
         // 3) Filter by status
         $query->where(function ($q) use ($statuses) {
-            // a) include soft‐deleted if "deleted" requested
+            // a) include soft-deleted if "deleted" requested
             if (in_array('deleted', $statuses, true)) {
                 $q->orWhereNotNull('deleted_at');
             }
@@ -56,10 +50,18 @@ class FoKabelCoreOdcController extends Controller
             }
         });
 
-        // 4) Optional text filter on warna_core
+        // 4) Optional text filter on warna_core, tube color, or ODC name
         if ($request->filled('filter')) {
             $term = $request->query('filter');
-            $query->where('warna_core', 'LIKE', "%{$term}%");
+            $query->where(function ($q) use ($term) {
+                $q->where('warna_core', 'LIKE', "%{$term}%")
+                    ->orWhereHas('kabelTubeOdc', function ($q2) use ($term) {
+                        $q2->where('warna_tube', 'LIKE', "%{$term}%")
+                            ->orWhereHas('kabelOdc', function ($q3) use ($term) {
+                                $q3->where('nama_kabel', 'LIKE', "%{$term}%");
+                            });
+                    });
+            });
         }
 
         // 5) Optional sorting: "column|asc" or "column|dsc"
@@ -67,13 +69,7 @@ class FoKabelCoreOdcController extends Controller
             [$column, $dir] = array_pad(explode('|', $request->query('sort')), 2, null);
             $dir = (strtolower($dir) === 'dsc') ? 'desc' : 'asc';
 
-            $allowedSorts = [
-                'id',
-                'warna_core',
-                'created_at',
-                'updated_at',
-                'status'
-            ];
+            $allowedSorts = ['id', 'warna_core', 'created_at', 'updated_at', 'status'];
             if (in_array($column, $allowedSorts, true)) {
                 $query->orderBy($column, $dir);
             }
@@ -88,28 +84,31 @@ class FoKabelCoreOdcController extends Controller
             $perPage = 15;
         }
 
-        // 7) Eager‐load relationships and paginate
+        // 7) Eager-load relationships (tube + parent ODC + odp) and paginate
         $paginator = $query
-            ->with(['kabelTubeOdc', 'odp'])
+            ->with(['kabelTubeOdc.kabelOdc', 'odp'])
             ->paginate($perPage)
             ->appends($request->only(['filter', 'sort', 'per_page', 'status']));
 
-        // 8) Transform results into the JSON structure
+        // 8) Transform results into JSON structure
         $items = array_map(function ($c) {
             return [
-                'id'                 => $c->id,
-                'kabel_tube_odc_id'  => $c->kabel_tube_odc_id,
-                'kabel_tube_odc'     => [
-                    'id'           => $c->kabelTubeOdc->id,
-                    'warna_tube'   => $c->kabelTubeOdc->warna_tube,
+                'id'                => $c->id,
+                'kabel_tube_odc_id' => $c->kabel_tube_odc_id,
+                'kabel_tube_odc'    => [
+                    'id'         => $c->kabelTubeOdc->id,
+                    'warna_tube' => $c->kabelTubeOdc->warna_tube,
                 ],
-                'warna_core'         => $c->warna_core,
-                'status'             => $c->status,
-                // If there is an ODP, include its id in an array; otherwise, empty array
-                'odp_ids'            => $c->odp ? [$c->odp->id] : [],
-                'created_at'         => $c->created_at->toDateTimeString(),
-                'updated_at'         => $c->updated_at->toDateTimeString(),
-                'deleted_at'         => $c->deleted_at?->toDateTimeString(),
+                'kabel_odc'         => [
+                    'id'          => $c->kabelTubeOdc->kabelOdc->id,
+                    'nama_kabel'  => $c->kabelTubeOdc->kabelOdc->nama_kabel,
+                ],
+                'warna_core'        => $c->warna_core,
+                'status'            => $c->status,
+                'odp_ids'           => $c->odp ? [$c->odp->id] : [],
+                'created_at'        => $c->created_at->toDateTimeString(),
+                'updated_at'        => $c->updated_at->toDateTimeString(),
+                'deleted_at'        => $c->deleted_at?->toDateTimeString(),
             ];
         }, $paginator->items());
 
@@ -128,16 +127,14 @@ class FoKabelCoreOdcController extends Controller
     }
 
     /**
-     * Create a new Kabel‐Core‐ODC (default status = active).
-     *
-     * POST /api/v1/fo-kabel-core-odcs
+     * Create a new Kabel-Core-ODC (default status = active).
      */
     public function store(Request $request)
     {
         $data = $request->validate([
-            'kabel_tube_odc_id'  => 'required|exists:fo_kabel_tube_odcs,id',
-            'warna_core'         => 'required|in:biru,jingga,hijau,coklat,abu_abu,putih,merah,hitam,kuning,ungu,merah_muda,aqua',
-            'status'             => 'sometimes|in:active,archived',
+            'kabel_tube_odc_id' => 'required|exists:fo_kabel_tube_odcs,id',
+            'warna_core'        => 'required|in:biru,jingga,hijau,coklat,abu_abu,putih,merah,hitam,kuning,ungu,merah_muda,aqua',
+            'status'            => 'sometimes|in:active,archived',
         ]);
 
         if (!isset($data['status'])) {
@@ -145,88 +142,96 @@ class FoKabelCoreOdcController extends Controller
         }
 
         $c = FoKabelCoreOdc::create($data);
-        $c->load(['kabelTubeOdc', 'odp']);
+        $c->load(['kabelTubeOdc.kabelOdc', 'odp']);
 
         return response()->json([
             'status'  => 'success',
             'data'    => [
-                'id'                 => $c->id,
-                'kabel_tube_odc_id'  => $c->kabel_tube_odc_id,
-                'kabel_tube_odc'     => [
-                    'id'           => $c->kabelTubeOdc->id,
-                    'warna_tube'   => $c->kabelTubeOdc->warna_tube,
+                'id'                => $c->id,
+                'kabel_tube_odc_id' => $c->kabel_tube_odc_id,
+                'kabel_tube_odc'    => [
+                    'id'         => $c->kabelTubeOdc->id,
+                    'warna_tube' => $c->kabelTubeOdc->warna_tube,
                 ],
-                'warna_core'         => $c->warna_core,
-                'status'             => $c->status,
-                'odp_ids'            => $c->odp ? [$c->odp->id] : [],
-                'created_at'         => $c->created_at->toDateTimeString(),
-                'updated_at'         => $c->updated_at->toDateTimeString(),
+                'kabel_odc'         => [
+                    'id'          => $c->kabelTubeOdc->kabelOdc->id,
+                    'nama_kabel'  => $c->kabelTubeOdc->kabelOdc->nama_kabel,
+                ],
+                'warna_core'        => $c->warna_core,
+                'status'            => $c->status,
+                'odp_ids'           => $c->odp ? [$c->odp->id] : [],
+                'created_at'        => $c->created_at->toDateTimeString(),
+                'updated_at'        => $c->updated_at->toDateTimeString(),
             ],
             'message' => 'Core ODC created.',
         ], 201);
     }
 
     /**
-     * Show a single Kabel‐Core‐ODC by ID (including soft‐deleted).
-     *
-     * GET /api/v1/fo-kabel-core-odcs/{id}
+     * Show a single Kabel-Core-ODC by ID (including soft-deleted).
      */
     public function show($id)
     {
         $c = FoKabelCoreOdc::withTrashed()->findOrFail($id);
-        $c->load(['kabelTubeOdc', 'odp']);
+        $c->load(['kabelTubeOdc.kabelOdc', 'odp']);
 
         return response()->json([
             'status' => 'success',
             'data'   => [
-                'id'                 => $c->id,
-                'kabel_tube_odc_id'  => $c->kabel_tube_odc_id,
-                'kabel_tube_odc'     => [
-                    'id'           => $c->kabelTubeOdc->id,
-                    'warna_tube'   => $c->kabelTubeOdc->warna_tube,
+                'id'                => $c->id,
+                'kabel_tube_odc_id' => $c->kabel_tube_odc_id,
+                'kabel_tube_odc'    => [
+                    'id'         => $c->kabelTubeOdc->id,
+                    'warna_tube' => $c->kabelTubeOdc->warna_tube,
                 ],
-                'warna_core'         => $c->warna_core,
-                'status'             => $c->status,
-                'odp_ids'            => $c->odp ? [$c->odp->id] : [],
-                'created_at'         => $c->created_at->toDateTimeString(),
-                'updated_at'         => $c->updated_at->toDateTimeString(),
-                'deleted_at'         => $c->deleted_at?->toDateTimeString(),
+                'kabel_odc'         => [
+                    'id'          => $c->kabelTubeOdc->kabelOdc->id,
+                    'nama_kabel'  => $c->kabelTubeOdc->kabelOdc->nama_kabel,
+                ],
+                'warna_core'        => $c->warna_core,
+                'status'            => $c->status,
+                'odp_ids'           => $c->odp ? [$c->odp->id] : [],
+                'created_at'        => $c->created_at->toDateTimeString(),
+                'updated_at'        => $c->updated_at->toDateTimeString(),
+                'deleted_at'        => $c->deleted_at?->toDateTimeString(),
             ],
         ], 200);
     }
 
     /**
-     * Update an existing Kabel‐Core‐ODC by ID (can also change status).
-     *
-     * PUT/PATCH /api/v1/fo-kabel-core-odcs/{id}
+     * Update an existing Kabel-Core-ODC by ID.
      */
     public function update(Request $request, $id)
     {
         $c = FoKabelCoreOdc::withTrashed()->findOrFail($id);
 
         $data = $request->validate([
-            'kabel_tube_odc_id'  => 'sometimes|exists:fo_kabel_tube_odcs,id',
-            'warna_core'         => 'sometimes|in:biru,jingga,hijau,coklat,abu_abu,putih,merah,hitam,kuning,ungu,merah_muda,aqua',
-            'status'             => 'sometimes|in:active,archived',
+            'kabel_tube_odc_id' => 'sometimes|exists:fo_kabel_tube_odcs,id',
+            'warna_core'        => 'sometimes|in:biru,jingga,hijau,coklat,abu_abu,putih,merah,hitam,kuning,ungu,merah_muda,aqua',
+            'status'            => 'sometimes|in:active,archived',
         ]);
 
         $c->update($data);
-        $c->refresh()->load(['kabelTubeOdc', 'odp']);
+        $c->refresh()->load(['kabelTubeOdc.kabelOdc', 'odp']);
 
         return response()->json([
             'status'  => 'success',
             'data'    => [
-                'id'                 => $c->id,
-                'kabel_tube_odc_id'  => $c->kabel_tube_odc_id,
-                'kabel_tube_odc'     => [
-                    'id'           => $c->kabelTubeOdc->id,
-                    'warna_tube'   => $c->kabelTubeOdc->warna_tube,
+                'id'                => $c->id,
+                'kabel_tube_odc_id' => $c->kabel_tube_odc_id,
+                'kabel_tube_odc'    => [
+                    'id'         => $c->kabelTubeOdc->id,
+                    'warna_tube' => $c->kabelTubeOdc->warna_tube,
                 ],
-                'warna_core'         => $c->warna_core,
-                'status'             => $c->status,
-                'odp_ids'            => $c->odp ? [$c->odp->id] : [],
-                'created_at'         => $c->created_at->toDateTimeString(),
-                'updated_at'         => $c->updated_at->toDateTimeString(),
+                'kabel_odc'         => [
+                    'id'          => $c->kabelTubeOdc->kabelOdc->id,
+                    'nama_kabel'  => $c->kabelTubeOdc->kabelOdc->nama_kabel,
+                ],
+                'warna_core'        => $c->warna_core,
+                'status'            => $c->status,
+                'odp_ids'           => $c->odp ? [$c->odp->id] : [],
+                'created_at'        => $c->created_at->toDateTimeString(),
+                'updated_at'        => $c->updated_at->toDateTimeString(),
             ],
             'message' => 'Core ODC updated.',
         ], 200);

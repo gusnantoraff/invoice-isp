@@ -409,56 +409,71 @@ export function Default(props: Props) {
                     },
                 },
                 {
-                    name: t('Kabel ODC'),
-                    href: '/fo-kabel-odcs',
+                    name: t('KABEL'),
+                    href: '', // kosong karena hanya toggle
                     icon: Radio,
-                    current: location.pathname.startsWith('/fo-kabel-odcs'),
+                    current:
+                        location.pathname.startsWith('/fo-lokasis') ||
+                        location.pathname.startsWith('/fo-odc'),
                     visible:
                         hasPermission('view_product') ||
                         hasPermission('create_product') ||
                         hasPermission('edit_product'),
-                    rightButton: {
-                        icon: PlusCircle,
-                        to: '/fo-kabel-odcs/create',
-                        label: t('new_product'),
-                        visible: hasPermission('create_product'),
-                    },
-                },
-                {
-                    name: t('Tube Kabel ODC'),
-                    href: '/fo-kabel-tube-odcs',
-                    icon: Radio,
-                    current: location.pathname.startsWith(
-                        '/fo-kabel-tube-odcs'
-                    ),
-                    visible:
-                        hasPermission('view_product') ||
-                        hasPermission('create_product') ||
-                        hasPermission('edit_product'),
-                    rightButton: {
-                        icon: PlusCircle,
-                        to: '/fo-odc/create',
-                        label: t('new_product'),
-                        visible: hasPermission('create_product'),
-                    },
-                },
-                {
-                    name: t('Core Kabel ODC'),
-                    href: '/fo-kabel-core-odcs',
-                    icon: Radio,
-                    current: location.pathname.startsWith(
-                        '/fo-kabel-core-odcs'
-                    ),
-                    visible:
-                        hasPermission('view_product') ||
-                        hasPermission('create_product') ||
-                        hasPermission('edit_product'),
-                    rightButton: {
-                        icon: PlusCircle,
-                        to: '/fo-kabel-core-odcs/create',
-                        label: t('new_product'),
-                        visible: hasPermission('create_product'),
-                    },
+                    children: [
+                        {
+                            name: t('Kabel ODC'),
+                            href: '/fo-kabel-odcs',
+                            icon: Radio,
+                            current:
+                                location.pathname.startsWith('/fo-kabel-odcs'),
+                            visible:
+                                hasPermission('view_product') ||
+                                hasPermission('create_product') ||
+                                hasPermission('edit_product'),
+                            rightButton: {
+                                icon: PlusCircle,
+                                to: '/fo-kabel-odcs/create',
+                                label: t('new_product'),
+                                visible: hasPermission('create_product'),
+                            },
+                        },
+                        {
+                            name: t('Tube Kabel ODC'),
+                            href: '/fo-kabel-tube-odcs',
+                            icon: Radio,
+                            current: location.pathname.startsWith(
+                                '/fo-kabel-tube-odcs'
+                            ),
+                            visible:
+                                hasPermission('view_product') ||
+                                hasPermission('create_product') ||
+                                hasPermission('edit_product'),
+                            rightButton: {
+                                icon: PlusCircle,
+                                to: '/fo-odc/create',
+                                label: t('new_product'),
+                                visible: hasPermission('create_product'),
+                            },
+                        },
+                        {
+                            name: t('Core Kabel ODC'),
+                            href: '/fo-kabel-core-odcs',
+                            icon: Radio,
+                            current: location.pathname.startsWith(
+                                '/fo-kabel-core-odcs'
+                            ),
+                            visible:
+                                hasPermission('view_product') ||
+                                hasPermission('create_product') ||
+                                hasPermission('edit_product'),
+                            rightButton: {
+                                icon: PlusCircle,
+                                to: '/fo-kabel-core-odcs/create',
+                                label: t('new_product'),
+                                visible: hasPermission('create_product'),
+                            },
+                        },
+                    ],
                 },
                 {
                     name: t('ODP'),

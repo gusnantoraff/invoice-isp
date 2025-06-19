@@ -57,9 +57,20 @@ class FoKabelTubeOdcController extends Controller
         });
 
         // 4) Optional text filter on warna_tube
+        // if ($request->filled('filter')) {
+        //     $term = $request->query('filter');
+        //     $query->where('warna_tube', 'LIKE', "%{$term}%");
+        // }
+
+        // 4) Optional text filter on warna_tube or related kabelOdc.nama_kabel
         if ($request->filled('filter')) {
             $term = $request->query('filter');
-            $query->where('warna_tube', 'LIKE', "%{$term}%");
+            $query->where(function ($q) use ($term) {
+                $q->where('warna_tube', 'LIKE', "%{$term}%")
+                    ->orWhereHas('kabelOdc', function ($q2) use ($term) {
+                        $q2->where('nama_kabel', 'LIKE', "%{$term}%");
+                    });
+            });
         }
 
         // 5) Optional sorting: "column|asc" or "column|dsc"

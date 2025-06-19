@@ -57,11 +57,23 @@ class FoKabelOdcController extends Controller
         });
 
         // 4) Optional text filtering on nama_kabel or tipe_kabel
+        // if ($request->filled('filter')) {
+        //     $term = $request->query('filter');
+        //     $query->where(function ($q) use ($term) {
+        //         $q->where('nama_kabel', 'LIKE', "%{$term}%")
+        //             ->orWhere('tipe_kabel', 'LIKE', "%{$term}%");
+        //     });
+        // }
+
+        // 4) Optional text filtering on nama_kabel, tipe_kabel, or related odc.nama_odc
         if ($request->filled('filter')) {
             $term = $request->query('filter');
             $query->where(function ($q) use ($term) {
                 $q->where('nama_kabel', 'LIKE', "%{$term}%")
-                    ->orWhere('tipe_kabel', 'LIKE', "%{$term}%");
+                    ->orWhere('tipe_kabel', 'LIKE', "%{$term}%")
+                    ->orWhereHas('odc', function ($q2) use ($term) {
+                        $q2->where('nama_odc', 'LIKE', "%{$term}%");
+                    });
             });
         }
 

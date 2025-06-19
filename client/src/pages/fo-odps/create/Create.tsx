@@ -1,94 +1,94 @@
-// client/src/pages/fo-odcs/edit/Edit.tsx
-
-import React, { FormEvent, useEffect, useState } from 'react';
+// client/src/pages/fo-odps/create/Create.tsx
+import React, { FormEvent, useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTitle } from '$app/common/hooks/useTitle';
 import { Default } from '$app/components/layouts/Default';
 import { Container } from '$app/components/Container';
 import { Spinner } from '$app/components/Spinner';
 import { toast } from '$app/common/helpers/toast/toast';
-import { request } from '$app/common/helpers/request';
 import { endpoint } from '$app/common/helpers';
-// import { route } from '$app/common/helpers/route';
-import { useNavigate, useParams } from 'react-router-dom';
+import { request } from '$app/common/helpers/request';
+import { route } from '$app/common/helpers/route';
+import { useNavigate } from 'react-router-dom';
 import { ValidationBag } from '$app/common/interfaces/validation-bag';
 import { GenericSingleResourceResponse } from '$app/common/interfaces/generic-api-response';
-import { CreateFoOdc, FoOdcFormValues } from '../common/components/CreateFoOdc';
+import { CreateFoOdp, FoOdpFormValues } from '../common/components/CreateFoOdp';
 
 interface LokasiOption {
     id: number;
     nama_lokasi: string;
 }
 
-export default function Edit() {
-    useTitle('edit_odc');
+interface CoreOption {
+    id: number;
+    warna_tube: string;
+    warna_core: string;
+}
+
+export default function Create() {
+    useTitle('New FO ODP');
     const [t] = useTranslation();
-    const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
 
-    // Default form values
-    const initialValues: FoOdcFormValues = {
+    const pages = [
+        { name: t('FO ODP')!, href: '/fo-odps' },
+        { name: t('New FO ODP')!, href: '/fo-odps/create' },
+    ];
+
+    const [values, setValues] = useState<FoOdpFormValues>({
         create_new_lokasi: false,
         lokasi_id: '',
         lokasi_name: '',
         lokasi_deskripsi: '',
         lokasi_latitude: '',
         lokasi_longitude: '',
-        nama_odc: '',
-        tipe_splitter: '1:8',
-    };
-
-    const [values, setValues] = useState<FoOdcFormValues>(initialValues);
+        kabel_core_odc_id: '',
+        nama_odp: '',
+    });
     const [lokasis, setLokasis] = useState<LokasiOption[]>([]);
+    const [cores, setCores] = useState<CoreOption[]>([]);
     const [errors, setErrors] = useState<ValidationBag>();
     const [isBusy, setIsBusy] = useState(false);
-    const [loading, setLoading] = useState(true);
 
-    // Fetch existing ODC and Lokasi list
     useEffect(() => {
-        Promise.all([
-            request('GET', endpoint(`/api/v1/fo-odcs/${id}`)),
-            request('GET', endpoint('/api/v1/fo-lokasis')),
-        ])
-            .then(([odcRes, lokRes]: any) => {
-                const odc = odcRes.data.data;
-                setValues({
-                    ...initialValues,
-                    lokasi_id: odc.lokasi.id.toString(),
-                    nama_odc: odc.nama_odc,
-                    tipe_splitter: odc.tipe_splitter,
-                });
-                setLokasis(
-                    lokRes.data.data.map((l: any) => ({
-                        id: l.id,
-                        nama_lokasi: l.nama_lokasi,
-                    }))
-                );
-            })
-            .catch(() => {
-                toast.error('error_refresh_page');
-                navigate('/fo-odcs');
-            })
-            .finally(() => setLoading(false));
-    }, [id, navigate]);
+        request('GET', endpoint('/api/v1/fo-lokasis')).then((res) => {
+            setLokasis(
+                res.data.data.map((l: any) => ({
+                    id: l.id,
+                    nama_lokasi: l.nama_lokasi,
+                }))
+            );
+        });
+        request('GET', endpoint('/api/v1/fo-kabel-core-odcs')).then((res) => {
+            setCores(
+                res.data.data.map((c: any) => ({
+                    id: c.id,
+                    warna_tube: c.warna_tube,
+                    warna_core: c.warna_core,
+                }))
+            );
+        });
+    }, []);
 
-    if (loading) {
-        return <Spinner />;
-    }
-
-    const handleSave = (e: FormEvent<HTMLFormElement>) => {
+    const handleSave = (e: FormEvent) => {
         e.preventDefault();
         if (isBusy) return;
         setIsBusy(true);
         toast.processing();
 
-        const doUpdate = (lokasi_id: number) => {
-            request('PUT', endpoint(`/api/v1/fo-odcs/${id}`), {
+        const postOdp = (lokasi_id: number) => {
+            request('POST', endpoint('/api/v1/fo-odps'), {
                 lokasi_id,
-                nama_odc: values.nama_odc,
-                tipe_splitter: values.tipe_splitter,
+                kabel_core_odc_id: parseInt(values.kabel_core_odc_id, 10),
+                nama_odp: values.nama_odp,
             })
-                .then(() => toast.success('updated_odc'))
+                .then((resp: GenericSingleResourceResponse<any>) => {
+                    toast.success('created_odp');
+                    navigate(
+                        route('/fo-odps/:id/edit', { id: resp.data.data.id }),
+                        { state: { toast: 'created_odp' } }
+                    );
+                })
                 .catch((err) => {
                     if (err.response?.status === 422) {
                         setErrors(err.response.data);
@@ -108,7 +108,7 @@ export default function Edit() {
                 longitude: parseFloat(values.lokasi_longitude),
             })
                 .then((res: GenericSingleResourceResponse<any>) =>
-                    doUpdate(res.data.data.id)
+                    postOdp(res.data.data.id)
                 )
                 .catch((err) => {
                     if (err.response?.status === 422) {
@@ -117,30 +117,27 @@ export default function Edit() {
                     } else {
                         toast.error('error_refresh_page');
                     }
+                    setIsBusy(false);
                 });
         } else {
-            doUpdate(parseInt(values.lokasi_id, 10));
+            postOdp(parseInt(values.lokasi_id, 10));
         }
     };
 
-    const pages = [
-        { name: t('FO ODC')!, href: '/fo-odcs' },
-        { name: t('edit_odc')!, href: `/fo-odcs/${id}/edit` },
-    ];
-
     return (
         <Default
-            title={t('edit_odc')!}
+            title={t('New FO ODP')}
             breadcrumbs={pages}
             disableSaveButton={isBusy}
             onSaveClick={handleSave}
         >
             <Container breadcrumbs={[]}>
                 <form onSubmit={handleSave}>
-                    <CreateFoOdc
+                    <CreateFoOdp
                         values={values}
                         setValues={setValues}
                         lokasis={lokasis}
+                        cores={cores}
                         errors={errors}
                     />
                 </form>

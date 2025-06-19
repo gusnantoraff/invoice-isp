@@ -92,7 +92,7 @@ export default function Edit() {
                 <form onSubmit={handleSave}>
                     <CreateFoLokasi
                         foLokasi={lokasi}
-                        setFoLokasi={setLokasi}
+                        setFoLokasi={setLokasi as any}
                         errors={errors}
                         setErrors={setErrors}
                     />
