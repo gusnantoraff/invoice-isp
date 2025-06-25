@@ -18,7 +18,8 @@ return new class extends Migration
             $table->foreignId('kabel_core_odc_id')
                 ->constrained('fo_kabel_core_odcs')
                 ->cascadeOnDelete()
-                ->cascadeOnUpdate();
+                ->cascadeOnUpdate()
+                ->nullable()->change(); //enable nullable
 
             // Foreign key to fo_lokasis.id
             $table->foreignId('lokasi_id')

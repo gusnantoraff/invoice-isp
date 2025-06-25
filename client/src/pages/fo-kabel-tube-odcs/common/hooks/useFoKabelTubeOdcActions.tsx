@@ -7,13 +7,14 @@ import { Icon } from '$app/components/icons/Icon';
 import { MdArchive, MdRestore } from 'react-icons/md';
 import { getEntityState } from '$app/common/helpers2';
 import { EntityState } from '$app/common/enums/entity-state';
-import { bulk } from '$app/common/queries/foKabelTubeOdc';
+import { useFoKabelTubeOdcBulkAction } from '$app/common/queries/foKabelTubeOdc';
 import { toast } from '$app/common/helpers/toast/toast';
 
 export const useFoKabelTubeOdcActions = (): Array<
     (res: any) => ReactElement
 > => {
     const [t] = useTranslation();
+    const bulkAction = useFoKabelTubeOdcBulkAction();
 
     return [
         (res) => {
@@ -23,9 +24,7 @@ export const useFoKabelTubeOdcActions = (): Array<
                 return (
                     <DropdownElement
                         onClick={() =>
-                            bulk([res.id], 'archive').then(() =>
-                                toast.success(t('archived_tube_odc')!)
-                            )
+                            bulkAction([res.id], 'archive')
                         }
                         icon={<Icon element={MdArchive} />}
                     >
@@ -41,9 +40,7 @@ export const useFoKabelTubeOdcActions = (): Array<
                 return (
                     <DropdownElement
                         onClick={() =>
-                            bulk([res.id], 'restore').then(() =>
-                                toast.success(t('restored_tube_odc')!)
-                            )
+                            bulkAction([res.id], 'restore')
                         }
                         icon={<Icon element={MdRestore} />}
                     >

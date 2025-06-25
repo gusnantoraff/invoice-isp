@@ -13,6 +13,8 @@ export interface FoOdpFormValues {
     lokasi_deskripsi: string;
     lokasi_latitude: string;
     lokasi_longitude: string;
+    kabel_odc_id: string;
+    kabel_tube_odc_id: string;
     kabel_core_odc_id: string;
     nama_odp: string;
 }
@@ -24,8 +26,11 @@ interface LokasiOption {
 
 interface CoreOption {
     id: number;
-    warna_tube?: string;
     warna_core: string;
+    kabel_odc_id: number;
+    nama_kabel: string;
+    kabel_tube_odc_id: number;
+    warna_tube: string;
 }
 
 interface Props {
@@ -49,13 +54,45 @@ export function CreateFoOdp({
         value: FoOdpFormValues[K]
     ) => setValues((v) => ({ ...v, [field]: value }));
 
+    // derive unique kabel options
+    const kabelOptions = Array.from(
+        new Map(
+            cores.map((c) => [
+                c.kabel_odc_id,
+                { id: c.kabel_odc_id, nama_kabel: c.nama_kabel },
+            ])
+        ).values()
+    );
+
+    // derive tube options based on selected kabel
+    const tubeOptions = values.kabel_odc_id
+        ? Array.from(
+              new Map(
+                  cores
+                      .filter(
+                          (c) => String(c.kabel_odc_id) === values.kabel_odc_id
+                      )
+                      .map((c) => [
+                          c.kabel_tube_odc_id,
+                          { id: c.kabel_tube_odc_id, warna_tube: c.warna_tube },
+                      ])
+              ).values()
+          )
+        : [];
+
+    // derive core options based on selected kabel and tube
+    const coreOptions = cores.filter(
+        (c) =>
+            String(c.kabel_odc_id) === values.kabel_odc_id &&
+            String(c.kabel_tube_odc_id) === values.kabel_tube_odc_id
+    );
+
     return (
         <Card
             title={t(
                 values.create_new_lokasi ? 'new_lokasi_and_odp' : 'new_odp'
             )}
         >
-            {/* Toggle for creating new Lokasi */}
             <Element leftSide={t('create_new_lokasi')}>
                 <Checkbox
                     checked={values.create_new_lokasi}
@@ -65,11 +102,8 @@ export function CreateFoOdp({
                 />
             </Element>
 
-            {/* Lokasi selection or creation */}
             {values.create_new_lokasi ? (
                 <>
-                    {' '}
-                    {/* New Lokasi fields */}
                     <Element leftSide={t('nama_lokasi')} required>
                         <InputField
                             required
@@ -129,26 +163,62 @@ export function CreateFoOdp({
                 </Element>
             )}
 
-            {/* Core ODC selection always visible */}
-            <Element leftSide={t('core_odc')} required>
+            <Element leftSide={t('kabel_odc')} required>
+                <SelectField
+                    required
+                    value={values.kabel_odc_id}
+                    onValueChange={(v) => {
+                        onChange('kabel_odc_id', v);
+                        // reset dependent
+                        onChange('kabel_tube_odc_id', '');
+                        onChange('kabel_core_odc_id', '');
+                    }}
+                    errorMessage={errors?.errors.kabel_odc_id}
+                >
+                    <option value="">{t('select_kabel_odc')}</option>
+                    {kabelOptions.map((k) => (
+                        <option key={k.id} value={k.id.toString()}>
+                            {k.nama_kabel}
+                        </option>
+                    ))}
+                </SelectField>
+            </Element>
+
+            <Element leftSide={t('kabel_tube_odc')} required>
+                <SelectField
+                    required
+                    value={values.kabel_tube_odc_id}
+                    onValueChange={(v) => {
+                        onChange('kabel_tube_odc_id', v);
+                        onChange('kabel_core_odc_id', '');
+                    }}
+                    errorMessage={errors?.errors.kabel_tube_odc_id}
+                >
+                    <option value="">{t('select_tube_odc')}</option>
+                    {tubeOptions.map((t) => (
+                        <option key={t.id} value={t.id.toString()}>
+                            {t.warna_tube}
+                        </option>
+                    ))}
+                </SelectField>
+            </Element>
+
+            <Element leftSide={t('kabel_core_odc')}>
                 <SelectField
                     required
                     value={values.kabel_core_odc_id}
                     onValueChange={(v) => onChange('kabel_core_odc_id', v)}
                     errorMessage={errors?.errors.kabel_core_odc_id}
                 >
-                    <option value="">{t('select_core')}</option>
-                    {cores.map((c) => (
+                    <option value="">{t('unassigned_core') || '—'}</option>
+                    {coreOptions.map((c) => (
                         <option key={c.id} value={c.id.toString()}>
-                            {c.warna_tube
-                                ? `${c.warna_tube} / ${c.warna_core}`
-                                : c.warna_core}
+                            {c.warna_core}
                         </option>
                     ))}
                 </SelectField>
             </Element>
 
-            {/* Nama ODP */}
             <Element leftSide={t('nama_odp')} required>
                 <InputField
                     required

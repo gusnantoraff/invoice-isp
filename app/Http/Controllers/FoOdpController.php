@@ -96,17 +96,13 @@ class FoOdpController extends Controller
         }
 
         // 6) Pagination (default 15 per page)
-        $perPage = (int) $request->query('per_page', 15);
-        // if ($perPage <= 0) {
-        //     $perPage = 15;
-        // }
-        $perPage = $perPage > 0 ? $perPage : 15;
+        $perPage = max(1, (int) $request->query('per_page', 15));
 
         // 7) Eager-load relationships and paginate
-        $paginator = $query
+        $paginator = FoOdp::withTrashed()
             ->with([
                 'lokasi',
-                'kabelCoreOdc.kabelTubeOdc.kabelOdc.odc',  // full chain to ODC
+                'kabelCoreOdc.kabelTubeOdc.kabelOdc.odc',
                 'clientFtth',
             ])
             ->paginate($perPage)
@@ -114,47 +110,44 @@ class FoOdpController extends Controller
 
         // 8) Transform each FoOdp into JSON structure
         $items = array_map(function ($o) {
+            $core = $o->kabelCoreOdc;
+            $tube = $core?->kabelTubeOdc;
+            $kabelOdc = $tube?->kabelOdc;
+            $topOdc = $kabelOdc?->odc;
+
             return [
-                'id'           => $o->id,
-                'nama_odp'     => $o->nama_odp,
-                'lokasi'       => [
+                'id'         => $o->id,
+                'nama_odp'   => $o->nama_odp,
+                'lokasi'     => $o->lokasi ? [
                     'id'          => $o->lokasi->id,
                     'nama_lokasi' => $o->lokasi->nama_lokasi,
                     'latitude'    => $o->lokasi->latitude,
                     'longitude'   => $o->lokasi->longitude,
-                ],
-                'kabel_core_odc' => [
-                    'id'         => $o->kabelCoreOdc->id,
-                    'warna_core' => $o->kabelCoreOdc->warna_core,
-                    'kabel_tube_odc' => [
-                        'id'         => $o->kabelCoreOdc->kabelTubeOdc->id,
-                        'warna_tube' => $o->kabelCoreOdc->kabelTubeOdc->warna_tube,
-                    ],
-                    'kabel_odc' => [
-                        'id'         => $o->kabelCoreOdc->kabelTubeOdc->kabelOdc->id,
-                        'nama_kabel' => $o->kabelCoreOdc->kabelTubeOdc->kabelOdc->nama_kabel,
-                    ],
-                ],
-                // newly added top-level ODC relationship
-                'odc' => [
-                    'id'      => $o->kabelCoreOdc
-                        ->kabelTubeOdc
-                        ->kabelOdc
-                        ->odc
-                        ->id,
-                    'nama_odc' => $o->kabelCoreOdc
-                        ->kabelTubeOdc
-                        ->kabelOdc
-                        ->odc
-                        ->nama_odc,
-                ],
-                'client_ftth' => $o->clientFtth
-                    ? [
-                        'id'          => $o->clientFtth->id,
-                        'nama_client' => $o->clientFtth->nama_client,
-                        'alamat'      => $o->clientFtth->alamat,
-                    ]
-                    : null,
+                ] : null,
+
+                'kabel_core_odc' => $core ? [
+                    'id'         => $core->id,
+                    'warna_core' => $core->warna_core,
+                    'kabel_tube_odc' => $tube ? [
+                        'id'         => $tube->id,
+                        'warna_tube' => $tube->warna_tube,
+                    ] : null,
+                    'kabel_odc' => $kabelOdc ? [
+                        'id'          => $kabelOdc->id,
+                        'nama_kabel'  => $kabelOdc->nama_kabel,
+                    ] : null,
+                ] : null,
+
+                'odc' => $topOdc ? [
+                    'id'       => $topOdc->id,
+                    'nama_odc' => $topOdc->nama_odc,
+                ] : null,
+
+                'client_ftth' => $o->clientFtth ? [
+                    'id'          => $o->clientFtth->id,
+                    'nama_client' => $o->clientFtth->nama_client,
+                    'alamat'      => $o->clientFtth->alamat,
+                ] : null,
 
                 'status'     => $o->status,
                 'created_at' => $o->created_at->toDateTimeString(),
@@ -186,10 +179,24 @@ class FoOdpController extends Controller
     {
         $data = $request->validate([
             'lokasi_id'         => 'required|exists:fo_lokasis,id',
-            'kabel_core_odc_id' => 'required|exists:fo_kabel_core_odcs,id',
+            'kabel_core_odc_id' => 'nullable|exists:fo_kabel_core_odcs,id',
             'nama_odp'          => 'required|string|max:255',
             'status'            => 'sometimes|in:active,archived',
         ]);
+
+        // Check if the kabel_core_odc_id already has an associated FoOdp
+        if (isset($data['kabel_core_odc_id'])) {
+            $exists = FoOdp::where('kabel_core_odc_id', $data['kabel_core_odc_id'])->exists();
+            if ($exists) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'This core is already associated with another ODP.',
+                    'errors'  => [
+                        'kabel_core_odc_id' => ['This core is already associated with another ODP.'],
+                    ],
+                ], 422);
+            }
+        }
 
         $data['status'] = $data['status'] ?? 'active';
 
@@ -204,51 +211,52 @@ class FoOdpController extends Controller
         ]);
 
         // 3) Build the response exactly like in update()
+        // Build same mapping as index
+        $core = $o->kabelCoreOdc;
+        $tube = $core?->kabelTubeOdc;
+        $kabelOdc = $tube?->kabelOdc;
+        $topOdc = $kabelOdc?->odc;
+
+        $responseData = [
+            'id'           => $o->id,
+            'nama_odp'     => $o->nama_odp,
+            'lokasi'       => $o->lokasi ? [
+                'id'          => $o->lokasi->id,
+                'nama_lokasi' => $o->lokasi->nama_lokasi,
+            ] : null,
+
+            'kabel_core_odc' => $core ? [
+                'id'         => $core->id,
+                'warna_core' => $core->warna_core,
+                'kabel_tube_odc' => $tube ? [
+                    'id'         => $tube->id,
+                    'warna_tube' => $tube->warna_tube,
+                ] : null,
+                'kabel_odc' => $kabelOdc ? [
+                    'id'          => $kabelOdc->id,
+                    'nama_kabel'  => $kabelOdc->nama_kabel,
+                ] : null,
+            ] : null,
+
+            'odc' => $topOdc ? [
+                'id'       => $topOdc->id,
+                'nama_odc' => $topOdc->nama_odc,
+            ] : null,
+
+            'client_ftth' => $o->clientFtth ? [
+                'id'          => $o->clientFtth->id,
+                'nama_client' => $o->clientFtth->nama_client,
+                'alamat'      => $o->clientFtth->alamat,
+            ] : null,
+
+            'status'     => $o->status,
+            'created_at' => $o->created_at->toDateTimeString(),
+            'updated_at' => $o->updated_at->toDateTimeString(),
+        ];
+
         return response()->json([
-            'status' => 'success',
-            'data'   => [
-                'id'           => $o->id,
-                'nama_odp'     => $o->nama_odp,
-                'lokasi'       => [
-                    'id'          => $o->lokasi->id,
-                    'nama_lokasi' => $o->lokasi->nama_lokasi,
-                ],
-                'kabel_core_odc' => [
-                    'id'         => $o->kabelCoreOdc->id,
-                    'warna_core' => $o->kabelCoreOdc->warna_core,
-                    'kabel_tube_odc' => [
-                        'id'         => $o->kabelCoreOdc->kabelTubeOdc->id,
-                        'warna_tube' => $o->kabelCoreOdc->kabelTubeOdc->warna_tube,
-                    ],
-                    'kabel_odc' => [
-                        'id'         => $o->kabelCoreOdc->kabelTubeOdc->kabelOdc->id,
-                        'nama_kabel' => $o->kabelCoreOdc->kabelTubeOdc->kabelOdc->nama_kabel,
-                    ],
-                ],
-                // newly added top-level ODC relationship
-                'odc' => [
-                    'id'      => $o->kabelCoreOdc
-                        ->kabelTubeOdc
-                        ->kabelOdc
-                        ->odc
-                        ->id,
-                    'nama_odc' => $o->kabelCoreOdc
-                        ->kabelTubeOdc
-                        ->kabelOdc
-                        ->odc
-                        ->nama_odc,
-                ],
-                'client_ftth' => $o->clientFtth
-                    ? [
-                        'id'          => $o->clientFtth->id,
-                        'nama_client' => $o->clientFtth->nama_client,
-                        'alamat'      => $o->clientFtth->alamat,
-                    ]
-                    : null,
-                'status'     => $o->status,
-                'created_at' => $o->created_at->toDateTimeString(),
-                'updated_at' => $o->updated_at->toDateTimeString(),
-            ],
+            'status'  => 'success',
+            'data'    => $responseData,
             'message' => 'ODP created.',
         ], 201);
     }
@@ -267,47 +275,47 @@ class FoOdpController extends Controller
             'clientFtth',
         ]);
 
+        // Null‐safety chain
+        $core     = $o->kabelCoreOdc;
+        $tube     = $core?->kabelTubeOdc;
+        $kabelOdc = $tube?->kabelOdc;
+        $topOdc   = $kabelOdc?->odc;
+
         return response()->json([
             'status' => 'success',
             'data'   => [
-                'id'           => $o->id,
-                'nama_odp'     => $o->nama_odp,
-                'lokasi'       => [
+                'id'       => $o->id,
+                'nama_odp' => $o->nama_odp,
+
+                'lokasi'   => $o->lokasi ? [
                     'id'          => $o->lokasi->id,
                     'nama_lokasi' => $o->lokasi->nama_lokasi,
-                ],
-                'kabel_core_odc' => [
-                    'id'         => $o->kabelCoreOdc->id,
-                    'warna_core' => $o->kabelCoreOdc->warna_core,
-                    'kabel_tube_odc' => [
-                        'id'         => $o->kabelCoreOdc->kabelTubeOdc->id,
-                        'warna_tube' => $o->kabelCoreOdc->kabelTubeOdc->warna_tube,
-                    ],
-                    'kabel_odc' => [
-                        'id'         => $o->kabelCoreOdc->kabelTubeOdc->kabelOdc->id,
-                        'nama_kabel' => $o->kabelCoreOdc->kabelTubeOdc->kabelOdc->nama_kabel,
-                    ],
-                ],
-                // newly added top-level ODC relationship
-                'odc' => [
-                    'id'      => $o->kabelCoreOdc
-                        ->kabelTubeOdc
-                        ->kabelOdc
-                        ->odc
-                        ->id,
-                    'nama_odc' => $o->kabelCoreOdc
-                        ->kabelTubeOdc
-                        ->kabelOdc
-                        ->odc
-                        ->nama_odc,
-                ],
-                'client_ftth' => $o->clientFtth
-                    ? [
-                        'id'          => $o->clientFtth->id,
-                        'nama_client' => $o->clientFtth->nama_client,
-                        'alamat'      => $o->clientFtth->alamat,
-                    ]
-                    : null,
+                ] : null,
+
+                'kabel_core_odc' => $core ? [
+                    'id'         => $core->id,
+                    'warna_core' => $core->warna_core,
+                    'kabel_tube_odc' => $tube ? [
+                        'id'         => $tube->id,
+                        'warna_tube' => $tube->warna_tube,
+                    ] : null,
+                    'kabel_odc' => $kabelOdc ? [
+                        'id'         => $kabelOdc->id,
+                        'nama_kabel' => $kabelOdc->nama_kabel,
+                    ] : null,
+                ] : null,
+
+                'odc' => $topOdc ? [
+                    'id'      => $topOdc->id,
+                    'nama_odc' => $topOdc->nama_odc,
+                ] : null,
+
+                'client_ftth' => $o->clientFtth ? [
+                    'id'          => $o->clientFtth->id,
+                    'nama_client' => $o->clientFtth->nama_client,
+                    'alamat'      => $o->clientFtth->alamat,
+                ] : null,
+
                 'status'     => $o->status,
                 'created_at' => $o->created_at->toDateTimeString(),
                 'updated_at' => $o->updated_at->toDateTimeString(),
@@ -317,77 +325,95 @@ class FoOdpController extends Controller
     }
 
     /**
-     * Update an existing ODP by ID (can also change status).
+     * Update an existing ODP by ID (can also change status and unlink core).
      *
      * PUT/PATCH /api/v1/fo-odps/{id}
      */
     public function update(Request $request, $id)
     {
-        $o = FoOdp::withTrashed()->findOrFail($id);
+        $odp = FoOdp::withTrashed()->findOrFail($id);
 
         $data = $request->validate([
             'lokasi_id'         => 'sometimes|exists:fo_lokasis,id',
-            'kabel_core_odc_id' => 'sometimes|exists:fo_kabel_core_odcs,id',
+            'kabel_core_odc_id' => 'nullable|exists:fo_kabel_core_odcs,id',
             'nama_odp'          => 'sometimes|string|max:255',
             'status'            => 'sometimes|in:active,archived',
         ]);
 
-        $o->update($data);
+        // Check core linkage conflict
+        if (array_key_exists('kabel_core_odc_id', $data) && $data['kabel_core_odc_id'] !== null) {
+            $conflict = FoOdp::where('kabel_core_odc_id', $data['kabel_core_odc_id'])
+                ->where('id', '!=', $odp->id)
+                ->exists();
 
-        // reload everything—including nested tube->odc chain:
-        $o->refresh()->load([
+            if ($conflict) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'This core is already associated with another ODP.',
+                    'errors'  => [
+                        'kabel_core_odc_id' => ['This core is already associated with another ODP.'],
+                    ],
+                ], 422);
+            }
+        }
+
+        // Perform update (allows unlinking if null)
+        $odp->update($data);
+
+        // Reload nested relations
+        $odp->refresh()->load([
             'lokasi',
             'kabelCoreOdc.kabelTubeOdc.kabelOdc.odc',
             'clientFtth',
         ]);
 
-        // build response, safely checking each relation:
+        // Safely build JSON, guarding against null relations
+        $core = $odp->kabelCoreOdc;
+        $tube = $core?->kabelTubeOdc;
+        $kabelOdc = $tube?->kabelOdc;
+        $topOdc = $kabelOdc?->odc;
+
         return response()->json([
-            'status' => 'success',
-            'data'   => [
-                'id'           => $o->id,
-                'nama_odp'     => $o->nama_odp,
-                'lokasi'       => [
-                    'id'          => $o->lokasi->id,
-                    'nama_lokasi' => $o->lokasi->nama_lokasi,
-                ],
-                'kabel_core_odc' => [
-                    'id'         => $o->kabelCoreOdc->id,
-                    'warna_core' => $o->kabelCoreOdc->warna_core,
-                    'kabel_tube_odc' => [
-                        'id'         => $o->kabelCoreOdc->kabelTubeOdc->id,
-                        'warna_tube' => $o->kabelCoreOdc->kabelTubeOdc->warna_tube,
-                    ],
-                    'kabel_odc' => [
-                        'id'         => $o->kabelCoreOdc->kabelTubeOdc->kabelOdc->id,
-                        'nama_kabel' => $o->kabelCoreOdc->kabelTubeOdc->kabelOdc->nama_kabel,
-                    ],
-                ],
-                // newly added top-level ODC relationship
-                'odc' => [
-                    'id'      => $o->kabelCoreOdc
-                        ->kabelTubeOdc
-                        ->kabelOdc
-                        ->odc
-                        ->id,
-                    'nama_odc' => $o->kabelCoreOdc
-                        ->kabelTubeOdc
-                        ->kabelOdc
-                        ->odc
-                        ->nama_odc,
-                ],
-                'client_ftth' => $o->clientFtth
-                    ? [
-                        'id'          => $o->clientFtth->id,
-                        'nama_client' => $o->clientFtth->nama_client,
-                        'alamat'      => $o->clientFtth->alamat,
-                    ]
-                    : null,
-                'status'     => $o->status,
-                'created_at' => $o->created_at->toDateTimeString(),
-                'updated_at' => $o->updated_at->toDateTimeString(),
+            'status'  => 'success',
+            'data'    => [
+                'id'                 => $odp->id,
+                'nama_odp'           => $odp->nama_odp,
+                'lokasi'             => $odp->lokasi ? [
+                    'id'            => $odp->lokasi->id,
+                    'nama_lokasi'   => $odp->lokasi->nama_lokasi,
+                ] : null,
+
+                // core/tube/odc chain
+                'kabel_core_odc'     => $core ? [
+                    'id'         => $core->id,
+                    'warna_core' => $core->warna_core,
+                    'kabel_tube_odc' => $tube ? [
+                        'id'         => $tube->id,
+                        'warna_tube' => $tube->warna_tube,
+                    ] : null,
+                    'kabel_odc' => $kabelOdc ? [
+                        'id'          => $kabelOdc->id,
+                        'nama_kabel'  => $kabelOdc->nama_kabel,
+                    ] : null,
+                ] : null,
+
+                // top-level ODC via tube -> kabelOdc -> odc
+                'odc'                => $topOdc ? [
+                    'id'      => $topOdc->id,
+                    'nama_odc' => $topOdc->nama_odc,
+                ] : null,
+
+                'client_ftth'        => $odp->clientFtth ? [
+                    'id'          => $odp->clientFtth->id,
+                    'nama_client' => $odp->clientFtth->nama_client,
+                    'alamat'      => $odp->clientFtth->alamat,
+                ] : null,
+
+                'status'             => $odp->status,
+                'created_at'         => $odp->created_at->toDateTimeString(),
+                'updated_at'         => $odp->updated_at->toDateTimeString(),
             ],
-            'message' => 'ODP updated.',
+            'message' => 'ODP updated successfully.',
         ], 200);
     }
 

@@ -5,11 +5,12 @@ import { Icon } from '$app/components/icons/Icon';
 import { MdArchive, MdRestore } from 'react-icons/md';
 import { getEntityState } from '$app/common/helpers2';
 import { EntityState } from '$app/common/enums/entity-state';
-import { bulk as bulkOdp } from '$app/common/queries/foOdp';
+import { useFoOdpBulkAction } from '$app/common/queries/foOdp';
 import { toast } from '$app/common/helpers/toast/toast';
 
 export const useFoOdpActions = (): Array<(res: any) => ReactElement> => {
     const [t] = useTranslation();
+    const bulkAction = useFoOdpBulkAction();
 
     return [
         (res) => {
@@ -19,9 +20,7 @@ export const useFoOdpActions = (): Array<(res: any) => ReactElement> => {
                 return (
                     <DropdownElement
                         onClick={() =>
-                            bulkOdp([res.id], 'archive').then(() =>
-                                toast.success(t('archived_odp')!)
-                            )
+                            bulkAction([res.id], 'archive')
                         }
                         icon={<Icon element={MdArchive} />}
                     >
@@ -37,9 +36,7 @@ export const useFoOdpActions = (): Array<(res: any) => ReactElement> => {
                 return (
                     <DropdownElement
                         onClick={() =>
-                            bulkOdp([res.id], 'restore').then(() =>
-                                toast.success(t('restored_odp')!)
-                            )
+                            bulkAction([res.id], 'restore')
                         }
                         icon={<Icon element={MdRestore} />}
                     >

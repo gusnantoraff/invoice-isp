@@ -13,11 +13,12 @@ import {
 // import { getEntityState } from '$app/common/helpers';
 import { getEntityState } from '$app/common/helpers2';
 import { EntityState } from '$app/common/enums/entity-state';
-import { bulk } from '$app/common/queries/foLokasi';
+import { useFoLokasiBulkAction } from '$app/common/queries/foLokasi';
 import { toast } from '$app/common/helpers/toast/toast';
 
 export const useFoLokasiActions = (): Array<(res: any) => ReactElement> => {
     const [t] = useTranslation();
+    const bulkAction = useFoLokasiBulkAction();
 
     return [
         (res) => {
@@ -29,9 +30,7 @@ export const useFoLokasiActions = (): Array<(res: any) => ReactElement> => {
                 return (
                     <DropdownElement
                         onClick={() =>
-                            bulk([res.id], 'archive').then(() =>
-                                toast.success(t('archived_lokasi')!)
-                            )
+                            bulkAction([res.id], 'archive')
                         }
                         icon={<Icon element={MdArchive} />}
                     >
@@ -47,9 +46,7 @@ export const useFoLokasiActions = (): Array<(res: any) => ReactElement> => {
                 return (
                     <DropdownElement
                         onClick={() =>
-                            bulk([res.id], 'restore').then(() =>
-                                toast.success(t('restored_lokasi')!)
-                            )
+                            bulkAction([res.id], 'restore')
                         }
                         icon={<Icon element={MdRestore} />}
                     >

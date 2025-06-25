@@ -7,13 +7,14 @@ import { Icon } from '$app/components/icons/Icon';
 import { MdArchive, MdRestore } from 'react-icons/md';
 import { getEntityState } from '$app/common/helpers2';
 import { EntityState } from '$app/common/enums/entity-state';
-import { bulk } from '$app/common/queries/foKabelCoreOdc';
+import { useFoKabelCoreOdcBulkAction } from '$app/common/queries/foKabelCoreOdc';
 import { toast } from '$app/common/helpers/toast/toast';
 
 export const useFoKabelCoreOdcActions = (): Array<
     (res: any) => ReactElement
 > => {
     const [t] = useTranslation();
+    const bulkAction = useFoKabelCoreOdcBulkAction();
 
     return [
         (res) => {
@@ -23,9 +24,7 @@ export const useFoKabelCoreOdcActions = (): Array<
                 return (
                     <DropdownElement
                         onClick={() =>
-                            bulk([res.id], 'archive').then(() =>
-                                toast.success(t('archived_core_odc')!)
-                            )
+                            bulkAction([res.id], 'archive')
                         }
                         icon={<Icon element={MdArchive} />}
                     >
@@ -41,9 +40,7 @@ export const useFoKabelCoreOdcActions = (): Array<
                 return (
                     <DropdownElement
                         onClick={() =>
-                            bulk([res.id], 'restore').then(() =>
-                                toast.success(t('restored_core_odc')!)
-                            )
+                            bulkAction([res.id], 'restore')
                         }
                         icon={<Icon element={MdRestore} />}
                     >

@@ -14,15 +14,13 @@ import { ValidationBag } from '$app/common/interfaces/validation-bag';
 import { GenericSingleResourceResponse } from '$app/common/interfaces/generic-api-response';
 import { CreateFoOdp, FoOdpFormValues } from '../common/components/CreateFoOdp';
 
-interface LokasiOption {
-    id: number;
-    nama_lokasi: string;
-}
-
 interface CoreOption {
     id: number;
-    warna_tube: string;
     warna_core: string;
+    kabel_odc_id: number;
+    nama_kabel: string;
+    kabel_tube_odc_id: number;
+    warna_tube: string;
 }
 
 export default function Create() {
@@ -42,32 +40,42 @@ export default function Create() {
         lokasi_deskripsi: '',
         lokasi_latitude: '',
         lokasi_longitude: '',
+        kabel_odc_id: '',
+        kabel_tube_odc_id: '',
         kabel_core_odc_id: '',
         nama_odp: '',
     });
-    const [lokasis, setLokasis] = useState<LokasiOption[]>([]);
+
+    const [lokasis, setLokasis] = useState<
+        { id: number; nama_lokasi: string }[]
+    >([]);
     const [cores, setCores] = useState<CoreOption[]>([]);
     const [errors, setErrors] = useState<ValidationBag>();
     const [isBusy, setIsBusy] = useState(false);
 
     useEffect(() => {
-        request('GET', endpoint('/api/v1/fo-lokasis')).then((res) => {
+        // fetch ODP locales
+        request('GET', endpoint('/api/v1/fo-lokasis')).then((res) =>
             setLokasis(
                 res.data.data.map((l: any) => ({
                     id: l.id,
                     nama_lokasi: l.nama_lokasi,
                 }))
-            );
-        });
-        request('GET', endpoint('/api/v1/fo-kabel-core-odcs')).then((res) => {
+            )
+        );
+        // fetch core options (each includes nested cable & tube)
+        request('GET', endpoint('/api/v1/fo-kabel-core-odcs')).then((res) =>
             setCores(
                 res.data.data.map((c: any) => ({
                     id: c.id,
-                    warna_tube: c.warna_tube,
                     warna_core: c.warna_core,
+                    kabel_odc_id: c.kabel_odc.id,
+                    nama_kabel: c.kabel_odc.nama_kabel,
+                    kabel_tube_odc_id: c.kabel_tube_odc.id,
+                    warna_tube: c.kabel_tube_odc.warna_tube,
                 }))
-            );
-        });
+            )
+        );
     }, []);
 
     const handleSave = (e: FormEvent) => {
@@ -76,11 +84,22 @@ export default function Create() {
         setIsBusy(true);
         toast.processing();
 
+        const payload: Record<string, any> = {
+            lokasi_id: parseInt(values.lokasi_id, 10),
+            nama_odp: values.nama_odp,
+            // only include core if a selection was made:
+        };
+        if (values.kabel_core_odc_id !== '') {
+            payload.kabel_core_odc_id =
+                values.kabel_core_odc_id === ''
+                    ? null
+                    : parseInt(values.kabel_core_odc_id, 10);
+        }
+
         const postOdp = (lokasi_id: number) => {
             request('POST', endpoint('/api/v1/fo-odps'), {
+                ...payload,
                 lokasi_id,
-                kabel_core_odc_id: parseInt(values.kabel_core_odc_id, 10),
-                nama_odp: values.nama_odp,
             })
                 .then((resp: GenericSingleResourceResponse<any>) => {
                     toast.success('created_odp');
@@ -92,10 +111,17 @@ export default function Create() {
                 .catch((err) => {
                     if (err.response?.status === 422) {
                         setErrors(err.response.data);
-                        toast.dismiss();
-                    } else {
-                        toast.error('error_refresh_page');
-                    }
+                        //check if the relation is already exist
+                        const validation = err.response.data.errors;
+                        if (validation.kabel_core_odc_id) {
+                            toast.error(
+                                validation.kabel_core_odc_id[0] +
+                                    ' Please disable or unset the existing ODP before assigning this core.'
+                            );
+                        } else {
+                            toast.dismiss();
+                        }
+                    } else toast.error('error_refresh_page');
                 })
                 .finally(() => setIsBusy(false));
         };
@@ -107,16 +133,12 @@ export default function Create() {
                 latitude: parseFloat(values.lokasi_latitude),
                 longitude: parseFloat(values.lokasi_longitude),
             })
-                .then((res: GenericSingleResourceResponse<any>) =>
-                    postOdp(res.data.data.id)
-                )
+                .then((res: any) => postOdp(res.data.data.id))
                 .catch((err) => {
                     if (err.response?.status === 422) {
                         setErrors(err.response.data);
                         toast.dismiss();
-                    } else {
-                        toast.error('error_refresh_page');
-                    }
+                    } else toast.error('error_refresh_page');
                     setIsBusy(false);
                 });
         } else {

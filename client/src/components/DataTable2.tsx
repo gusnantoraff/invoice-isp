@@ -38,8 +38,8 @@ import {
     Tr,
 } from './tables';
 import { TFooter } from './tables/TFooter';
-import { useQuery } from 'react-query';
-import { useSetAtom } from 'jotai';
+import { useQuery, useQueryClient } from 'react-query';
+import { useSetAtom, useAtomValue } from 'jotai';
 import { Icon } from './icons/Icon';
 import { MdArchive, MdDelete, MdEdit, MdRestore } from 'react-icons/md';
 import { invalidationQueryAtom } from '$app/common/atoms/data-table';
@@ -158,6 +158,7 @@ export function DataTable2<T extends { id: string }>(props: Props<T>) {
     const themeColors = useThemeColorScheme();
     const [hasVerticalOverflow, setHasVerticalOverflow] =
         useState<boolean>(false);
+    const queryClient = useQueryClient();
 
     // Simpan URL endpoint awal
     const [apiEndpoint, setApiEndpoint] = useState<URL>(
@@ -370,7 +371,16 @@ export function DataTable2<T extends { id: string }>(props: Props<T>) {
             })
             .finally(() => {
                 setSelected([]);
+                // Invalidate the current query and related queries
                 refetchByUrl([props.endpoint, apiEndpoint.pathname]);
+
+                // Additional invalidation for better cache management
+                if (queryClient) {
+                    // Invalidate the specific endpoint query
+                    queryClient.invalidateQueries([apiEndpoint.pathname]);
+                    // Invalidate all queries related to this endpoint
+                    queryClient.invalidateQueries([props.endpoint]);
+                }
             });
     };
 
@@ -463,7 +473,7 @@ export function DataTable2<T extends { id: string }>(props: Props<T>) {
         emitter.on('bulk.completed', () => setSelected([]));
     }, []);
 
-    // show Archive/Delete if there’s at least one ACTIVE + not-deleted item
+    // show Archive/Delete if there's at least one ACTIVE + not-deleted item
     const showArchiveBulk = () =>
         selectedResources.some(
             (r: any) => r.status === 'active' && r.deleted_at == null
@@ -474,7 +484,7 @@ export function DataTable2<T extends { id: string }>(props: Props<T>) {
             (r: any) => r.status === 'active' && r.deleted_at == null
         );
 
-    // show Restore if there’s at least one ARCHIVED or soft‑deleted item
+    // show Restore if there's at least one ARCHIVED or soft‑deleted item
     const showRestoreBulk = () =>
         selectedResources.some(
             (r: any) => r.status === 'archived' || r.deleted_at != null
@@ -646,7 +656,7 @@ export function DataTable2<T extends { id: string }>(props: Props<T>) {
                             />
                         </Th>
                     )}
-                    {/* ← INSERTED: “No” header next to checkbox */}
+                    {/* ← INSERTED: "No" header next to checkbox */}
                     <Th
                         className={styleOptions?.thClassName}
                         resizable={`${apiEndpoint.pathname}.noColumn`}
@@ -880,22 +890,6 @@ export function DataTable2<T extends { id: string }>(props: Props<T>) {
                                                         />
                                                     )}
 
-                                                {/* Custom actions */}
-                                                {/* {customActions &&
-                                                    customActions.map(
-                                                        (actionFn, aidx) =>
-                                                            !bottomActionsKeys!.includes(
-                                                                actionFn(res)
-                                                                    ?.key || ''
-                                                            ) && (
-                                                                <div key={aidx}>
-                                                                    {actionFn(
-                                                                        res
-                                                                    )}
-                                                                </div>
-                                                            )
-                                                    )} */}
-
                                                 {/* Divider sebelum archive/restore/delete */}
                                                 {customActions &&
                                                     (showRestore?.(res) ??
@@ -976,22 +970,6 @@ export function DataTable2<T extends { id: string }>(props: Props<T>) {
                                                             {t('restore')}
                                                         </DropdownElement>
                                                     )}
-
-                                                {/* Custom actions bawah */}
-                                                {/* {customActions &&
-                                                    customActions.map(
-                                                        (actionFn, aidx) =>
-                                                            bottomActionsKeys!.includes(
-                                                                actionFn(res)
-                                                                    ?.key || ''
-                                                            ) && (
-                                                                <div key={aidx}>
-                                                                    {actionFn(
-                                                                        res
-                                                                    )}
-                                                                </div>
-                                                            )
-                                                    )} */}
                                             </Dropdown>
                                         </Td>
                                     )}
@@ -1008,7 +986,7 @@ export function DataTable2<T extends { id: string }>(props: Props<T>) {
                                 <Th></Th>
                             )}
 
-                            {/* ← INSERTED: blank under “No.” to align footer */}
+                            {/* ← INSERTED: blank under "No." to align footer */}
                             <Td
                                 resizable={`${apiEndpoint.pathname}.noColumn`}
                             ></Td>

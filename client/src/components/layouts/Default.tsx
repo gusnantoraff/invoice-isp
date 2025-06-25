@@ -370,7 +370,12 @@ export function Default(props: Props) {
             icon: Radio,
             current:
                 location.pathname.startsWith('/fo-lokasis') ||
-                location.pathname.startsWith('/fo-odc'),
+                location.pathname.startsWith('/fo-odc') ||
+                location.pathname.startsWith('/fo-kabel-odcs') ||
+                location.pathname.startsWith('/fo-kabel-tube-odcs') ||
+                location.pathname.startsWith('/fo-kabel-core-odcs') ||
+                location.pathname.startsWith('/fo-odps') ||
+                location.pathname.startsWith('/fo-client-ftths'),
             visible:
                 hasPermission('view_product') ||
                 hasPermission('create_product') ||
@@ -413,8 +418,9 @@ export function Default(props: Props) {
                     href: '', // kosong karena hanya toggle
                     icon: Radio,
                     current:
-                        location.pathname.startsWith('/fo-lokasis') ||
-                        location.pathname.startsWith('/fo-odc'),
+                        location.pathname.startsWith('/fo-kabel-odcs') ||
+                        location.pathname.startsWith('/fo-kabel-tube-odcs') ||
+                        location.pathname.startsWith('/fo-kabel-core-odcs'),
                     visible:
                         hasPermission('view_product') ||
                         hasPermission('create_product') ||
@@ -506,6 +512,13 @@ export function Default(props: Props) {
                         label: t('new_product'),
                         visible: hasPermission('create_product'),
                     },
+                },
+                {
+                    name: t('Reports'),
+                    href: '/fo-reports',
+                    icon: PieChart,
+                    current: location.pathname.startsWith('/fo-reports'),
+                    visible: hasPermission('view_reports'),
                 },
             ],
         },

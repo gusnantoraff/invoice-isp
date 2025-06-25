@@ -127,7 +127,9 @@ export function useFoOdpColumns() {
             id: 'kabel_core_odc',
             label: t('kabel_core_odc'),
             format: (_: any, odp: FoOdp) => (
-                <span>{odp.kabel_core_odc.warna_core}</span>
+                <span>
+                    {odp.kabel_core_odc?.warna_core ?? t('unassigned_core')}
+                </span>
             ),
         },
         {

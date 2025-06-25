@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { ValidationBag } from '$app/common/interfaces/validation-bag';
 import { GenericSingleResourceResponse } from '$app/common/interfaces/generic-api-response';
 import { CreateFoOdc, FoOdcFormValues } from '../common/components/CreateFoOdc';
+import { useQueryClient } from 'react-query';
 
 interface LokasiOption {
     id: number;
@@ -24,13 +25,14 @@ export default function Create() {
     useTitle('New FO ODC');
     const [t] = useTranslation();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
     const pages = [
         { name: t('FO ODC')!, href: '/fo-odcs' },
         { name: t('New FO ODC')!, href: '/fo-odcs/create' },
     ];
 
-    const [values, setValues] = useState<FoOdcFormValues>({
+    const initialValues: FoOdcFormValues = {
         create_new_lokasi: false,
         lokasi_id: '',
         lokasi_name: '',
@@ -39,53 +41,64 @@ export default function Create() {
         lokasi_longitude: '',
         nama_odc: '',
         tipe_splitter: '1:8',
-    });
+    };
+
+    const [values, setValues] = useState<FoOdcFormValues>(initialValues);
     const [lokasis, setLokasis] = useState<LokasiOption[]>([]);
     const [errors, setErrors] = useState<ValidationBag>();
     const [isBusy, setIsBusy] = useState(false);
 
+    // Fetch Lokasi list
     useEffect(() => {
-        request('GET', endpoint('/api/v1/fo-lokasis')).then((res) => {
-            setLokasis(
-                res.data.data.map((l: any) => ({
-                    id: l.id,
-                    nama_lokasi: l.nama_lokasi,
-                }))
-            );
-        });
+        request('GET', endpoint('/api/v1/fo-lokasis'))
+            .then((res: any) => {
+                setLokasis(
+                    res.data.data.map((l: any) => ({
+                        id: l.id,
+                        nama_lokasi: l.nama_lokasi,
+                    }))
+                );
+            })
+            .catch(() => {
+                toast.error('error_refresh_page');
+            });
     }, []);
 
-    const handleSave = (e: FormEvent) => {
+    const postOdc = (lokasi_id: number) => {
+        request('POST', endpoint('/api/v1/fo-odcs'), {
+            lokasi_id,
+            nama_odc: values.nama_odc,
+            tipe_splitter: values.tipe_splitter,
+        })
+            .then((response: GenericSingleResourceResponse<any>) => {
+                toast.success('created_odc');
+
+                // Invalidate related queries
+                queryClient.invalidateQueries(['/api/v1/fo-odcs']);
+                queryClient.invalidateQueries(['/api/v1/fo-lokasis']);
+
+                navigate(
+                    route('/fo-odcs/:id/edit', {
+                        id: response.data.data.id,
+                    })
+                );
+            })
+            .catch((err) => {
+                if (err.response?.status === 422) {
+                    setErrors(err.response.data);
+                    toast.dismiss();
+                } else {
+                    toast.error('error_refresh_page');
+                }
+            })
+            .finally(() => setIsBusy(false));
+    };
+
+    const handleSave = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (isBusy) return;
         setIsBusy(true);
         toast.processing();
-
-        const postOdc = (lokasi_id: number) => {
-            request('POST', endpoint('/api/v1/fo-odcs'), {
-                lokasi_id,
-                nama_odc: values.nama_odc,
-                tipe_splitter: values.tipe_splitter,
-            })
-                .then((resp: GenericSingleResourceResponse<any>) => {
-                    toast.success('created_odc');
-                    navigate(
-                        route('/fo-odcs/:id/edit', { id: resp.data.data.id }),
-                        {
-                            state: { toast: 'created_odc' },
-                        }
-                    );
-                })
-                .catch((err) => {
-                    if (err.response?.status === 422) {
-                        setErrors(err.response.data);
-                        toast.dismiss();
-                    } else {
-                        toast.error('error_refresh_page');
-                    }
-                })
-                .finally(() => setIsBusy(false));
-        };
 
         if (values.create_new_lokasi) {
             request('POST', endpoint('/api/v1/fo-lokasis'), {

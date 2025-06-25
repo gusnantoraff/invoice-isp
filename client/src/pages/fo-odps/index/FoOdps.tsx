@@ -8,22 +8,17 @@ import { DataTable2, DataTableColumns } from '$app/components/DataTable2';
 import { useFoOdpActions } from '../common/hooks/useFoOdpActions';
 
 interface FoOdp {
-    [x: string]: any;
     id: string;
     nama_odp: string;
-    lokasi: {
-        id: number;
-        nama_lokasi: string;
-        latitude: number;
-        longitude: number;
-    };
-    kabel_core_odc: {
+    lokasi: { id: number; nama_lokasi: string };
+    odc?: { id: number; nama_odc: string };
+    kabel_core_odc?: {
         id: number;
         warna_core: string;
-        kabel_odc: { id: number; nama_kabel: string };
-        kabel_tube_odc: { id: number; warna_tube: string };
+        kabel_odc?: { id: number; nama_kabel: string };
+        kabel_tube_odc?: { id: number; warna_tube: string };
     };
-    client_ftth: { id: number; nama_client: string; alamat: string } | null;
+    client_ftth: { id: number; nama_client: string } | null;
     status: 'active' | 'archived';
     created_at: string;
     updated_at: string;
@@ -36,49 +31,61 @@ export default function FoOdps() {
     const pages: Page[] = [{ name: t('FO ODP'), href: '/fo-odps' }];
 
     const columns: DataTableColumns<FoOdp> = [
-        { id: 'id', label: 'ID' },
+        { id: 'string', label: 'ID' },
         {
             id: 'lokasi',
-            label: 'Lokasi',
+            label: t('lokasi'),
             format: (_v, r) => r.lokasi.nama_lokasi,
         },
-        { id: 'nama_odp', label: 'Nama ODP' },
+        { id: 'nama_odp', label: t('nama_odp') },
         {
             id: 'odc',
-            label: 'ODC',
+            label: t('odc'),
             format: (_v, r) => r.odc?.nama_odc ?? '-',
         },
         {
             id: 'kabel_odc',
-            label: 'Kabel ODC',
-            format: (_v, r) => r.kabel_core_odc.kabel_odc.nama_kabel,
+            label: t('kabel_odc'),
+            format: (_v, r) => r.kabel_core_odc?.kabel_odc?.nama_kabel ?? '-',
         },
         {
             id: 'kabel_tube_odc',
-            label: 'Warna Tube',
-            format: (_v, r) => r.kabel_core_odc.kabel_tube_odc.warna_tube,
+            label: t('kabel_tube_odc'),
+            format: (_v, r) =>
+                r.kabel_core_odc?.kabel_tube_odc?.warna_tube ?? '-',
         },
         {
             id: 'kabel_core_odc',
-            label: 'Warna Core',
-            format: (_v, r) => r.kabel_core_odc.warna_core,
+            label: t('kabel_core_odc'),
+            format: (_v, r) => r.kabel_core_odc?.warna_core ?? '-',
         },
         {
             id: 'client_ftth',
-            label: 'Client FTTH',
-            format: (_v, r) =>
-                r.client_ftth ? r.client_ftth.nama_client : '-',
+            label: t('client_ftth'),
+            format: (_v, r) => r.client_ftth?.nama_client ?? '-',
         },
-        { id: 'status', label: 'Status' },
-        { id: 'created_at', label: 'Dibuat Pada', format: (v) => v },
-        { id: 'updated_at', label: 'Diubah Pada', format: (v) => v },
-        { id: 'deleted_at', label: 'Dihapus Pada', format: (v) => v || '-' },
+        { id: 'status', label: t('status') },
+        {
+            id: 'created_at',
+            label: t('created_at'),
+            format: (v) => v,
+        },
+        {
+            id: 'updated_at',
+            label: t('updated_at'),
+            format: (v) => v,
+        },
+        {
+            id: 'deleted_at',
+            label: t('deleted_at'),
+            format: (v) => v ?? '-',
+        },
     ];
 
     return (
         <Default title={t('FO ODP')} breadcrumbs={pages}>
             <DataTable2<FoOdp>
-                resource="FO ODP"
+                resource="fo-odps"
                 columns={columns}
                 endpoint="/api/v1/fo-odps"
                 linkToCreate="/fo-odps/create"

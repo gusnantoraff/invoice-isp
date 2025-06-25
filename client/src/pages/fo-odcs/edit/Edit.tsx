@@ -14,6 +14,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ValidationBag } from '$app/common/interfaces/validation-bag';
 import { GenericSingleResourceResponse } from '$app/common/interfaces/generic-api-response';
 import { CreateFoOdc, FoOdcFormValues } from '../common/components/CreateFoOdc';
+import { useQueryClient } from 'react-query';
 
 interface LokasiOption {
     id: number;
@@ -25,6 +26,7 @@ export default function Edit() {
     const [t] = useTranslation();
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
     // Default form values
     const initialValues: FoOdcFormValues = {
@@ -88,7 +90,13 @@ export default function Edit() {
                 nama_odc: values.nama_odc,
                 tipe_splitter: values.tipe_splitter,
             })
-                .then(() => toast.success('updated_odc'))
+                .then(() => {
+                    toast.success('updated_odc');
+
+                    // Invalidate related queries
+                    queryClient.invalidateQueries(['/api/v1/fo-odcs']);
+                    queryClient.invalidateQueries(['/api/v1/fo-lokasis']);
+                })
                 .catch((err) => {
                     if (err.response?.status === 422) {
                         setErrors(err.response.data);
