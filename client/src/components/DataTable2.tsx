@@ -39,7 +39,7 @@ import {
 } from './tables';
 import { TFooter } from './tables/TFooter';
 import { useQuery } from 'react-query';
-import { useSetAtom, useAtomValue } from 'jotai';
+import { useSetAtom } from 'jotai';
 import { Icon } from './icons/Icon';
 import { MdArchive, MdDelete, MdEdit, MdRestore } from 'react-icons/md';
 import { invalidationQueryAtom } from '$app/common/atoms/data-table';

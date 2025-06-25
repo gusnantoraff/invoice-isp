@@ -235,6 +235,10 @@ Route::group(['middleware' => ['throttle:api', 'api_db', 'token_auth', 'locale']
     Route::patch('/fo-client-ftths/{id}/restore', [FoClientFtthController::class, 'restore']);
     Route::post('/fo-client-ftths/bulk', [FoClientFtthController::class, 'bulk']);
 
+    Route::get('/test-ftth', function () {
+        return \App\Models\FoClientFtth::all();
+    });
+
     // Route::resource('fo-lokasis', FoLokasiController::class);
     // Route::resource('fo-odcs', FoOdcController::class);
     // Route::resource('fo-kabel-odcs', FoKabelOdcController::class);

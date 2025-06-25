@@ -42,7 +42,7 @@ import { foKabelOdcRoutes } from '$app/pages/fo-kabel-odcs/routes';
 import { foKabelTubeOdcRoutes } from '$app/pages/fo-kabel-tube-odcs/routes';
 import { foKabelCoreOdcRoutes } from '$app/pages/fo-kabel-core-odcs/routes';
 import { foOdpRoutes } from '$app/pages/fo-odps/routes';
-// import { foClientFtthRoutes } from '$app/pages/fo-kabel-odcs/routes';
+import { foClientFtthRoutes } from '$app/pages/fo-client-ftths/routes';
 // import { foReportRoutes } from '$app/pages/fo-reports/routes';
 
 const Dashboard = lazy(() => import('$app/pages/dashboard/Dashboard'));
@@ -88,7 +88,7 @@ export const routes = (
             {foKabelTubeOdcRoutes}
             {foKabelCoreOdcRoutes}
             {foOdpRoutes}
-            {/* {foClientFtthRoutes} */}
+            {foClientFtthRoutes}
             {/* {foReportRoutes} */}
             <Route element={<TestingRoute />}>
                 <Route path="/testing" element={<TestingPage />} />

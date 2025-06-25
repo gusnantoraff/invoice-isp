@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Models\FoLokasi;
 use App\Models\FoOdp;
+use App\Models\Client;
+use App\Models\Company;
 
 class FoClientFtth extends Model
 {
@@ -16,6 +18,8 @@ class FoClientFtth extends Model
     protected $fillable = [
         'lokasi_id',
         'odp_id',
+        'client_id',
+        'company_id',
         'nama_client',
         'alamat',
         'status',     // 'active' or 'archived'
@@ -40,5 +44,21 @@ class FoClientFtth extends Model
     public function odp()
     {
         return $this->belongsTo(FoOdp::class, 'odp_id');
+    }
+
+    /**
+     * Each client belongs to one InvoiceNinja Client.
+     */
+    public function client()
+    {
+        return $this->belongsTo(Client::class, 'client_id');
+    }
+
+    /**
+     * Each client belongs to one Company.
+     */
+    public function company()
+    {
+        return $this->belongsTo(Company::class, 'company_id');
     }
 }

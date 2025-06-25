@@ -4,10 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\FoClientFtth;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Utils\Traits\MakesHash;
 
 class FoClientFtthController extends Controller
 {
+    use MakesHash;
     protected $model = FoClientFtth::class;
+    protected $table = 'fo_client_ftths';
     /**
      * List all FTTH clients with pagination, filtering, sorting, and status.
      *
@@ -22,135 +26,108 @@ class FoClientFtthController extends Controller
      */
     public function index(Request $request)
     {
-        // 1) Parse the 'status' parameter into an array
+        $companyId = auth()->user()->getCompany()?->id;
+
+        // 1) Parse status param
         $statusParam = $request->query('status', 'active');
-        $requested   = collect(explode(',', $statusParam))
+        $requested = collect(explode(',', $statusParam))
             ->map(fn($s) => trim(strtolower($s)))
             ->filter()
             ->unique()
-            ->values()
             ->all();
 
         $validStatuses = ['active', 'archived', 'deleted'];
-        $statuses = array_values(array_intersect($requested, $validStatuses));
+        $statuses = array_intersect($requested, $validStatuses);
         if (empty($statuses)) {
             $statuses = ['active'];
         }
 
-        // 2) Base query including soft-deleted rows
-        $query = FoClientFtth::withTrashed();
+        // 2) Start query: include trashed to handle “deleted” status
+        $query = FoClientFtth::withTrashed()
+            ->with(['lokasi', 'odp', 'client', 'company'])
+            ->where('company_id', $companyId);
 
-        // 3) Filter by status
-        $query->where(function ($q) use ($statuses) {
-            // a) include soft-deleted rows if 'deleted' is requested
+        // 3) Apply status filtering
+        $query->where(function($q) use ($statuses) {
             if (in_array('deleted', $statuses, true)) {
                 $q->orWhereNotNull('deleted_at');
             }
-            // b) include active/archived rows where deleted_at IS NULL
-            $nonDeleted = array_values(array_intersect($statuses, ['active', 'archived']));
+            $nonDeleted = array_intersect($statuses, ['active','archived']);
             if (!empty($nonDeleted)) {
-                $q->orWhere(function ($sub) use ($nonDeleted) {
+                $q->orWhere(function($sub) use ($nonDeleted) {
                     $sub->whereNull('deleted_at')
                         ->whereIn('status', $nonDeleted);
                 });
             }
         });
 
-        // 4) Optional text filtering on nama_client OR alamat
-        // if ($request->filled('filter')) {
-        //     $term = $request->query('filter');
-        //     $query->where(function ($q) use ($term) {
-        //         $q->where('nama_client', 'LIKE', "%{$term}%")
-        //             ->orWhere('alamat', 'LIKE', "%{$term}%");
-        //     });
-        // }
-
-        // 4) Optional text filtering on nama_client OR alamat
+        // 4) Optional text filter on nama_client or alamat
         if ($request->filled('filter')) {
-            $term = $request->query('filter');
-            $query->where(function ($q) use ($term) {
-                // a) match on the Client name
-                $q->where('nama_client', 'LIKE', "%{$term}%")
-                    // b) match on the alamat
-                    ->orWhere('alamat', 'LIKE', "%{$term}%")
-                    // c) match on the ODP name
-                    ->orWhereHas('odp', function ($q2) use ($term) {
-                        $q2->where('nama_odp', 'LIKE', "%{$term}%");
-                    });
+            $term = "%{$request->query('filter')}%";
+            $query->where(function($q) use ($term) {
+                $q->where('nama_client', 'LIKE', $term)
+                  ->orWhere('alamat', 'LIKE', $term);
             });
         }
 
-        // 5) Optional sorting: "column|asc" or "column|dsc"
+        // 5) Optional sort param: column|asc or column|dsc
         if ($request->filled('sort')) {
             [$column, $dir] = array_pad(explode('|', $request->query('sort')), 2, null);
-            $dir = (strtolower($dir) === 'dsc') ? 'desc' : 'asc';
-
-            $allowedSorts = [
-                'id',
-                'nama_client',
-                'alamat',
-                'created_at',
-                'updated_at',
-                'status',
-            ];
-            if (in_array($column, $allowedSorts, true)) {
+            $dir = (strtolower($dir)==='dsc') ? 'desc' : 'asc';
+            $allowed = ['id','nama_client','created_at','updated_at','status'];
+            if (in_array($column, $allowed, true)) {
                 $query->orderBy($column, $dir);
             }
         } else {
-            // Default: newest first by id
-            $query->orderBy('id', 'desc');
+            $query->orderBy('id','desc');
         }
 
-        // 6) Pagination (default 15 per page)
-        $perPage = (int) $request->query('per_page', 15);
-        if ($perPage <= 0) {
-            $perPage = 15;
-        }
+        // 6) Pagination
+        $perPage = max(1, (int)$request->query('per_page', 15));
+        $p = $query->paginate($perPage)
+                   ->appends($request->only(['filter','sort','per_page','status']));
 
-        // 7) Eager-load 'lokasi' and 'odp', then paginate
-        $paginator = $query
-            ->with(['lokasi', 'odp'])
-            ->paginate($perPage)
-            ->appends($request->only(['filter', 'sort', 'per_page', 'status']));
-
-        // 8) Transform results into the JSON structure
-        $items = array_map(function ($c) {
-            return [
-                'id'           => $c->id,
-                'nama_client'  => $c->nama_client,
-                // Nested Lokasi
-                'lokasi'       => [
-                    'id'           => $c->lokasi->id,
-                    'nama_lokasi'  => $c->lokasi->nama_lokasi,
-                    'latitude'     => $c->lokasi->latitude,
-                    'longitude'    => $c->lokasi->longitude,
-                ],
-                // Nested ODP
-                'odp'          => [
-                    'id'           => $c->odp->id,
-                    'nama_odp'     => $c->odp->nama_odp,
-                ],
-                'alamat'       => $c->alamat,
-                'status'       => $c->status,
-                'created_at'   => $c->created_at->toDateTimeString(),
-                'updated_at'   => $c->updated_at->toDateTimeString(),
-                'deleted_at'   => $c->deleted_at?->toDateTimeString(),
-            ];
-        }, $paginator->items());
+        // 7) Transform result
+        $items = $p->map(fn($c) => [
+            'id'          => $c->id,
+            'nama_client' => $c->nama_client,
+            'lokasi'      => $c->lokasi ? [
+                'id'           => $c->lokasi->id,
+                'nama_lokasi'  => $c->lokasi->nama_lokasi,
+            ] : null,
+            'odp'         => $c->odp ? [
+                'id'       => $c->odp->id,
+                'nama_odp' => $c->odp->nama_odp,
+            ] : null,
+            'client'      => $c->client ? [
+                'id'   => $c->client->id,
+                'name' => $c->client->name,
+            ] : null,
+            'company'     => $c->company ? [
+                'id'   => $c->company->id,
+                'name' => $c->company->present()->name(),
+            ] : null,
+            'alamat'      => $c->alamat,
+            'status'      => $c->status,
+            'created_at'  => $c->created_at?->toDateTimeString(),
+            'updated_at'  => $c->updated_at?->toDateTimeString(),
+            'deleted_at'  => $c->deleted_at?->toDateTimeString(),
+        ])->all();
 
         return response()->json([
             'status' => 'success',
             'data'   => $items,
             'meta'   => [
-                'current_page' => $paginator->currentPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
-                'last_page'    => $paginator->lastPage(),
-                'from'         => $paginator->firstItem(),
-                'to'           => $paginator->lastItem(),
+                'current_page' => $p->currentPage(),
+                'per_page'     => $p->perPage(),
+                'total'        => $p->total(),
+                'last_page'    => $p->lastPage(),
+                'from'         => $p->firstItem(),
+                'to'           => $p->lastItem(),
             ],
         ], 200);
     }
+
 
     /**
      * Create a new FTTH client (default status = active).
@@ -159,38 +136,67 @@ class FoClientFtthController extends Controller
      */
     public function store(Request $request)
     {
+        $companyId = auth()->user()->getCompany()?->id;
         $data = $request->validate([
             'lokasi_id'    => 'required|exists:fo_lokasis,id',
             'odp_id'       => 'required|exists:fo_odps,id',
-            'nama_client'  => 'required|string|max:255',
-            'alamat'       => 'required|string|max:255',
+            'client_id'    => 'required',
+            'nama_client'  => 'nullable|string|max:255',
+            'alamat'       => 'nullable|string|max:255',
             'status'       => 'sometimes|in:active,archived',
         ]);
+
+        // Decode hashed client_id
+        $data['client_id'] = $this->decodePrimaryKey($data['client_id']);
+        $data['company_id'] = $companyId;
+
+        // Ensure the selected client belongs to the user's company
+        $client = \App\Models\Client::where('id', $data['client_id'])
+            ->where('company_id', $companyId)
+            ->first();
+        if (!$client) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Selected client does not belong to your company.',
+            ], 422);
+        }
+
+        \Log::info('User company_id: ' . $companyId);
+        \Log::info('Client company_id: ' . $client->company_id);
 
         if (!isset($data['status'])) {
             $data['status'] = 'active';
         }
 
         $c = FoClientFtth::create($data);
-        $c->load(['lokasi', 'odp']);
+        $c->load(['lokasi', 'odp', 'client', 'company']);
 
         return response()->json([
             'status'  => 'success',
             'data'    => [
                 'id'           => $c->id,
                 'nama_client'  => $c->nama_client,
-                'lokasi'       => [
+                'lokasi'       => $c->lokasi ? [
                     'id'           => $c->lokasi->id,
                     'nama_lokasi'  => $c->lokasi->nama_lokasi,
-                ],
-                'odp'          => [
+                ] : null,
+                'odp'          => $c->odp ? [
                     'id'           => $c->odp->id,
                     'nama_odp'     => $c->odp->nama_odp,
-                ],
+                ] : null,
+                'client'       => $c->client ? [
+                    'id'           => $c->client->id,
+                    'name'         => $c->client->name,
+                ] : null,
+                'company'      => $c->company ? [
+                    'id'           => $c->company->id,
+                    'name'         => $c->company->present()->name(),
+                ] : null,
                 'alamat'       => $c->alamat,
                 'status'       => $c->status,
-                'created_at'   => $c->created_at->toDateTimeString(),
-                'updated_at'   => $c->updated_at->toDateTimeString(),
+                'created_at'   => $c->created_at ? $c->created_at->toDateTimeString() : null,
+                'updated_at'   => $c->updated_at ? $c->updated_at->toDateTimeString() : null,
+                'deleted_at'   => $c->deleted_at ? $c->deleted_at->toDateTimeString() : null,
             ],
             'message' => 'FTTH client created.',
         ], 201);
@@ -203,27 +209,36 @@ class FoClientFtthController extends Controller
      */
     public function show($id)
     {
-        $c = FoClientFtth::withTrashed()->findOrFail($id);
-        $c->load(['lokasi', 'odp']);
+        $companyId = auth()->user()->getCompany()?->id;
+        $c = FoClientFtth::withTrashed()->where('company_id', $companyId)->findOrFail($id);
+        $c->load(['lokasi', 'odp', 'client', 'company']);
 
         return response()->json([
             'status' => 'success',
             'data'   => [
                 'id'           => $c->id,
                 'nama_client'  => $c->nama_client,
-                'lokasi'       => [
+                'lokasi'       => $c->lokasi ? [
                     'id'           => $c->lokasi->id,
                     'nama_lokasi'  => $c->lokasi->nama_lokasi,
-                ],
-                'odp'          => [
+                ] : null,
+                'odp'          => $c->odp ? [
                     'id'           => $c->odp->id,
                     'nama_odp'     => $c->odp->nama_odp,
-                ],
+                ] : null,
+                'client'       => $c->client ? [
+                    'id'           => $c->client->id,
+                    'name'         => $c->client->name,
+                ] : null,
+                'company'      => $c->company ? [
+                    'id'           => $c->company->id,
+                    'name'         => $c->company->present()->name(),
+                ] : null,
                 'alamat'       => $c->alamat,
                 'status'       => $c->status,
-                'created_at'   => $c->created_at->toDateTimeString(),
-                'updated_at'   => $c->updated_at->toDateTimeString(),
-                'deleted_at'   => $c->deleted_at?->toDateTimeString(),
+                'created_at'   => $c->created_at ? $c->created_at->toDateTimeString() : null,
+                'updated_at'   => $c->updated_at ? $c->updated_at->toDateTimeString() : null,
+                'deleted_at'   => $c->deleted_at ? $c->deleted_at->toDateTimeString() : null,
             ],
         ], 200);
     }
@@ -235,36 +250,61 @@ class FoClientFtthController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $c = FoClientFtth::withTrashed()->findOrFail($id);
+        $companyId = auth()->user()->getCompany()?->id;
+        $c = FoClientFtth::withTrashed()->where('company_id', $companyId)->findOrFail($id);
 
         $data = $request->validate([
             'lokasi_id'    => 'sometimes|exists:fo_lokasis,id',
             'odp_id'       => 'sometimes|exists:fo_odps,id',
-            'nama_client'  => 'sometimes|string|max:255',
-            'alamat'       => 'sometimes|string|max:255',
+            'client_id'    => 'sometimes',
+            'nama_client'  => 'nullable|string|max:255',
+            'alamat'       => 'nullable|string|max:255',
             'status'       => 'sometimes|in:active,archived',
         ]);
 
+        // If client_id is being updated, decode hashed client_id
+        if (isset($data['client_id'])) {
+            $data['client_id'] = $this->decodePrimaryKey($data['client_id']);
+            $client = \App\Models\Client::where('id', $data['client_id'])
+                ->where('company_id', $companyId)
+                ->first();
+            if (!$client) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Selected client does not belong to your company.',
+                ], 422);
+            }
+        }
+
         $c->update($data);
-        $c->refresh()->load(['lokasi', 'odp']);
+        $c->refresh()->load(['lokasi', 'odp', 'client', 'company']);
 
         return response()->json([
             'status'  => 'success',
             'data'    => [
                 'id'           => $c->id,
                 'nama_client'  => $c->nama_client,
-                'lokasi'       => [
+                'lokasi'       => $c->lokasi ? [
                     'id'           => $c->lokasi->id,
                     'nama_lokasi'  => $c->lokasi->nama_lokasi,
-                ],
-                'odp'          => [
+                ] : null,
+                'odp'          => $c->odp ? [
                     'id'           => $c->odp->id,
                     'nama_odp'     => $c->odp->nama_odp,
-                ],
+                ] : null,
+                'client'       => $c->client ? [
+                    'id'           => $c->client->id,
+                    'name'         => $c->client->name,
+                ] : null,
+                'company'      => $c->company ? [
+                    'id'           => $c->company->id,
+                    'name'         => $c->company->present()->name(),
+                ] : null,
                 'alamat'       => $c->alamat,
                 'status'       => $c->status,
-                'created_at'   => $c->created_at->toDateTimeString(),
-                'updated_at'   => $c->updated_at->toDateTimeString(),
+                'created_at'   => $c->created_at ? $c->created_at->toDateTimeString() : null,
+                'updated_at'   => $c->updated_at ? $c->updated_at->toDateTimeString() : null,
+                'deleted_at'   => $c->deleted_at ? $c->deleted_at->toDateTimeString() : null,
             ],
             'message' => 'FTTH client updated.',
         ], 200);
@@ -277,11 +317,15 @@ class FoClientFtthController extends Controller
      */
     public function destroy($id)
     {
-        $c = FoClientFtth::findOrFail($id);
+        $companyId = auth()->user()->getCompany()?->id;
+        $c = FoClientFtth::where('company_id', $companyId)->findOrFail($id);
         $c->delete();
 
         return response()->json([
             'status'  => 'success',
+            'data'    => [
+                'id' => $c->id,
+            ],
             'message' => 'FTTH client soft-deleted.',
         ], 200);
     }
@@ -293,11 +337,38 @@ class FoClientFtthController extends Controller
      */
     public function archive($id)
     {
-        $c = FoClientFtth::withTrashed()->findOrFail($id);
+        $companyId = auth()->user()->getCompany()?->id;
+        $c = FoClientFtth::withTrashed()->where('company_id', $companyId)->findOrFail($id);
         $c->update(['status' => 'archived']);
+        $c->refresh()->load(['lokasi', 'odp', 'client', 'company']);
 
         return response()->json([
             'status'  => 'success',
+            'data'    => [
+                'id'           => $c->id,
+                'nama_client'  => $c->nama_client,
+                'lokasi'       => $c->lokasi ? [
+                    'id'           => $c->lokasi->id,
+                    'nama_lokasi'  => $c->lokasi->nama_lokasi,
+                ] : null,
+                'odp'          => $c->odp ? [
+                    'id'           => $c->odp->id,
+                    'nama_odp'     => $c->odp->nama_odp,
+                ] : null,
+                'client'       => $c->client ? [
+                    'id'           => $c->client->id,
+                    'name'         => $c->client->name,
+                ] : null,
+                'company'      => $c->company ? [
+                    'id'           => $c->company->id,
+                    'name'         => $c->company->present()->name(),
+                ] : null,
+                'alamat'       => $c->alamat,
+                'status'       => $c->status,
+                'created_at'   => $c->created_at ? $c->created_at->toDateTimeString() : null,
+                'updated_at'   => $c->updated_at ? $c->updated_at->toDateTimeString() : null,
+                'deleted_at'   => $c->deleted_at ? $c->deleted_at->toDateTimeString() : null,
+            ],
             'message' => 'FTTH client archived.',
         ], 200);
     }
@@ -309,11 +380,38 @@ class FoClientFtthController extends Controller
      */
     public function unarchive($id)
     {
-        $c = FoClientFtth::withTrashed()->findOrFail($id);
+        $companyId = auth()->user()->getCompany()?->id;
+        $c = FoClientFtth::withTrashed()->where('company_id', $companyId)->findOrFail($id);
         $c->update(['status' => 'active']);
+        $c->refresh()->load(['lokasi', 'odp', 'client', 'company']);
 
         return response()->json([
             'status'  => 'success',
+            'data'    => [
+                'id'           => $c->id,
+                'nama_client'  => $c->nama_client,
+                'lokasi'       => $c->lokasi ? [
+                    'id'           => $c->lokasi->id,
+                    'nama_lokasi'  => $c->lokasi->nama_lokasi,
+                ] : null,
+                'odp'          => $c->odp ? [
+                    'id'           => $c->odp->id,
+                    'nama_odp'     => $c->odp->nama_odp,
+                ] : null,
+                'client'       => $c->client ? [
+                    'id'           => $c->client->id,
+                    'name'         => $c->client->name,
+                ] : null,
+                'company'      => $c->company ? [
+                    'id'           => $c->company->id,
+                    'name'         => $c->company->present()->name(),
+                ] : null,
+                'alamat'       => $c->alamat,
+                'status'       => $c->status,
+                'created_at'   => $c->created_at ? $c->created_at->toDateTimeString() : null,
+                'updated_at'   => $c->updated_at ? $c->updated_at->toDateTimeString() : null,
+                'deleted_at'   => $c->deleted_at ? $c->deleted_at->toDateTimeString() : null,
+            ],
             'message' => 'FTTH client set to active.',
         ], 200);
     }
@@ -325,11 +423,38 @@ class FoClientFtthController extends Controller
      */
     public function restore($id)
     {
-        $c = FoClientFtth::onlyTrashed()->findOrFail($id);
+        $companyId = auth()->user()->getCompany()?->id;
+        $c = FoClientFtth::onlyTrashed()->where('company_id', $companyId)->findOrFail($id);
         $c->restore();
+        $c->refresh()->load(['lokasi', 'odp', 'client', 'company']);
 
         return response()->json([
             'status'  => 'success',
+            'data'    => [
+                'id'           => $c->id,
+                'nama_client'  => $c->nama_client,
+                'lokasi'       => $c->lokasi ? [
+                    'id'           => $c->lokasi->id,
+                    'nama_lokasi'  => $c->lokasi->nama_lokasi,
+                ] : null,
+                'odp'          => $c->odp ? [
+                    'id'           => $c->odp->id,
+                    'nama_odp'     => $c->odp->nama_odp,
+                ] : null,
+                'client'       => $c->client ? [
+                    'id'           => $c->client->id,
+                    'name'         => $c->client->name,
+                ] : null,
+                'company'      => $c->company ? [
+                    'id'           => $c->company->id,
+                    'name'         => $c->company->present()->name(),
+                ] : null,
+                'alamat'       => $c->alamat,
+                'status'       => $c->status,
+                'created_at'   => $c->created_at ? $c->created_at->toDateTimeString() : null,
+                'updated_at'   => $c->updated_at ? $c->updated_at->toDateTimeString() : null,
+                'deleted_at'   => $c->deleted_at ? $c->deleted_at->toDateTimeString() : null,
+            ],
             'message' => 'FTTH client restored from deletion.',
         ], 200);
     }
@@ -345,6 +470,7 @@ class FoClientFtthController extends Controller
      */
     public function bulk(Request $request)
     {
+        $companyId = auth()->user()->getCompany()?->id;
         $data = $request->validate([
             'action' => 'required|in:archive,delete,restore',
             'ids'    => 'required|array|min:1',
@@ -353,30 +479,39 @@ class FoClientFtthController extends Controller
 
         $ids    = $data['ids'];
         $action = $data['action'];
+        $message = '';
+        $affected = [];
 
         switch ($action) {
             case 'archive':
                 // Set status = 'archived'
-                $this->model::withTrashed()
+                FoClientFtth::withTrashed()
+                    ->where('company_id', $companyId)
                     ->whereIn('id', $ids)
                     ->update(['status' => 'archived']);
+                $affected = FoClientFtth::withTrashed()->where('company_id', $companyId)->whereIn('id', $ids)->get();
                 $message = 'Items archived.';
                 break;
 
             case 'delete':
                 // Soft‐delete all (mark deleted_at)
-                $this->model::whereIn('id', $ids)->delete();
+                FoClientFtth::where('company_id', $companyId)
+                    ->whereIn('id', $ids)->delete();
+                $affected = FoClientFtth::withTrashed()->where('company_id', $companyId)->whereIn('id', $ids)->get();
                 $message = 'Items soft‐deleted.';
                 break;
 
             case 'restore':
                 // First restore soft‐deleted
-                $this->model::onlyTrashed()
+                FoClientFtth::onlyTrashed()
+                    ->where('company_id', $companyId)
                     ->whereIn('id', $ids)
                     ->restore();
                 // Then set status back to 'active'
-                $this->model::whereIn('id', $ids)
+                FoClientFtth::where('company_id', $companyId)
+                    ->whereIn('id', $ids)
                     ->update(['status' => 'active']);
+                $affected = FoClientFtth::withTrashed()->where('company_id', $companyId)->whereIn('id', $ids)->get();
                 $message = 'Items restored to active.';
                 break;
 
@@ -388,8 +523,37 @@ class FoClientFtthController extends Controller
                 ], 422);
         }
 
+        $data = $affected->map(function ($c) {
+            return [
+                'id'           => $c->id,
+                'nama_client'  => $c->nama_client,
+                'lokasi'       => $c->lokasi ? [
+                    'id'           => $c->lokasi->id,
+                    'nama_lokasi'  => $c->lokasi->nama_lokasi,
+                ] : null,
+                'odp'          => $c->odp ? [
+                    'id'           => $c->odp->id,
+                    'nama_odp'     => $c->odp->nama_odp,
+                ] : null,
+                'client'       => $c->client ? [
+                    'id'           => $c->client->id,
+                    'name'         => $c->client->name,
+                ] : null,
+                'company'      => $c->company ? [
+                    'id'           => $c->company->id,
+                    'name'         => $c->company->present()->name(),
+                ] : null,
+                'alamat'       => $c->alamat,
+                'status'       => $c->status,
+                'created_at'   => $c->created_at ? $c->created_at->toDateTimeString() : null,
+                'updated_at'   => $c->updated_at ? $c->updated_at->toDateTimeString() : null,
+                'deleted_at'   => $c->deleted_at ? $c->deleted_at->toDateTimeString() : null,
+            ];
+        });
+
         return response()->json([
             'status'  => 'success',
+            'data'    => $data,
             'message' => $message,
         ], 200);
     }

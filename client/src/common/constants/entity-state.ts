@@ -11,7 +11,7 @@
 import { EntityState } from '$app/common/enums/entity-state';
 
 export default {
-  [EntityState.Active]: 'active',
-  [EntityState.Archived]: 'archived',
-  [EntityState.Deleted]: 'deleted',
+    [EntityState.Active]: 'active',
+    [EntityState.Archived]: 'archived',
+    [EntityState.Deleted]: 'deleted',
 };
