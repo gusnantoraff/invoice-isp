@@ -38,7 +38,7 @@ import {
     Tr,
 } from './tables';
 import { TFooter } from './tables/TFooter';
-import { useQuery, useQueryClient } from 'react-query';
+import { useQuery } from 'react-query';
 import { useSetAtom, useAtomValue } from 'jotai';
 import { Icon } from './icons/Icon';
 import { MdArchive, MdDelete, MdEdit, MdRestore } from 'react-icons/md';
@@ -47,7 +47,6 @@ import CommonProps from '$app/common/interfaces/common-props.interface';
 import classNames from 'classnames';
 import { Guard } from '$app/common/guards/Guard';
 // import { EntityState } from '$app/common/enums/entity-state';
-import { refetchByUrl } from '$app/common/hooks/useRefetch';
 import { useDataTableOptions } from '$app/common/hooks/useDataTableOptions';
 import { useDataTableUtilities } from '$app/common/hooks/useDataTableUtilities';
 import { useDataTablePreferences } from '$app/common/hooks/useDataTablePreferences';
@@ -158,7 +157,6 @@ export function DataTable2<T extends { id: string }>(props: Props<T>) {
     const themeColors = useThemeColorScheme();
     const [hasVerticalOverflow, setHasVerticalOverflow] =
         useState<boolean>(false);
-    const queryClient = useQueryClient();
 
     // Simpan URL endpoint awal
     const [apiEndpoint, setApiEndpoint] = useState<URL>(
@@ -371,16 +369,6 @@ export function DataTable2<T extends { id: string }>(props: Props<T>) {
             })
             .finally(() => {
                 setSelected([]);
-                // Invalidate the current query and related queries
-                refetchByUrl([props.endpoint, apiEndpoint.pathname]);
-
-                // Additional invalidation for better cache management
-                if (queryClient) {
-                    // Invalidate the specific endpoint query
-                    queryClient.invalidateQueries([apiEndpoint.pathname]);
-                    // Invalidate all queries related to this endpoint
-                    queryClient.invalidateQueries([props.endpoint]);
-                }
             });
     };
 

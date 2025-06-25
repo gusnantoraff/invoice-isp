@@ -1,17 +1,16 @@
-import React from 'react';
+import React, { ReactElement } from 'react';
 import { useTranslation } from 'react-i18next';
 import { DropdownElement } from '$app/components/dropdown/DropdownElement';
 import { Icon } from '$app/components/icons/Icon';
 import { MdArchive, MdDelete, MdRestore } from 'react-icons/md';
-import { useFoKabelCoreOdcBulkAction } from '$app/common/queries/foKabelCoreOdc';
-import { CustomBulkAction } from '$app/components/DataTable2';
+import { useFoOdpBulkAction } from '$app/common/queries/foOdp';
 
-export const useFoKabelCoreOdcBulkActions = (): CustomBulkAction<any>[] => {
+export const useFoOdpBulkActions = () => {
     const [t] = useTranslation();
-    const bulkAction = useFoKabelCoreOdcBulkAction();
+    const bulkAction = useFoOdpBulkAction();
 
     return [
-        ({ selectedIds, setSelected }) => (
+        ({ selectedIds, setSelected }: any): ReactElement => (
             <>
                 <DropdownElement
                     onClick={() => {

@@ -7,6 +7,7 @@ import { Page } from '$app/components/Breadcrumbs';
 import { Default } from '$app/components/layouts/Default';
 import { DataTable2, DataTableColumns } from '$app/components/DataTable2';
 import { useFoKabelTubeOdcActions } from '../common/hooks/useFoKabelTubeOdcActions';
+import { useFoKabelTubeOdcBulkActions } from '../common/hooks/useFoKabelTubeOdcBulkActions';
 
 interface FoKabelTubeOdc {
     id: string;
@@ -81,7 +82,9 @@ export default function FoKabelTubeOdcs() {
                 linkToEdit="/fo-kabel-tube-odcs/:id/edit"
                 withResourcefulActions
                 bulkRoute="/api/v1/fo-kabel-tube-odcs/bulk"
+                customBulkActions={useFoKabelTubeOdcBulkActions()}
                 customActions={useFoKabelTubeOdcActions()}
+                withoutDefaultBulkActions={true}
             />
         </Default>
     );

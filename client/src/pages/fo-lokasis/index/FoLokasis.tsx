@@ -79,6 +79,7 @@ export default function FoLokasis() {
                 bulkRoute="/api/v1/fo-lokasis/bulk"
                 customBulkActions={useFoLokasiBulkActions()}
                 customActions={useFoLokasiActions()}
+                withoutDefaultBulkActions={true}
             />
         </Default>
     );

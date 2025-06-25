@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { ValidationBag } from '$app/common/interfaces/validation-bag';
 import { GenericSingleResourceResponse } from '$app/common/interfaces/generic-api-response';
 import { CreateFoOdp, FoOdpFormValues } from '../common/components/CreateFoOdp';
+import { useQueryClient } from 'react-query';
 
 interface CoreOption {
     id: number;
@@ -27,6 +28,7 @@ export default function Create() {
     useTitle('New FO ODP');
     const [t] = useTranslation();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
     const pages = [
         { name: t('FO ODP')!, href: '/fo-odps' },
@@ -103,6 +105,7 @@ export default function Create() {
             })
                 .then((resp: GenericSingleResourceResponse<any>) => {
                     toast.success('created_odp');
+                    queryClient.invalidateQueries('fo-odps');
                     navigate(
                         route('/fo-odps/:id/edit', { id: resp.data.data.id }),
                         { state: { toast: 'created_odp' } }
@@ -133,7 +136,11 @@ export default function Create() {
                 latitude: parseFloat(values.lokasi_latitude),
                 longitude: parseFloat(values.lokasi_longitude),
             })
-                .then((res: any) => postOdp(res.data.data.id))
+                .then((res: any) => {
+                    // Invalidate lokasi queries as well
+                    queryClient.invalidateQueries(['/api/v1/fo-lokasis']);
+                    postOdp(res.data.data.id);
+                })
                 .catch((err) => {
                     if (err.response?.status === 422) {
                         setErrors(err.response.data);

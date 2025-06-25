@@ -6,6 +6,7 @@ import { Page } from '$app/components/Breadcrumbs';
 import { Default } from '$app/components/layouts/Default';
 import { DataTable2, DataTableColumns } from '$app/components/DataTable2';
 import { useFoOdpActions } from '../common/hooks/useFoOdpActions';
+import { useFoOdpBulkActions } from '../common/hooks/useFoOdpBulkActions';
 
 interface FoOdp {
     id: string;
@@ -92,7 +93,9 @@ export default function FoOdps() {
                 linkToEdit="/fo-odps/:id/edit"
                 withResourcefulActions
                 bulkRoute="/api/v1/fo-odps/bulk"
+                customBulkActions={useFoOdpBulkActions()}
                 customActions={useFoOdpActions()}
+                withoutDefaultBulkActions={true}
             />
         </Default>
     );

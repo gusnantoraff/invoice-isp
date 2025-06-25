@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { ValidationBag } from '$app/common/interfaces/validation-bag';
 import { GenericSingleResourceResponse } from '$app/common/interfaces/generic-api-response';
 import { CreateFoKabelCoreOdc } from '../common/components/CreateFoKabelCoreOdc';
+import { useQueryClient } from 'react-query';
 
 interface FoKabelCoreOdcCreate {
     kabel_tube_odc_id: number;
@@ -30,6 +31,7 @@ export default function Create() {
     useTitle('New FO Kabel Core ODC');
     const [t] = useTranslation();
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
 
     const pages = [
         { name: t('FO Kabel Core ODC')!, href: '/fo-kabel-core-odcs' },
@@ -76,6 +78,7 @@ export default function Create() {
                     }),
                     { state: { toast: 'created_core_odc' } }
                 );
+                queryClient.invalidateQueries('fo-kabel-core-odcs');
             })
             .catch((error) => {
                 if (error.response?.status === 422) {

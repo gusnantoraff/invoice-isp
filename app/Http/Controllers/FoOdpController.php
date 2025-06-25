@@ -63,10 +63,10 @@ class FoOdpController extends Controller
             $query->where(function ($q) use ($term) {
                 // a) match on the ODP name
                 $q->where('nama_odp', 'LIKE', "%{$term}%")
-                    // b) or on the core’s own warna_core
+                    // b) or on the core's own warna_core
                     ->orWhereHas('kabelCoreOdc', function ($q2) use ($term) {
                         $q2->where('warna_core', 'LIKE', "%{$term}%")
-                            // c) optionally also on the parent tube’s warna_tube
+                            // c) optionally also on the parent tube's warna_tube
                             ->orWhereHas('kabelTubeOdc', function ($q3) use ($term) {
                                 $q3->where('warna_tube', 'LIKE', "%{$term}%");
                             });
@@ -99,7 +99,7 @@ class FoOdpController extends Controller
         $perPage = max(1, (int) $request->query('per_page', 15));
 
         // 7) Eager-load relationships and paginate
-        $paginator = FoOdp::withTrashed()
+        $paginator = $query
             ->with([
                 'lokasi',
                 'kabelCoreOdc.kabelTubeOdc.kabelOdc.odc',

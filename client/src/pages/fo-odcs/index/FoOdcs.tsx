@@ -6,7 +6,7 @@ import { useTitle } from '$app/common/hooks/useTitle';
 import { Page } from '$app/components/Breadcrumbs';
 import { Default } from '$app/components/layouts/Default';
 import { DataTable2, DataTableColumns } from '$app/components/DataTable2';
-// import { useFoOdcBulkActions } from '../common/hooks/useFoOdcBulkActions';
+import { useFoOdcBulkActions } from '../common/hooks/useFoOdcBulkActions';
 import { useFoOdcActions } from '../common/hooks/useFoOdcActions';
 
 interface FoOdc {
@@ -70,8 +70,9 @@ export default function FoOdcs() {
                 linkToEdit="/fo-odcs/:id/edit"
                 withResourcefulActions
                 bulkRoute="/api/v1/fo-odcs/bulk"
-                // customBulkActions={useFoOdcBulkActions()}
+                customBulkActions={useFoOdcBulkActions()}
                 customActions={useFoOdcActions()}
+                withoutDefaultBulkActions={true}
             />
         </Default>
     );
