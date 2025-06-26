@@ -6,7 +6,7 @@ import { useTitle } from '$app/common/hooks/useTitle';
 import { Page } from '$app/components/Breadcrumbs';
 import { Default } from '$app/components/layouts/Default';
 import { DataTable2, DataTableColumns } from '$app/components/DataTable2';
-import { useFoLokasiBulkActions } from '../common/hooks/useFoLokasiBulkActions';
+// import { useFoLokasiBulkActions } from '../common/hooks/useFoLokasiBulkActions';
 import { useFoLokasiActions } from '../common/hooks/useFoLokasiActions';
 
 interface FoLokasi {
@@ -34,8 +34,18 @@ export default function FoLokasis() {
     const pages: Page[] = [{ name: t('FO Lokasi'), href: '/fo-lokasis' }];
 
     const columns: DataTableColumns<FoLokasi> = [
-        { id: 'id', label: 'ID' },
-        { id: 'nama_lokasi', label: 'Nama Lokasi' },
+        {
+            id: 'nama_lokasi',
+            label: 'Nama Lokasi',
+            format: (val, resource) => (
+                <a
+                    href={`/fo-lokasis/${resource.id}/edit`}
+                    className="text-blue-600 hover:underline"
+                >
+                    {val}
+                </a>
+            ),
+        },
         { id: 'deskripsi', label: 'Deskripsi' },
         { id: 'latitude', label: 'Latitude' },
         { id: 'longitude', label: 'Longitude' },
@@ -54,16 +64,6 @@ export default function FoLokasis() {
             label: 'Jumlah Client',
             format: (_f, resource) => `${resource.clients?.length ?? 0} Client`,
         },
-        {
-            id: 'created_at',
-            label: 'Dibuat Pada',
-            format: (field) => field,
-        },
-        {
-            id: 'updated_at',
-            label: 'Diubah Pada',
-            format: (field) => field,
-        },
     ];
 
     return (
@@ -77,9 +77,9 @@ export default function FoLokasis() {
                 linkToEdit="/fo-lokasis/:id/edit"
                 withResourcefulActions
                 bulkRoute="/api/v1/fo-lokasis/bulk"
-                customBulkActions={useFoLokasiBulkActions()}
+                // customBulkActions={useFoLokasiBulkActions()}
                 customActions={useFoLokasiActions()}
-                withoutDefaultBulkActions={true}
+                withoutDefaultBulkActions={false}
             />
         </Default>
     );

@@ -35,7 +35,18 @@ export default function FoOdcs() {
             label: 'Lokasi',
             format: (_val, record) => record.lokasi.nama_lokasi,
         },
-        { id: 'nama_odc', label: 'Nama ODC' },
+        {
+            id: 'nama_odc',
+            label: 'Nama ODC',
+            format: (val, record) => (
+                <a
+                    href={`/fo-odcs/${record.id}/edit`}
+                    className="text-blue-600 hover:underline"
+                >
+                    {val}
+                </a>
+            ),
+        },
         { id: 'tipe_splitter', label: 'Tipe Splitter' },
         { id: 'status', label: 'Status' },
         {

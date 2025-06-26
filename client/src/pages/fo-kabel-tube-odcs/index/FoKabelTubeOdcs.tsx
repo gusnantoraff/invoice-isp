@@ -48,7 +48,18 @@ export default function FoKabelTubeOdcs() {
             label: 'Kabel ODC',
             format: (_val, record) => record.kabel_odc.nama_kabel,
         },
-        { id: 'warna_tube', label: 'Warna Tube' },
+        {
+            id: 'warna_tube',
+            label: 'Warna Tube',
+            format: (val, record) => (
+                <a
+                    href={`/fo-kabel-tube-odcs/${record.id}/edit`}
+                    className="text-blue-600 hover:underline"
+                >
+                    {val}
+                </a>
+            ),
+        },
         { id: 'status', label: 'Status' },
         {
             id: 'kabel_core_odc_ids',

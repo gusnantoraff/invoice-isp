@@ -90,25 +90,47 @@ export function CreateFoKabelOdc(props: Props) {
             </Element>
 
             <Element leftSide={t('jumlah_tube')} required>
-                <InputField
-                    type="number"
+                <SelectField
                     required
+                    customSelector
+                    menuPlacement='bottom'
                     value={form.jumlah_tube.toString()}
                     onValueChange={(v) => change('jumlah_tube', parseInt(v))}
                     errorMessage={errors?.errors.jumlah_tube}
-                />
+                >
+                    <option value="2">2</option>
+                    <option value="4">4</option>
+                    <option value="6">6</option>
+                    <option value="8">8</option>
+                    <option value="12">12</option>
+                    <option value="24">24</option>
+                    <option value="48">48</option>
+                    <option value="72">72</option>
+                    <option value="96">96</option>
+                    <option value="144">144</option>
+                </SelectField>
             </Element>
 
             <Element leftSide={t('jumlah_core_in_tube')} required>
-                <InputField
-                    type="number"
+                <SelectField
                     required
+                    customSelector
+                    menuPlacement='bottom'
                     value={form.jumlah_core_in_tube.toString()}
-                    onValueChange={(v) =>
-                        change('jumlah_core_in_tube', parseInt(v))
-                    }
+                    onValueChange={(v) => change('jumlah_core_in_tube', parseInt(v))}
                     errorMessage={errors?.errors.jumlah_core_in_tube}
-                />
+                >
+                    <option value="2">2</option>
+                    <option value="4">4</option>
+                    <option value="6">6</option>
+                    <option value="8">8</option>
+                    <option value="12">12</option>
+                    <option value="24">24</option>
+                    <option value="48">48</option>
+                    <option value="72">72</option>
+                    <option value="96">96</option>
+                    <option value="144">144</option>
+                </SelectField>
             </Element>
 
             {/* <Element leftSide={t('jumlah_total_core')} required>

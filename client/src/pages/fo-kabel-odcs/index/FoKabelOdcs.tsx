@@ -39,7 +39,18 @@ export default function FoKabelOdcs() {
             label: 'ODC',
             format: (_val, record) => record.odc.nama_odc,
         },
-        { id: 'nama_kabel', label: 'Nama Kabel' },
+        {
+            id: 'nama_kabel',
+            label: 'Nama Kabel',
+            format: (val, record) => (
+                <a
+                    href={`/fo-kabel-odcs/${record.id}/edit`}
+                    className="text-blue-600 hover:underline"
+                >
+                    {val}
+                </a>
+            ),
+        },
         { id: 'tipe_kabel', label: 'Tipe Kabel' },
         {
             id: 'panjang_kabel',

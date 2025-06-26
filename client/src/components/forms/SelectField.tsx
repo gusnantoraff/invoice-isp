@@ -30,6 +30,7 @@ export interface SelectProps extends CommonProps {
   clearAfterSelection?: boolean;
   menuPosition?: 'fixed';
   placeholder?: string | null;
+  menuPlacement?: 'auto' | 'top' | 'bottom';
 }
 
 export function SelectField(props: SelectProps) {
@@ -166,6 +167,7 @@ export function SelectField(props: SelectProps) {
             return onValueChange?.(v.value as string);
           }}
           menuPosition={props.menuPosition}
+          menuPlacement={props.menuPlacement}
           isDisabled={disabled}
           // eslint-disable-next-line @typescript-eslint/ban-ts-comment
           // @ts-ignore
@@ -176,7 +178,7 @@ export function SelectField(props: SelectProps) {
               selectedEntry?.value &&
               selectedEntry?.value !== blankOptionValue
           )}
-          placeholder={placeholder ?? undefined} 
+          placeholder={placeholder ?? undefined}
           data-cy={cypressRef}
         />
       )}

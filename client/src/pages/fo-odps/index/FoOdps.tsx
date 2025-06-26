@@ -38,7 +38,18 @@ export default function FoOdps() {
             label: t('lokasi'),
             format: (_v, r) => r.lokasi.nama_lokasi,
         },
-        { id: 'nama_odp', label: t('nama_odp') },
+        {
+            id: 'nama_odp',
+            label: t('nama_odp'),
+            format: (val, r) => (
+                <a
+                    href={`/fo-odps/${r.id}/edit`}
+                    className="text-blue-600 hover:underline"
+                >
+                    {val}
+                </a>
+            ),
+        },
         {
             id: 'odc',
             label: t('odc'),
