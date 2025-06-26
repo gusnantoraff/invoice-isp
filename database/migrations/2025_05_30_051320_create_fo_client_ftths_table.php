@@ -26,11 +26,11 @@
                     ->cascadeOnDelete()
                     ->cascadeOnUpdate();
 
-                // Foreign key to clients.id (InvoiceNinja)
-                $table->unsignedInteger('client_id');
+                // Foreign key to clients.id (InvoiceNinja) - now nullable
+                $table->unsignedInteger('client_id')->nullable();
                 $table->foreign('client_id')->references('id')->on('clients')->onDelete('cascade')->onUpdate('cascade');
 
-                // Foreign key to companies.id (for scoping)
+                // Foreign key to companies.id (for scoping) - auto-set by user
                 $table->unsignedInteger('company_id');
                 $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade')->onUpdate('cascade');
 

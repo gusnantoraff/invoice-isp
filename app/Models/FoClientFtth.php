@@ -18,8 +18,8 @@ class FoClientFtth extends Model
     protected $fillable = [
         'lokasi_id',
         'odp_id',
-        'client_id',
-        'company_id',
+        'client_id',     // now nullable
+        'company_id',    // auto-set by user
         'nama_client',
         'alamat',
         'status',     // 'active' or 'archived'
@@ -47,7 +47,7 @@ class FoClientFtth extends Model
     }
 
     /**
-     * Each client belongs to one InvoiceNinja Client.
+     * Each client belongs to one InvoiceNinja Client (nullable).
      */
     public function client()
     {

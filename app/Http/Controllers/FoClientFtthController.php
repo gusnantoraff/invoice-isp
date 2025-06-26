@@ -42,7 +42,7 @@ class FoClientFtthController extends Controller
             $statuses = ['active'];
         }
 
-        // 2) Start query: include trashed to handle “deleted” status
+        // 2) Start query: include trashed to handle "deleted" status
         $query = FoClientFtth::withTrashed()
             ->with(['lokasi', 'odp', 'client', 'company'])
             ->where('company_id', $companyId);
@@ -100,7 +100,7 @@ class FoClientFtthController extends Controller
                 'nama_odp' => $c->odp->nama_odp,
             ] : null,
             'client'      => $c->client ? [
-                'id'   => $c->client->id,
+                'id'   => $this->encodePrimaryKey($c->client->id),
                 'name' => $c->client->name,
             ] : null,
             'company'     => $c->company ? [
@@ -140,29 +140,38 @@ class FoClientFtthController extends Controller
         $data = $request->validate([
             'lokasi_id'    => 'required|exists:fo_lokasis,id',
             'odp_id'       => 'required|exists:fo_odps,id',
-            'client_id'    => 'required',
+            'client_id'    => 'nullable',
             'nama_client'  => 'nullable|string|max:255',
             'alamat'       => 'nullable|string|max:255',
             'status'       => 'sometimes|in:active,archived',
         ]);
 
-        // Decode hashed client_id
-        $data['client_id'] = $this->decodePrimaryKey($data['client_id']);
+        // Auto-set company_id from authenticated user
         $data['company_id'] = $companyId;
 
-        // Ensure the selected client belongs to the user's company
-        $client = \App\Models\Client::where('id', $data['client_id'])
-            ->where('company_id', $companyId)
-            ->first();
-        if (!$client) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Selected client does not belong to your company.',
-            ], 422);
+        // Decode hashed client_id if provided
+        if (isset($data['client_id']) && $data['client_id'] !== null) {
+            $data['client_id'] = $this->decodePrimaryKey($data['client_id']);
+
+            // Ensure the selected client belongs to the user's company
+            $client = \App\Models\Client::where('id', $data['client_id'])
+                ->where('company_id', $companyId)
+                ->first();
+            if (!$client) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Selected client does not belong to your company.',
+                ], 422);
+            }
+        } else {
+            // Set to null if not provided
+            $data['client_id'] = null;
         }
 
         \Log::info('User company_id: ' . $companyId);
-        \Log::info('Client company_id: ' . $client->company_id);
+        if ($data['client_id']) {
+            \Log::info('Client company_id: ' . $client->company_id);
+        }
 
         if (!isset($data['status'])) {
             $data['status'] = 'active';
@@ -185,7 +194,7 @@ class FoClientFtthController extends Controller
                     'nama_odp'     => $c->odp->nama_odp,
                 ] : null,
                 'client'       => $c->client ? [
-                    'id'           => $c->client->id,
+                    'id'           => $this->encodePrimaryKey($c->client->id),
                     'name'         => $c->client->name,
                 ] : null,
                 'company'      => $c->company ? [
@@ -227,7 +236,7 @@ class FoClientFtthController extends Controller
                     'nama_odp'     => $c->odp->nama_odp,
                 ] : null,
                 'client'       => $c->client ? [
-                    'id'           => $c->client->id,
+                    'id'           => $this->encodePrimaryKey($c->client->id),
                     'name'         => $c->client->name,
                 ] : null,
                 'company'      => $c->company ? [
@@ -256,23 +265,28 @@ class FoClientFtthController extends Controller
         $data = $request->validate([
             'lokasi_id'    => 'sometimes|exists:fo_lokasis,id',
             'odp_id'       => 'sometimes|exists:fo_odps,id',
-            'client_id'    => 'sometimes',
+            'client_id'    => 'nullable',
             'nama_client'  => 'nullable|string|max:255',
             'alamat'       => 'nullable|string|max:255',
             'status'       => 'sometimes|in:active,archived',
         ]);
 
-        // If client_id is being updated, decode hashed client_id
-        if (isset($data['client_id'])) {
-            $data['client_id'] = $this->decodePrimaryKey($data['client_id']);
-            $client = \App\Models\Client::where('id', $data['client_id'])
-                ->where('company_id', $companyId)
-                ->first();
-            if (!$client) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Selected client does not belong to your company.',
-                ], 422);
+        // If client_id is being updated, decode hashed client_id if provided
+        if (array_key_exists('client_id', $data)) {
+            if ($data['client_id'] !== null) {
+                $data['client_id'] = $this->decodePrimaryKey($data['client_id']);
+                $client = \App\Models\Client::where('id', $data['client_id'])
+                    ->where('company_id', $companyId)
+                    ->first();
+                if (!$client) {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Selected client does not belong to your company.',
+                    ], 422);
+                }
+            } else {
+                // Set to null if explicitly set to null
+                $data['client_id'] = null;
             }
         }
 
@@ -293,7 +307,7 @@ class FoClientFtthController extends Controller
                     'nama_odp'     => $c->odp->nama_odp,
                 ] : null,
                 'client'       => $c->client ? [
-                    'id'           => $c->client->id,
+                    'id'           => $this->encodePrimaryKey($c->client->id),
                     'name'         => $c->client->name,
                 ] : null,
                 'company'      => $c->company ? [
@@ -356,7 +370,7 @@ class FoClientFtthController extends Controller
                     'nama_odp'     => $c->odp->nama_odp,
                 ] : null,
                 'client'       => $c->client ? [
-                    'id'           => $c->client->id,
+                    'id'           => $this->encodePrimaryKey($c->client->id),
                     'name'         => $c->client->name,
                 ] : null,
                 'company'      => $c->company ? [
@@ -399,7 +413,7 @@ class FoClientFtthController extends Controller
                     'nama_odp'     => $c->odp->nama_odp,
                 ] : null,
                 'client'       => $c->client ? [
-                    'id'           => $c->client->id,
+                    'id'           => $this->encodePrimaryKey($c->client->id),
                     'name'         => $c->client->name,
                 ] : null,
                 'company'      => $c->company ? [
@@ -442,7 +456,7 @@ class FoClientFtthController extends Controller
                     'nama_odp'     => $c->odp->nama_odp,
                 ] : null,
                 'client'       => $c->client ? [
-                    'id'           => $c->client->id,
+                    'id'           => $this->encodePrimaryKey($c->client->id),
                     'name'         => $c->client->name,
                 ] : null,
                 'company'      => $c->company ? [
@@ -536,7 +550,7 @@ class FoClientFtthController extends Controller
                     'nama_odp'     => $c->odp->nama_odp,
                 ] : null,
                 'client'       => $c->client ? [
-                    'id'           => $c->client->id,
+                    'id'           => $this->encodePrimaryKey($c->client->id),
                     'name'         => $c->client->name,
                 ] : null,
                 'company'      => $c->company ? [
