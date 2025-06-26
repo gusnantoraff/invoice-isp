@@ -514,7 +514,7 @@ export function Default(props: Props) {
                     },
                 },
                 {
-                    name: t('Reports'),
+                    name: t('FTTH Reports'),
                     href: '/fo-reports',
                     icon: PieChart,
                     current: location.pathname.startsWith('/fo-reports'),
