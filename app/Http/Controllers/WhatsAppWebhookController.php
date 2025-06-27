@@ -138,4 +138,24 @@ class WhatsAppWebhookController extends Controller
 
         return response()->json(['status' => 'ok']);
     }
+
+    public function handleSession(Request $request)
+    {
+        $sessionName = $request->input('session');
+        $status = $request->input('status');
+
+        if (!$sessionName || !$status) {
+            return response()->json(['error' => 'Invalid session or status'], 400);
+        }
+
+        $device = Device::where('name', $sessionName)->first();
+
+        if (!$device) {
+            return response()->json(['error' => 'Device not found'], 404);
+        }
+
+        $device->update(['status' => $status]);
+
+        return response()->json(['message' => 'Device status updated']);
+    }
 }

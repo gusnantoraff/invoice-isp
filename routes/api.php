@@ -551,7 +551,7 @@ Route::group(['middleware' => ['throttle:api', 'api_db', 'token_auth', 'locale']
     Route::prefix('devices')->controller(DevicesController::class)->group(function () {
         Route::get('/', 'getAllDevices');
         Route::post('/', 'addDevice');
-        Route::get('/status', 'getStatus');
+        Route::put('/{id}','updateDevice');
         Route::post('/{id}/connect', 'connectDevice');
         Route::post('/{id}/disconnect', 'disconnectDevice');
         Route::delete('/{id}', 'deleteDevice');
@@ -588,6 +588,8 @@ Route::group(['middleware' => ['throttle:api', 'api_db', 'token_auth', 'locale']
 });
 
 Route::post('webhook/message', action: [WhatsAppWebhookController::class, 'handleMessage']);
+Route::post('webhook/session', action: [WhatsAppWebhookController::class, 'handleSession']);
+
 
 
 Route::post('api/v1/sms_reset', [TwilioController::class, 'generate2faResetCode'])->name('sms_reset.generate')->middleware('throttle:3,1');

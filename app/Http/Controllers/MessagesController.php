@@ -88,6 +88,29 @@ class MessagesController extends Controller
         $device = Device::findOrFail($validated['device_id']);
         $session = $device->name;
 
+        if ($device->status !== 'connected') {
+            foreach ($decodedClientIds as $clientId) {
+                if (!$clientId)
+                    continue;
+
+                Message::create([
+                    'device_id' => $device->id,
+                    'client_id' => $clientId,
+                    'message_template_id' => $validated['message_template_id'] ?? null,
+                    'message' => $validated['text'] ?? '',
+                    'file' => $validated['document_name'] ?? null,
+                    'url' => $validated['document_url'] ?? ($validated['image_url'] ?? null),
+                    'status' => 'failed',
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Device is not connected.',
+                'results' => [],
+            ], 400);
+        }
+
         $clients = Client::whereIn('id', $decodedClientIds)->get();
 
         $isGroup = $request->boolean('is_group', false);
