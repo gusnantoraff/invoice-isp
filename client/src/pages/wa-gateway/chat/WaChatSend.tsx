@@ -62,7 +62,6 @@ export default function WaChatSend() {
     }, [searchParams]);
 
     useEffect(() => {
-        console.log('client',clients);
     }, [clients]);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {

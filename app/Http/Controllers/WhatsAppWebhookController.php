@@ -13,10 +13,19 @@ use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\AdminContact;
 use Carbon\Carbon;
-
+use Illuminate\Support\Facades\Blade;
 
 class WhatsAppWebhookController extends Controller
 {
+    protected function renderTemplate($template, $data = [])
+    {
+        $php = Blade::compileString($template);
+        ob_start();
+        extract($data, EXTR_SKIP);
+        eval ('?>' . $php);
+        return ob_get_clean();
+    }
+
     public function handleMessage(Request $request, WhatsappService $wa)
     {
         Carbon::setLocale('id');
@@ -80,10 +89,12 @@ class WhatsAppWebhookController extends Controller
             $msg = strtolower(trim($message));
             $q = strtolower(trim($chatbot->question));
 
-            similar_text($msg, $q, $percent);
-            return $percent >= 80 || str_contains($msg, $q) || str_contains($q, $msg);
-        });
+            if ($msg === $q)
+                return true;
 
+            similar_text($msg, $q, $percent);
+            return $percent >= 80;
+        });
 
         $invoice = null;
         if ($client) {
@@ -91,44 +102,30 @@ class WhatsAppWebhookController extends Controller
         }
 
         if ($matchedChatbot) {
-            $template = $matchedChatbot->answer;
+            $questionKey = trim(strtolower($matchedChatbot->question));
 
-            $menuOption1 = $matchedChatbot->question;
-
-            if ($client) {
+            if ($questionKey === 'menu') {
+                $answer = $matchedChatbot->answer;
+            } elseif (!$client) {
+                $answer = "Maaf, nomor Anda belum terdaftar di sistem kami.";
+            } else {
                 $invoice = Invoice::where('client_id', $client->id)->latest()->first();
 
-                if ($invoice) {
-                    $status = ($invoice->status_id == 4) ? 'Sudah Lunas' : 'Belum Lunas';
+                $data = [
+                    'name' => $client->name,
+                    'bulan' => $invoice?->due_date ? Carbon::parse($invoice->due_date)->translatedFormat('F Y') : '-',
+                    'amount' => $invoice ? number_format($invoice->amount, 0, ',', '.') : '-',
+                    'due_date' => $invoice?->due_date ? Carbon::parse($invoice->due_date)->translatedFormat('j F Y') : '-',
+                    'status' => $invoice ? ($invoice->status_id == 4 ? 'Sudah Lunas' : 'Belum Lunas') : 'Tidak Diketahui',
+                    'status_id' => $invoice->status_id ?? null,
+                ];
 
-                    if ($menuOption1 === '1') {
-                        if ($invoice->status_id == 4) {
-                            $answer = "Halo {$client->name}, Anda tidak memiliki tagihan atau sudah melunasinya bulan ini.";
-                        } else {
-                            $answer = str_replace('{{name}}', $client->name, $template);
-                            $answer = str_replace('{{bulan}}', Carbon::parse($invoice->due_date)->translatedFormat('F Y'), $answer);
-                            $answer = str_replace('{{amount}}', number_format($invoice->amount, 0, ',', '.'), $answer);
-                            $answer = str_replace('{{due_date}}', Carbon::parse($invoice->due_date)->translatedFormat('j F Y'), $answer);
-                        }
-                    } else {
-                        $answer = str_replace('{{name}}', $client->name, $template);
-                        $answer = str_replace('{{bulan}}', Carbon::parse($invoice->due_date)->translatedFormat('F Y'), $answer);
-                        $answer = str_replace('{{amount}}', number_format($invoice->amount, 0, ',', '.'), $answer);
-                        $answer = str_replace('{{due_date}}', Carbon::parse($invoice->due_date)->translatedFormat('j F Y'), $answer);
-                        $answer = str_replace('{{status}}', $status, $answer);
-                    }
-                } else {
-                    $answer = "Halo {$client->name}, Anda tidak memiliki tagihan atau sudah melunasinya bulan ini.";
-                }
-            } else {
-                $answer = "Halo Pelanggan, Anda tidak memiliki tagihan atau sudah melunasinya bulan ini.";
+                $answer = $this->renderTemplate($matchedChatbot->answer, $data);
             }
         } else {
             $answer = "Halo, selamat datang. Ini adalah *balasan otomatis* dari sistem kami.\n" .
-                "Ada yang bisa kami bantu?\n\n" .
-                "Ketik *menu* untuk melihat pilihan layanan.";
+                "Ada yang bisa kami bantu?\n\nKetik *menu* untuk melihat pilihan layanan.";
         }
-
 
         $wa->sendMessage([
             'session' => $session,
@@ -137,5 +134,25 @@ class WhatsAppWebhookController extends Controller
         ]);
 
         return response()->json(['status' => 'ok']);
+    }
+
+    public function handleSession(Request $request)
+    {
+        $sessionName = $request->input('session');
+        $status = $request->input('status');
+
+        if (!$sessionName || !$status) {
+            return response()->json(['error' => 'Invalid session or status'], 400);
+        }
+
+        $device = Device::where('name', $sessionName)->first();
+
+        if (!$device) {
+            return response()->json(['error' => 'Device not found'], 404);
+        }
+
+        $device->update(['status' => $status]);
+
+        return response()->json(['message' => 'Device status updated']);
     }
 }

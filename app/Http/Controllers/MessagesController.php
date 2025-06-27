@@ -11,6 +11,9 @@ use App\Models\Invoice;
 use App\Models\MessageTemplate;
 use App\Utils\Traits\MakesHash;
 use Carbon\Carbon;
+use App\Jobs\Entity\CreateRawPdf;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Storage;
 
 class MessagesController extends Controller
 {
@@ -87,6 +90,29 @@ class MessagesController extends Controller
 
         $device = Device::findOrFail($validated['device_id']);
         $session = $device->name;
+
+        if ($device->status !== 'connected') {
+            foreach ($decodedClientIds as $clientId) {
+                if (!$clientId)
+                    continue;
+
+                Message::create([
+                    'device_id' => $device->id,
+                    'client_id' => $clientId,
+                    'message_template_id' => $validated['message_template_id'] ?? null,
+                    'message' => $validated['text'] ?? '',
+                    'file' => $validated['document_name'] ?? null,
+                    'url' => $validated['document_url'] ?? ($validated['image_url'] ?? null),
+                    'status' => 'failed',
+                ]);
+            }
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Device is not connected.',
+                'results' => [],
+            ], 400);
+        }
 
         $clients = Client::whereIn('id', $decodedClientIds)->get();
 
@@ -179,4 +205,182 @@ class MessagesController extends Controller
 
         return str_replace(array_keys($replacements), array_values($replacements), $template);
     }
+
+    public function resend($id)
+    {
+        $message = Message::with(['device', 'client'])->findOrFail($id);
+        $device = $message->device;
+        $client = $message->client;
+
+        if (!$device || !$client) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Device atau Client tidak ditemukan',
+            ], 404);
+        }
+
+        if ($device->status !== 'connected') {
+            $message->status = 'failed';
+            $message->save();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Device tidak terhubung',
+            ], 400);
+        }
+
+        $payload = [
+            'session' => $device->name,
+            'to' => $client->phone,
+            'text' => $message->message,
+        ];
+
+        if ($message->url && $message->file) {
+            $payload['document_url'] = $message->url;
+            $payload['document_name'] = $message->file;
+        } elseif ($message->url) {
+            $payload['image_url'] = $message->url;
+        }
+
+        $response = $this->wa->sendMessage($payload);
+        $status = $response['status'] ?? 'failed';
+
+        $message->status = $status;
+        $message->save();
+
+        return response()->json([
+            'success' => $status === 'sent',
+            'status' => $status,
+            'whatsapp_response' => $response,
+        ]);
+    }
+    public function sendPaymentConfirmation(Request $request)
+    {
+        $validated = $request->validate([
+            'client_id' => 'required|string',
+            'invoice_id' => 'required|string',
+        ]);
+
+        $clientId = $this->decodePrimaryKey($validated['client_id']);
+        $invoiceId = $this->decodePrimaryKey($validated['invoice_id']);
+
+        if (!$clientId || !$invoiceId) {
+            return response()->json(['message' => 'Client ID atau Invoice ID tidak valid'], 422);
+        }
+
+        $client = Client::findOrFail($clientId);
+        $invoice = Invoice::findOrFail($invoiceId);
+
+        $device = Device::where('status', 'connected')->latest()->first();
+
+        if (!$client || !$invoice || !$device) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Client, invoice, atau device tidak ditemukan atau tidak terhubung.',
+            ], 404);
+        }
+
+        $template = MessageTemplate::where('title', 'Konfirmasi')->first();
+        if (!$template) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Template "Konfirmasi Pembayaran" tidak ditemukan',
+            ], 404);
+        }
+
+        Carbon::setLocale('id');
+        $text = $this->replacePlaceholders($template->content, $client, [
+            'amount' => number_format($invoice->amount, 0, ',', '.'),
+            'due_date' => $invoice->due_date ? Carbon::parse($invoice->due_date)->translatedFormat('d F Y') : '-',
+            'bulan' => $invoice->due_date ? Carbon::parse($invoice->due_date)->translatedFormat('F Y') : '-',
+        ]);
+
+        $payload = [
+            'session' => $device->name,
+            'to' => $client->phone,
+            'text' => $text,
+        ];
+
+        $response = $this->wa->sendMessage($payload);
+        $status = $response['status'] ?? 'failed';
+
+        Message::create([
+            'device_id' => $device->id,
+            'client_id' => $client->id,
+            'invoice_id' => $invoice->id,
+            'message_template_id' => $template->id,
+            'message' => $text,
+            'status' => $status,
+        ]);
+
+        return response()->json([
+            'success' => $status === 'sent',
+            'status' => $status,
+            'whatsapp_response' => $response,
+        ]);
+    }
+    public function sendInvoice(Invoice $invoice)
+    {
+        $invitation = $invoice->invitations()->first();
+        if (!$invitation) {
+            return response()->json(['error' => 'Invitation not found'], 404);
+        }
+
+        $client = $invoice->client;
+        if (!$client || !$client->phone) {
+            return response()->json(['error' => 'Client or phone number not found'], 400);
+        }
+
+        $device = Device::where('status', 'connected')->first();
+        if (!$device) {
+            return response()->json(['error' => 'No connected device found'], 400);
+        }
+
+        $template = MessageTemplate::where('title', 'Tagihan')->first();
+        if (!$template) {
+            return response()->json(['error' => 'Template "Tagihan" tidak ditemukan'], 404);
+        }
+
+        App::setLocale($invitation->contact->preferredLocale());
+
+        $pdfContent = (new CreateRawPdf($invitation))->handle();
+
+        $fileName = "invoice_{$invoice->number}.pdf";
+        $storagePath = "public/invoices/{$fileName}";
+        Storage::put($storagePath, $pdfContent);
+        $pdfUrl = url(Storage::url($storagePath));
+
+        Carbon::setLocale('id');
+        $amount = number_format($invoice->amount, 0, ',', '.');
+        $bulan = $invoice->due_date ? Carbon::parse($invoice->due_date)->translatedFormat('F Y') : '-';
+        $dueDate = $invoice->due_date ? Carbon::parse($invoice->due_date)->translatedFormat('d F Y') : '-';
+
+        $messageText = str_replace(
+            ['{{name}}', '{{amount}}', '{{bulan}}', '{{due_date}}'],
+            [$client->name, $amount, $bulan, $dueDate],
+            $template->content
+        );
+
+        $this->wa->sendMessage([
+            'session' => $device->name,
+            'to' => $client->phone,
+            'text' => $messageText,
+            'document_url' => $pdfUrl,
+            'document_name' => 'invoice.pdf',
+        ]);
+
+        Message::create([
+            'device_id' => $device->id,
+            'client_id' => $client->id,
+            'invoice_id' => $invoice->id,
+            'message_template_id' => $template->id,
+            'message' => $messageText,
+            'file' => 'invoice.pdf',
+            'url' => $pdfUrl,
+            'status' => 'sent',
+        ]);
+
+        return response()->json(['message' => 'Pesan berhasil dikirim dan disimpan.']);
+    }
+
 }

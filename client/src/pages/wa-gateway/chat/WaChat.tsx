@@ -36,24 +36,47 @@ export default function WAChat() {
     { name: t('Chats'), href: `/wa-gateway/chat/${deviceId}` },
   ];
 
-  useEffect(() => {
+  const fetchChats = async () => {
     const token = localStorage.getItem('X-API-TOKEN') ?? '';
-
-    axios.get(`http://localhost:8000/api/v1/wa/messages/device/${deviceId}`, {
-      headers: {
-        'X-API-TOKEN': token,
-        'Accept': 'application/json',
-      },
-    })
-      .then((response) => {
-        setChats(response.data.data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        setError(error.message);
-        setLoading(false);
+    setLoading(true);
+    try {
+      const response = await axios.get(`http://localhost:8000/api/v1/wa/messages/device/${deviceId}`, {
+        headers: {
+          'X-API-TOKEN': token,
+          'Accept': 'application/json',
+        },
       });
+      setChats(response.data.data);
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchChats();
   }, []);
+
+  const handleResend = async (messageId: number) => {
+    const token = localStorage.getItem('X-API-TOKEN') ?? '';
+    try {
+      await axios.post(
+        `http://localhost:8000/api/v1/wa/message/resend/${messageId}`,
+        {},
+        {
+          headers: {
+            'X-API-TOKEN': token,
+            'Accept': 'application/json',
+          },
+        }
+      );
+      alert("Pesan berhasil dikirim ulang!");
+      fetchChats();
+    } catch (err: any) {
+      alert(err.response?.data?.message || 'Gagal mengirim ulang pesan.');
+    }
+  };
 
   const statusLabel = (status: string) => {
     switch (status) {
@@ -149,11 +172,18 @@ export default function WAChat() {
                       <td className="p-3">
                         <button
                           onClick={() => navigate(`/wa-gateway/chat/detail/${chat.id}`)}
-                          className="px-3 py-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 transition duration-200"
+                          className="px-3 py-1 mr-1 text-sm text-white bg-blue-600 rounded hover:bg-blue-700 transition duration-200"
                         >
                           Detail
                         </button>
-
+                        {chat.status === 'failed' && (
+                          <button
+                            onClick={() => handleResend(chat.id)}
+                            className="px-3 py-1 text-sm text-white bg-yellow-500 rounded hover:bg-red-700 transition duration-200"
+                          >
+                            Resend
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}

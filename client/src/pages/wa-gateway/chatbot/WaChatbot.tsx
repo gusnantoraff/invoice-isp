@@ -102,12 +102,15 @@ export default function WAChatbot() {
   };
 
   const placeholders = [
-    "{{name}}     = Nama client",
-    "{{bulan}}    = Bulan pada tanggal tagihan",
-    "{{amount}}   = Jumlah tagihan",
-    "{{due_date}} = Tanggal tagihan",
-    "{{status}}   = Status pembayaran",
+    "{{$name}}     = Nama client",
+    "{{$bulan}}    = Bulan pada tanggal tagihan",
+    "{{$amount}}   = Jumlah tagihan",
+    "{{$due_date}} = Tanggal tagihan",
+    "{{$status}}   = Status pembayaran",
+    "▼ Template untuk cek tagihan ▼",
+    "@if($status_id == 4 || !$status_id)\n(pesan tidak ada tagihan)\n@else\n(pesan ada tagihan)\n@endif"
   ];
+
 
   const pages: Page[] = [
     { name: t("WhatsApp Gateway"), href: "/wa-gateway" },
@@ -271,13 +274,26 @@ export default function WAChatbot() {
 
         {isListModalOpen && (
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-50">
-            <div className="bg-white rounded-lg shadow-lg max-w-md w-full p-6">
+            <div className="bg-white rounded-lg shadow-lg max-w-xl w-full p-6">
               <h2 className="text-lg font-semibold mb-4 text-gray-800">Daftar Placeholder</h2>
-              <ul className="list-disc pl-5 text-gray-700 mb-4">
-                {placeholders.map((ph, index) => (
-                  <li key={index}>{ph}</li>
-                ))}
+
+              <ul className="space-y-3 text-gray-700 mb-4">
+                {placeholders.map((ph, index) => {
+                  const isTemplate = ph.toLowerCase().includes('@if');
+                  return (
+                    <li key={index}>
+                      {isTemplate ? (
+                        <div className="bg-gray-100 rounded p-4 text-sm text-gray-800 font-mono whitespace-pre-wrap border border-gray-300">
+                          {ph}
+                        </div>
+                      ) : (
+                        <div className="whitespace-pre-line">{ph}</div>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
+
               <div className="flex justify-end">
                 <button
                   onClick={() => setIsListModalOpen(false)}
@@ -289,7 +305,6 @@ export default function WAChatbot() {
             </div>
           </div>
         )}
-
 
         <style>
           {`

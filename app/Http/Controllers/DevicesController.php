@@ -17,15 +17,6 @@ class DevicesController extends Controller
         ]);
     }
 
-    public function getStatus(WhatsappService $wa): JsonResponse
-    {
-        $sessions = $wa->getAllSessions();
-
-        return response()->json([
-            'data' => $sessions,
-        ]);
-    }
-
     public function addDevice(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
@@ -49,6 +40,36 @@ class DevicesController extends Controller
             'message' => 'Device saved. Please connect to start session.',
             'data' => $device,
         ], 201);
+    }
+
+    public function updateDevice(Request $request, $id): JsonResponse
+    {
+        $device = Device::find($id);
+
+        if (!$device) {
+            return response()->json(['error' => 'Device not found'], 404);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255|unique:devices,name,' . $device->id,
+            'phone' => 'required|string|max:20|unique:devices,phone,' . $device->id,
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'error' => $validator->errors(),
+            ], 422);
+        }
+
+        $device->update([
+            'name' => $request->input('name'),
+            'phone' => $request->input('phone'),
+        ]);
+
+        return response()->json([
+            'message' => 'Device updated successfully.',
+            'data' => $device,
+        ]);
     }
 
     public function connectDevice($id, WhatsappService $wa): JsonResponse

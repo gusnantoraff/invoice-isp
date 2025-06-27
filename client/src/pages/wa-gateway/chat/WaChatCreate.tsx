@@ -114,8 +114,6 @@ export default function WaChatCreate() {
                 client_id: form.client_id,
             };
 
-            console.log("Payload yang dikirim:", payload);
-
             await axios.post("http://localhost:8000/api/v1/wa/message", payload, {
                 headers: {
                     "X-API-TOKEN": token,
@@ -123,11 +121,11 @@ export default function WaChatCreate() {
                 },
             });
 
-            navigate(`/wa-gateway/chat/${deviceId}`);
         } catch (err: any) {
             setError(err.response?.data?.message || err.message);
         } finally {
             setLoading(false);
+            navigate(`/wa-gateway/chat/${deviceId}`);
         }
     };
 

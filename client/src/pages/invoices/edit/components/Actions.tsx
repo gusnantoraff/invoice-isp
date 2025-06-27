@@ -31,6 +31,7 @@ import {
   MdDownload,
   MdEdit,
   MdMarkEmailRead,
+  MdOutlineWhatsapp,
   MdPaid,
   MdPictureAsPdf,
   MdPrint,
@@ -58,6 +59,8 @@ import { EntityActionElement } from '$app/components/EntityActionElement';
 import { useChangeTemplate } from '$app/pages/settings/invoice-design/pages/custom-designs/components/ChangeTemplate';
 import { useCurrentCompany } from '$app/common/hooks/useCurrentCompany';
 import { AddActivityComment } from '$app/pages/dashboard/hooks/useGenerateActivityElement';
+import { handleMarkPaidWithConfirmation } from '../hooks/ConfirmActions';
+import { handleSendInvoice } from '../hooks/SendInvoiceAction';
 
 export const isInvoiceAutoBillable = (invoice: Invoice) => {
   return (
@@ -185,6 +188,15 @@ export function useActions(params?: Params) {
         </EntityActionElement>
       ),
     (invoice: Invoice) =>
+      invoice.client_id && (
+        <DropdownElement
+          icon={<Icon element={MdOutlineWhatsapp} />}
+          onClick={() => handleSendInvoice(invoice)}
+        >
+          {t('Kirim Invoice lewat WA')}
+        </DropdownElement>
+      ),
+    (invoice: Invoice) =>
       invoice.status_id !== InvoiceStatus.Paid &&
       (isAdmin || isOwner) && (
         <EntityActionElement
@@ -299,7 +311,10 @@ export function useActions(params?: Params) {
           actionKey="mark_paid"
           isCommonActionSection={!dropdown}
           tooltipText={t('mark_paid')}
-          onClick={() => bulk([invoice.id], 'mark_paid')}
+          onClick={async () => {
+            await bulk([invoice.id], 'mark_paid');
+            await handleMarkPaidWithConfirmation(invoice);
+          }}
           icon={MdPaid}
           disablePreventNavigation
         >

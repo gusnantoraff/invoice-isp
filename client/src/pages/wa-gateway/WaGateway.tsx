@@ -24,6 +24,9 @@ export default function WAGateway() {
   const [name, setName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const navigate = useNavigate();
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [qrModalDevice, setQrModalDevice] = useState<Device | null>(null);
+
 
 
   useEffect(() => {
@@ -36,55 +39,59 @@ export default function WAGateway() {
     try {
       const token = localStorage.getItem('X-API-TOKEN') ?? '';
 
-      const devicesResponse = await axios.get("http://localhost:8000/api/v1/devices", {
+      const response = await axios.get("http://localhost:8000/api/v1/devices", {
         headers: { 'X-API-TOKEN': token },
       });
 
-      const allDevices: Device[] = devicesResponse.data.data || [];
+      const allDevices: Device[] = response.data.data || [];
 
-      const statusResponse = await axios.get("http://localhost:8000/api/v1/devices/status", {
-        headers: { 'X-API-TOKEN': token },
-      });
-
-      const connectedNames: string[] = statusResponse.data.data?.data || [];
-
-      const updatedDevices = allDevices.map((device) => ({
-        ...device,
-        status: connectedNames.includes(device.name) ? 'connected' : 'inactive',
-      }));
-
-      setDevices(updatedDevices);
+      setDevices(allDevices);
     } catch (error) {
-      console.error("Error fetching devices or statuses:", error);
+      console.error("Error fetching devices:", error);
       alert("Error fetching devices");
     }
 
     setLoading(false);
   };
 
-
-  const addDevice = async () => {
+  const handleSaveDevice = async () => {
     try {
       const token = localStorage.getItem('X-API-TOKEN') ?? '';
-      await axios.post(
-        "http://localhost:8000/api/v1/devices",
-        {
-          name,
-          phone: phoneNumber
-        },
-        {
-          headers: {
-            'X-API-TOKEN': token,
-          },
-        }
-      );
-      alert("Device added successfully");
+
+      if (isEditMode && selectedDevice) {
+        await axios.put(
+          `http://localhost:8000/api/v1/devices/${selectedDevice.id}`,
+          { name, phone: phoneNumber },
+          { headers: { 'X-API-TOKEN': token } }
+        );
+        alert("Device updated successfully");
+      } else {
+        await axios.post(
+          "http://localhost:8000/api/v1/devices",
+          { name, phone: phoneNumber },
+          { headers: { 'X-API-TOKEN': token } }
+        );
+        alert("Device added successfully");
+      }
+
       fetchDevices();
       setIsModalOpen(false);
+      setSelectedDevice(null);
+      setIsEditMode(false);
+      setName("");
+      setPhoneNumber("");
     } catch (error) {
-      console.error("Error adding device:", error);
-      alert("Failed to add device");
+      console.error("Error saving device:", error);
+      alert("Failed to save device");
     }
+  };
+
+  const openEditModal = (device: Device) => {
+    setIsEditMode(true);
+    setSelectedDevice(device);
+    setName(device.name);
+    setPhoneNumber(device.phone);
+    setIsModalOpen(true);
   };
 
   const connectQR = async (device: Device) => {
@@ -100,20 +107,14 @@ export default function WAGateway() {
         }
       );
 
-
       if (response.data?.url) {
-        setSelectedDevice({
+        const updatedDevice: Device = {
           ...device,
           url: response.data.url,
-        });
+        };
+        setQrModalDevice(updatedDevice);
 
-        setDevices((prevDevices) =>
-          prevDevices.map((d) =>
-            d.id === device.id ? { ...d, status: "connected" } : d
-          )
-        );
       } else {
-        console.error("Failed to fetch QR code:", response.data);
         alert(response.data?.message || "Failed to generate QR Code");
       }
     } catch (error) {
@@ -210,6 +211,12 @@ export default function WAGateway() {
                       >
                         🤖 Chatbot
                       </button>
+                      <button
+                        className="action-btn show"
+                        onClick={() => openEditModal(device)}
+                      >
+                        ✏️ Edit
+                      </button>
                       <button className="action-btn delete"
                         onClick={() => deleteDevice(device.id)}
                       > Delete </button>
@@ -226,23 +233,34 @@ export default function WAGateway() {
         {isModalOpen && (
           <div className="modal-overlay">
             <div className="modal">
-              <h2>Add Device</h2>
+              <h2>{isEditMode ? 'Edit Device' : 'Add Device'}</h2>
               <input type="text" placeholder="Device Name" value={name} onChange={(e) => setName(e.target.value)} />
               <input type="text" placeholder="Phone Number" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
               <div className="modal-actions">
-                <button className="primary-btn" onClick={addDevice}>Save</button>
-                <button className="cancel-btn" onClick={() => setIsModalOpen(false)}>Close</button>
+                <button className="primary-btn" onClick={handleSaveDevice}>{isEditMode ? 'Update' : 'Save'}</button>
+                <button className="cancel-btn" onClick={() => {
+                  setIsModalOpen(false);
+                  setSelectedDevice(null);
+                  setIsEditMode(false);
+                  setName('');
+                  setPhoneNumber('');
+                }}>Close</button>
               </div>
             </div>
           </div>
         )}
 
-        {selectedDevice && (
+        {qrModalDevice && (
           <div className="modal-overlay">
             <div className="modal">
-              <h2>QR Code for {selectedDevice.name}</h2>
-              <img src={selectedDevice.url} alt="QR Code" />
-              <button className="cancel-btn" onClick={() => setSelectedDevice(null)}>Close</button>
+              <h2>QR Code for {qrModalDevice.name}</h2>
+              <img src={qrModalDevice.url} alt="QR Code" />
+              <button className="cancel-btn" onClick={() => {
+                setQrModalDevice(null);
+                fetchDevices();
+              }}
+              >Close
+              </button>
             </div>
           </div>
         )}

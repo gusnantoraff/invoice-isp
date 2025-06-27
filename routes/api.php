@@ -555,7 +555,7 @@ Route::group(['middleware' => ['throttle:api', 'api_db', 'token_auth', 'locale']
     Route::prefix('devices')->controller(DevicesController::class)->group(function () {
         Route::get('/', 'getAllDevices');
         Route::post('/', 'addDevice');
-        Route::get('/status', 'getStatus');
+        Route::put('/{id}','updateDevice');
         Route::post('/{id}/connect', 'connectDevice');
         Route::post('/{id}/disconnect', 'disconnectDevice');
         Route::delete('/{id}', 'deleteDevice');
@@ -586,12 +586,17 @@ Route::group(['middleware' => ['throttle:api', 'api_db', 'token_auth', 'locale']
 
     Route::get('wa/message', [MessagesController::class, 'getMessages']);
     Route::get('wa/message/{id}', action: [MessagesController::class, 'showMessages']);
-    Route::get('/wa/messages/device/{deviceId}', [MessagesController::class, 'getMessagesByDevice']);
+    Route::get('wa/messages/device/{deviceId}', [MessagesController::class, 'getMessagesByDevice']);
     Route::post('wa/message', [MessagesController::class, 'sendMessage']);
+    Route::post('wa/message/resend/{id}', [MessagesController::class, 'resend']);
+    Route::post('wa/message/payment-confirmation', [MessagesController::class, 'sendPaymentConfirmation']);
+    Route::post('wa/message/send-invoice/{invoice}', [MessagesController::class, 'sendInvoice']);
     Route::apiResource('admin-contacts', AdminContactController::class);
 });
 
 Route::post('webhook/message', action: [WhatsAppWebhookController::class, 'handleMessage']);
+Route::post('webhook/session', action: [WhatsAppWebhookController::class, 'handleSession']);
+
 
 
 Route::post('api/v1/sms_reset', [TwilioController::class, 'generate2faResetCode'])->name('sms_reset.generate')->middleware('throttle:3,1');
