@@ -9,6 +9,7 @@ use App\Models\Chatbot;
 use App\Services\WhatsApp\WhatsappService;
 use App\Models\Device;
 use App\Models\Message;
+use App\Models\FoClientFtth;
 use App\Models\Client;
 use App\Models\Invoice;
 use App\Models\AdminContact;
@@ -39,6 +40,12 @@ class WhatsAppWebhookController extends Controller
 
         $client = Client::where('phone', $phoneNumber)->first();
 
+        $clientFtth = FoClientFtth::with(['client', 'lokasi', 'odp'])
+            ->whereHas('client', function ($query) use ($phoneNumber) {
+                $query->where('phone', $phoneNumber);
+            })
+            ->first();
+
         Message::create([
             'device_id' => $device->id,
             'client_id' => $client ? $client->id : null,
@@ -61,10 +68,22 @@ class WhatsAppWebhookController extends Controller
             foreach ($adminContacts as $phone) {
                 $adminPhone = $phone . '@s.whatsapp.net';
 
+                $clientName = $clientFtth?->client?->name ?? 'Pelanggan';
+                $lokasi = $clientFtth?->lokasi?->nama_lokasi ?? 'Tidak tersedia';
+                $odp = $clientFtth?->odp?->nama_odp ?? 'Tidak tersedia';
+                $alamat = $clientFtth?->alamat ?? '-';
+
                 $wa->sendMessage([
                     'session' => $session,
                     'to' => $adminPhone,
-                    'text' => "📨 *Keluhan Baru!*\nDari: *$phoneNumber*\nNomor Tiket: *$ticketNumber*\nIsi: $message",
+                    'text' => "📨 *Keluhan Baru!*\n" .
+                        "Dari: *$phoneNumber*\n" .
+                        "Nama Client: *$clientName*\n" .
+                        "Lokasi: *$lokasi*\n" .
+                        "ODP: *$odp*\n" .
+                        "Alamat: *$alamat*\n" .
+                        "Nomor Tiket: *$ticketNumber*\n" .
+                        "Isi Keluhan: \n$message",
                 ]);
             }
 

@@ -200,6 +200,7 @@ export function useClientColumns() {
 
         switch (latestInvoice.status_id) {
           case '1': return 'UNPAID';
+          case '2': return 'UNPAID';
           case '4': return 'PAID';
           default: return '-';
         }

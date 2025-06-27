@@ -102,6 +102,7 @@ class FoClientFtthController extends Controller
             'client'      => $c->client ? [
                 'id'   => $this->encodePrimaryKey($c->client->id),
                 'name' => $c->client->name,
+                'phone' => $c->client->phone,
             ] : null,
             'company'     => $c->company ? [
                 'id'   => $c->company->id,
