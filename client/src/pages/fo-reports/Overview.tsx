@@ -1,11 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from '$app/components/cards/Card';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Legend } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Legend, LineChart, Line } from 'recharts';
 import { Spinner } from '$app/components/Spinner';
 import { request } from '$app/common/helpers/request';
 import { endpoint } from '$app/common/helpers';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+
+// Custom tooltip for better data display
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+        <p className="font-semibold text-gray-800">{`${label}`}</p>
+        {payload.map((entry: any, index: number) => (
+          <p key={index} style={{ color: entry.color }} className="text-sm">
+            {`${entry.name}: ${entry.value}`}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
 
 export default function Overview() {
   const [loading, setLoading] = useState(true);
@@ -29,51 +46,18 @@ export default function Overview() {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    Promise.all([
-      request('GET', endpoint('/api/v1/fo-lokasis')),
-      request('GET', endpoint('/api/v1/fo-odcs')),
-      request('GET', endpoint('/api/v1/fo-odps')),
-      request('GET', endpoint('/api/v1/fo-client-ftths')),
-      request('GET', endpoint('/api/v1/fo-kabel-odcs')),
-      request('GET', endpoint('/api/v1/fo-kabel-tube-odcs')),
-      request('GET', endpoint('/api/v1/fo-kabel-core-odcs')),
-    ])
-      .then(([lokasiRes, odcRes, odpRes, clientFtthRes, kabelOdcRes, tubeOdcRes, coreOdcRes]) => {
-        // Summary
-        const lokasi = lokasiRes.data.data.length;
-        const odc = odcRes.data.data.length;
-        const odp = odpRes.data.data.length;
-        const kabel = kabelOdcRes.data.data.length;
-        const kabelLength = kabelOdcRes.data.data.reduce((sum: number, k: any) => sum + (k.panjang_kabel || 0), 0);
-        const clientFtth = clientFtthRes.data.data.length;
-        const tubes = tubeOdcRes.data.data.length;
-        const cores = coreOdcRes.data.data.length;
-        const odpUtilization = odpRes.data.data.length > 0 ? Math.round((clientFtthRes.data.data.length / odpRes.data.data.length) * 100) : 0;
-        const kabelUtilization = kabelOdcRes.data.data.length > 0 ? Math.round((tubeOdcRes.data.data.length / kabelOdcRes.data.data.length) * 100) : 0;
-        setSummary({ lokasi, odc, odp, kabel, kabelLength, clientFtth, tubes, cores, odpUtilization, kabelUtilization });
 
-        // ODPs per ODC (bar chart)
-        const odpsByOdc: Record<string, number> = {};
-        odpRes.data.data.forEach((odp: any) => {
-          const odcName = odp.odc?.nama_odc || 'Unknown';
-          odpsByOdc[odcName] = (odpsByOdc[odcName] || 0) + 1;
-        });
-        setOdpsPerOdc(Object.entries(odpsByOdc).map(([name, count]) => ({ name, ODPs: count })));
+    request('GET', endpoint('/api/v1/ftth-statistics'))
+      .then((response) => {
+        const data = response.data.data;
 
-        // Clients per ODP (bar chart)
-        const clientsByOdp: Record<string, number> = {};
-        clientFtthRes.data.data.forEach((client: any) => {
-          const odpName = client.odp?.nama_odp || 'Unknown';
-          clientsByOdp[odpName] = (clientsByOdp[odpName] || 0) + 1;
-        });
-        setClientsPerOdp(Object.entries(clientsByOdp).map(([name, count]) => ({ name, Clients: count })));
+        // Set summary data
+        setSummary(data.summary);
 
-        // ODP status pie
-        const statusCounts: Record<string, number> = {};
-        odpRes.data.data.forEach((o: any) => {
-          statusCounts[o.status] = (statusCounts[o.status] || 0) + 1;
-        });
-        setOdpStatusPie(Object.entries(statusCounts).map(([name, value]) => ({ name, value })));
+        // Set chart data
+        setOdpsPerOdc(data.charts.odpsPerOdc);
+        setClientsPerOdp(data.charts.clientsPerOdp);
+        setOdpStatusPie(data.charts.odpStatusPie);
       })
       .catch(() => {
         setError('Failed to load FTTH data.');
@@ -124,64 +108,193 @@ export default function Overview() {
 
   return (
     <div>
-      <div className="flex justify-end gap-2 mb-2">
-        <button onClick={handleExportCSV} className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Export CSV</button>
-        <button onClick={handleExportPDF} className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600">Export PDF</button>
+      <div className="flex justify-end gap-2 mb-4">
+        <button onClick={handleExportCSV} className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">Export CSV</button>
+        <button onClick={handleExportPDF} className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">Export PDF</button>
       </div>
       <div id="ftth-overview-dashboard">
-        <div className="grid grid-cols-1 md:grid-cols-5 lg:grid-cols-7 gap-4 mb-8">
-          <Card title="Total Lokasi" childrenClassName="flex justify-center items-center text-3xl font-bold min-h-[2.5rem]">{summary.lokasi}</Card>
-          <Card title="Total ODC" childrenClassName="flex justify-center items-center text-3xl font-bold min-h-[2.5rem]">{summary.odc}</Card>
-          <Card title="Total ODP" childrenClassName="flex justify-center items-center text-3xl font-bold min-h-[2.5rem]">{summary.odp}</Card>
-          <Card title="Total Kabel ODC" childrenClassName="flex justify-center items-center text-3xl font-bold min-h-[2.5rem]">{summary.kabel}</Card>
-          <Card title="Total Kabel Length (m)" childrenClassName="flex justify-center items-center text-3xl font-bold min-h-[2.5rem]">{summary.kabelLength}</Card>
-          <Card title="Total Tubes" childrenClassName="flex justify-center items-center text-3xl font-bold min-h-[2.5rem]">{summary.tubes}</Card>
-          <Card title="Total Cores" childrenClassName="flex justify-center items-center text-3xl font-bold min-h-[2.5rem]">{summary.cores}</Card>
-          <Card title="Total Client FTTH" childrenClassName="flex justify-center items-center text-3xl font-bold min-h-[2.5rem]">{summary.clientFtth}</Card>
-          <Card title="ODP Utilization (%)" childrenClassName="flex justify-center items-center text-2xl font-semibold min-h-[2.5rem]">{summary.odpUtilization}%</Card>
-          <Card title="Kabel Utilization (%)" childrenClassName="flex justify-center items-center text-2xl font-semibold min-h-[2.5rem]">{summary.kabelUtilization}%</Card>
+        {/* Summary Cards */}
+        <div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-7 gap-4 mb-8">
+          <Card title="Total Lokasi" childrenClassName="flex justify-center items-center text-3xl font-bold min-h-[3rem] text-blue-600">{summary.lokasi}</Card>
+          <Card title="Total ODC" childrenClassName="flex justify-center items-center text-3xl font-bold min-h-[3rem] text-green-600">{summary.odc}</Card>
+          <Card title="Total ODP" childrenClassName="flex justify-center items-center text-3xl font-bold min-h-[3rem] text-purple-600">{summary.odp}</Card>
+          <Card title="Total Kabel ODC" childrenClassName="flex justify-center items-center text-3xl font-bold min-h-[3rem] text-yellow-600">{summary.kabel}</Card>
+          <Card title="Total Kabel Length (m)" childrenClassName="flex justify-center items-center text-2xl font-bold min-h-[3rem] text-orange-600">{summary.kabelLength.toLocaleString()}</Card>
+          <Card title="Total Tubes" childrenClassName="flex justify-center items-center text-3xl font-bold min-h-[3rem] text-red-600">{summary.tubes}</Card>
+          <Card title="Total Cores" childrenClassName="flex justify-center items-center text-3xl font-bold min-h-[3rem] text-indigo-600">{summary.cores}</Card>
+          <Card title="Total Client FTTH" childrenClassName="flex justify-center items-center text-3xl font-bold min-h-[3rem] text-teal-600">{summary.clientFtth}</Card>
+          <Card title="ODP Utilization (%)" childrenClassName="flex justify-center items-center text-2xl font-semibold min-h-[3rem] text-emerald-600">{summary.odpUtilization}%</Card>
+          <Card title="Kabel Utilization (%)" childrenClassName="flex justify-center items-center text-2xl font-semibold min-h-[3rem] text-cyan-600">{summary.kabelUtilization}%</Card>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
-          <div className="col-span-1">
-            <h2 className="text-lg font-semibold mb-2">ODPs per ODC</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={odpsPerOdc}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="ODPs" fill="#8884d8" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="col-span-1">
-            <h2 className="text-lg font-semibold mb-2">Clients per ODP</h2>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={clientsPerOdp}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="Clients" fill="#82ca9d" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-          <div className="col-span-1">
-            <h2 className="text-lg font-semibold mb-2">ODP Status Breakdown</h2>
-            <ResponsiveContainer width="100%" height={300}>
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          {/* ODPs per ODC Chart */}
+          <Card title="ODPs per ODC Distribution" className="h-[500px]">
+            <div className="p-4">
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={odpsPerOdc} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis
+                    dataKey="name"
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                    tick={{ fontSize: 12 }}
+                    interval={0}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12 }}
+                    label={{ value: 'Number of ODPs', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle' } }}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar
+                    dataKey="ODPs"
+                    fill="#8884d8"
+                    radius={[4, 4, 0, 0]}
+                    name="ODPs"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+              <div className="mt-4 text-sm text-gray-600 text-center">
+                Shows the distribution of ODPs across different ODCs
+              </div>
+            </div>
+          </Card>
+
+          {/* Clients per ODP Chart */}
+          <Card title="Clients per ODP Distribution" className="h-[500px]">
+            <div className="p-4">
+              <ResponsiveContainer width="100%" height={400}>
+                <BarChart data={clientsPerOdp} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis
+                    dataKey="name"
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                    tick={{ fontSize: 12 }}
+                    interval={0}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12 }}
+                    label={{ value: 'Number of Clients', angle: -90, position: 'insideLeft', style: { textAnchor: 'middle' } }}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar
+                    dataKey="Clients"
+                    fill="#82ca9d"
+                    radius={[4, 4, 0, 0]}
+                    name="Clients"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+              <div className="mt-4 text-sm text-gray-600 text-center">
+                Shows the distribution of clients across different ODPs
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* ODP Status Pie Chart - Full Width */}
+        <Card title="ODP Status Breakdown" className="mb-8">
+          <div className="p-6">
+            <ResponsiveContainer width="100%" height={400}>
               <PieChart>
-                <Pie data={odpStatusPie} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
+                <Pie
+                  data={odpStatusPie}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={120}
+                  innerRadius={60}
+                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  labelLine={true}
+                >
                   {odpStatusPie.map((entry, idx) => (
-                    <Cell key={`cell-${idx}`} fill={["#8884d8", "#82ca9d", "#ffc658"][idx % 3]} />
+                    <Cell
+                      key={`cell-${idx}`}
+                      fill={["#8884d8", "#82ca9d", "#ffc658", "#ff8042", "#0088FE", "#00C49F"][idx % 6]}
+                    />
                   ))}
                 </Pie>
-                <Legend />
-                <Tooltip />
+                <Tooltip
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      return (
+                        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+                          <p className="font-semibold">{data.name}</p>
+                          <p className="text-sm">Count: {data.value}</p>
+                          <p className="text-sm">Percentage: {((data.value / odpStatusPie.reduce((sum, item) => sum + item.value, 0)) * 100).toFixed(1)}%</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Legend
+                  layout="horizontal"
+                  verticalAlign="bottom"
+                  align="center"
+                  wrapperStyle={{ paddingTop: '20px' }}
+                />
               </PieChart>
             </ResponsiveContainer>
+            <div className="mt-4 text-sm text-gray-600 text-center">
+              Distribution of ODPs by their current status (Active, Archived, Deleted, etc.)
+            </div>
           </div>
+        </Card>
+
+        {/* Additional Statistics */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card title="Infrastructure Efficiency" className="min-h-[300px]">
+            <div className="p-4 h-full flex flex-col justify-center">
+              <div className="text-center">
+                <div className="text-4xl font-bold text-blue-600 mb-2">{summary.odpUtilization}%</div>
+                <div className="text-lg text-gray-700 mb-2">ODP Utilization</div>
+                <div className="text-sm text-gray-500">Active ODPs vs Total ODPs</div>
+              </div>
+              <div className="mt-6 text-center">
+                <div className="text-4xl font-bold text-green-600 mb-2">{summary.kabelUtilization}%</div>
+                <div className="text-lg text-gray-700 mb-2">Kabel Utilization</div>
+                <div className="text-sm text-gray-500">Used Kabel vs Total Kabel</div>
+              </div>
+            </div>
+          </Card>
+
+          <Card title="Network Capacity" className="min-h-[300px]">
+            <div className="p-4 h-full flex flex-col justify-center">
+              <div className="text-center">
+                <div className="text-4xl font-bold text-purple-600 mb-2">{summary.cores}</div>
+                <div className="text-lg text-gray-700 mb-2">Total Cores</div>
+                <div className="text-sm text-gray-500">Available for client connections</div>
+              </div>
+              <div className="mt-6 text-center">
+                <div className="text-4xl font-bold text-orange-600 mb-2">{summary.tubes}</div>
+                <div className="text-lg text-gray-700 mb-2">Total Tubes</div>
+                <div className="text-sm text-gray-500">Fiber optic tubes</div>
+              </div>
+            </div>
+          </Card>
+
+          <Card title="Network Coverage" className="min-h-[300px]">
+            <div className="p-4 h-full flex flex-col justify-center">
+              <div className="text-center">
+                <div className="text-4xl font-bold text-teal-600 mb-2">{summary.kabelLength.toLocaleString()}</div>
+                <div className="text-lg text-gray-700 mb-2">Total Length (m)</div>
+                <div className="text-sm text-gray-500">Fiber optic cable deployed</div>
+              </div>
+              <div className="mt-6 text-center">
+                <div className="text-4xl font-bold text-indigo-600 mb-2">{summary.clientFtth}</div>
+                <div className="text-lg text-gray-700 mb-2">Connected Clients</div>
+                <div className="text-sm text-gray-500">Active FTTH connections</div>
+              </div>
+            </div>
+          </Card>
         </div>
-        {/* Future: Client growth line chart here if data available */}
       </div>
     </div>
   );
