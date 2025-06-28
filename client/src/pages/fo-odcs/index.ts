@@ -7,7 +7,7 @@
  *
  * @license https://www.elastic.co/licensing/elastic-license
  */
-export * from './FoOdc';
+
 export * from './index/FoOdcs';
 export * from './edit/Edit';
 export * from './create/Create';

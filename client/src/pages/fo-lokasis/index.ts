@@ -12,5 +12,3 @@ export * from './index/FoLokasis';
 export * from './edit/Edit';
 export * from './create/Create';
 export * from './show/Show';
-export * from './documents/Documents';
-export * from './edit/ProductFields';
