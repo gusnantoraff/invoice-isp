@@ -123,6 +123,14 @@ class FoClientFtthController extends Controller
                     'created_at'   => $c->odp->created_at?->toDateTimeString(),
                     'updated_at'   => $c->odp->updated_at?->toDateTimeString(),
                     'deleted_at'   => $c->odp->deleted_at?->toDateTimeString(),
+                     'lokasi'       => $c->odp->lokasi ? [
+                        'id'           => $c->odp->lokasi->id,
+                        'nama_lokasi'  => $c->odp->lokasi->nama_lokasi,
+                        'deskripsi'    => $c->odp->lokasi->deskripsi,
+                        'latitude'     => $c->odp->lokasi->latitude,
+                        'longitude'    => $c->odp->lokasi->longitude,
+                        'status'       => $c->odp->lokasi->status,
+                    ] : null,
                     'kabel_core_odc' => $core ? [
                         'id'         => $core->id,
                         'warna_core' => $core->warna_core,
