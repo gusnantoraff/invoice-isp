@@ -44,7 +44,15 @@ class FoClientFtthController extends Controller
 
         // 2) Start query: include trashed to handle "deleted" status
         $query = FoClientFtth::withTrashed()
-            ->with(['lokasi', 'odp.kabelCoreOdc.kabelTubeOdc.kabelOdc.odc', 'client', 'company'])
+            ->with([
+                'lokasi',
+                'odp.kabelCoreOdc.kabelTubeOdc.kabelOdc.odc.lokasi',
+                'odp.kabelCoreOdc.kabelTubeOdc.kabelOdc.odc.kabelOdcs.kabelTubeOdcs.kabelCoreOdcs.odp.clientFtth.lokasi',
+                'odp.kabelCoreOdc.kabelTubeOdc.kabelOdc.odc.kabelOdcs.kabelTubeOdcs.kabelCoreOdcs.odp.clientFtth.client',
+                'odp.kabelCoreOdc.kabelTubeOdc.kabelOdc.odc.kabelOdcs.kabelTubeOdcs.kabelCoreOdcs.odp.clientFtth.company',
+                'client',
+                'company'
+            ])
             ->where('company_id', $companyId);
 
         // 3) Apply status filtering
@@ -87,37 +95,184 @@ class FoClientFtthController extends Controller
         $p = $query->paginate($perPage)
                    ->appends($request->only(['filter','sort','per_page','status']));
 
-        // 7) Transform result
-        $items = $p->map(fn($c) => [
-            'id'          => $c->id,
-            'nama_client' => $c->nama_client,
-            'lokasi'      => $c->lokasi ? [
-                'id'           => $c->lokasi->id,
-                'nama_lokasi'  => $c->lokasi->nama_lokasi,
-            ] : null,
-            'odp'         => $c->odp ? [
-                'id'       => $c->odp->id,
-                'nama_odp' => $c->odp->nama_odp,
-            ] : null,
-            'odc'         => $c->odp?->kabelCoreOdc?->kabelTubeOdc?->kabelOdc?->odc ? [
-                'id'       => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->id,
-                'nama_odc' => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->nama_odc,
-            ] : null,
-            'client'      => $c->client ? [
-                'id'   => $this->encodePrimaryKey($c->client->id),
-                'name' => $c->client->name,
-                'phone' => $c->client->phone,
-            ] : null,
-            'company'     => $c->company ? [
-                'id'   => $c->company->id,
-                'name' => $c->company->present()->name(),
-            ] : null,
-            'alamat'      => $c->alamat,
-            'status'      => $c->status,
-            'created_at'  => $c->created_at?->toDateTimeString(),
-            'updated_at'  => $c->updated_at?->toDateTimeString(),
-            'deleted_at'  => $c->deleted_at?->toDateTimeString(),
-        ])->all();
+        // 7) Transform result with comprehensive data
+        $items = $p->map(function($c) {
+            $core = $c->odp?->kabelCoreOdc;
+            $tube = $core?->kabelTubeOdc;
+            $kabelOdc = $tube?->kabelOdc;
+            $topOdc = $kabelOdc?->odc;
+
+            return [
+                'id'          => $c->id,
+                'nama_client' => $c->nama_client,
+                'lokasi'      => $c->lokasi ? [
+                    'id'           => $c->lokasi->id,
+                    'nama_lokasi'  => $c->lokasi->nama_lokasi,
+                    'deskripsi'    => $c->lokasi->deskripsi,
+                    'latitude'     => $c->lokasi->latitude,
+                    'longitude'    => $c->lokasi->longitude,
+                    'status'       => $c->lokasi->status,
+                    'created_at'   => $c->lokasi->created_at?->toDateTimeString(),
+                    'updated_at'   => $c->lokasi->updated_at?->toDateTimeString(),
+                    'deleted_at'   => $c->lokasi->deleted_at?->toDateTimeString(),
+                ] : null,
+                'odp'         => $c->odp ? [
+                    'id'           => $c->odp->id,
+                    'nama_odp'     => $c->odp->nama_odp,
+                    'status'       => $c->odp->status,
+                    'created_at'   => $c->odp->created_at?->toDateTimeString(),
+                    'updated_at'   => $c->odp->updated_at?->toDateTimeString(),
+                    'deleted_at'   => $c->odp->deleted_at?->toDateTimeString(),
+                    'kabel_core_odc' => $core ? [
+                        'id'         => $core->id,
+                        'warna_core' => $core->warna_core,
+                        'status'     => $core->status,
+                        'created_at' => $core->created_at?->toDateTimeString(),
+                        'updated_at' => $core->updated_at?->toDateTimeString(),
+                        'deleted_at' => $core->deleted_at?->toDateTimeString(),
+                        'kabel_tube_odc' => $tube ? [
+                            'id'         => $tube->id,
+                            'warna_tube' => $tube->warna_tube,
+                            'status'     => $tube->status,
+                            'created_at' => $tube->created_at?->toDateTimeString(),
+                            'updated_at' => $tube->updated_at?->toDateTimeString(),
+                            'deleted_at' => $tube->deleted_at?->toDateTimeString(),
+                        ] : null,
+                        'kabel_odc' => $kabelOdc ? [
+                            'id'          => $kabelOdc->id,
+                            'nama_kabel'  => $kabelOdc->nama_kabel,
+                            'tipe_kabel'  => $kabelOdc->tipe_kabel,
+                            'panjang_kabel' => $kabelOdc->panjang_kabel,
+                            'jumlah_tube' => $kabelOdc->jumlah_tube,
+                            'jumlah_core_in_tube' => $kabelOdc->jumlah_core_in_tube,
+                            'jumlah_total_core' => $kabelOdc->jumlah_total_core,
+                            'status'      => $kabelOdc->status,
+                            'created_at'  => $kabelOdc->created_at?->toDateTimeString(),
+                            'updated_at'  => $kabelOdc->updated_at?->toDateTimeString(),
+                            'deleted_at'  => $kabelOdc->deleted_at?->toDateTimeString(),
+                        ] : null,
+                    ] : null,
+                ] : null,
+                'odc'         => $topOdc ? [
+                    'id'           => $topOdc->id,
+                    'nama_odc'     => $topOdc->nama_odc,
+                    'tipe_splitter' => $topOdc->tipe_splitter,
+                    'status'       => $topOdc->status,
+                    'created_at'   => $topOdc->created_at?->toDateTimeString(),
+                    'updated_at'   => $topOdc->updated_at?->toDateTimeString(),
+                    'deleted_at'   => $topOdc->deleted_at?->toDateTimeString(),
+                    'lokasi'       => $topOdc->lokasi ? [
+                        'id'           => $topOdc->lokasi->id,
+                        'nama_lokasi'  => $topOdc->lokasi->nama_lokasi,
+                        'deskripsi'    => $topOdc->lokasi->deskripsi,
+                        'latitude'     => $topOdc->lokasi->latitude,
+                        'longitude'    => $topOdc->lokasi->longitude,
+                        'status'       => $topOdc->lokasi->status,
+                    ] : null,
+                    'kabel_odcs'   => $topOdc->kabelOdcs->map(function ($k) {
+                        return [
+                            'id'                   => $k->id,
+                            'nama_kabel'           => $k->nama_kabel,
+                            'tipe_kabel'           => $k->tipe_kabel,
+                            'panjang_kabel'        => $k->panjang_kabel,
+                            'jumlah_tube'          => $k->jumlah_tube,
+                            'jumlah_core_in_tube'  => $k->jumlah_core_in_tube,
+                            'jumlah_total_core'    => $k->jumlah_total_core,
+                            'status'               => $k->status,
+                            'created_at'           => $k->created_at?->toDateTimeString(),
+                            'updated_at'           => $k->updated_at?->toDateTimeString(),
+                            'deleted_at'           => $k->deleted_at?->toDateTimeString(),
+                            'kabel_tube_odcs'      => $k->kabelTubeOdcs->map(function ($t) {
+                                return [
+                                    'id'                 => $t->id,
+                                    'warna_tube'         => $t->warna_tube,
+                                    'status'             => $t->status,
+                                    'created_at'         => $t->created_at?->toDateTimeString(),
+                                    'updated_at'         => $t->updated_at?->toDateTimeString(),
+                                    'deleted_at'         => $t->deleted_at?->toDateTimeString(),
+                                    'kabel_core_odcs'    => $t->kabelCoreOdcs->map(function ($c) {
+                                        return [
+                                            'id'                => $c->id,
+                                            'warna_core'        => $c->warna_core,
+                                            'status'            => $c->status,
+                                            'created_at'        => $c->created_at?->toDateTimeString(),
+                                            'updated_at'        => $c->updated_at?->toDateTimeString(),
+                                            'deleted_at'        => $c->deleted_at?->toDateTimeString(),
+                                            'odp'               => $c->odp ? [
+                                                'id'             => $c->odp->id,
+                                                'nama_odp'       => $c->odp->nama_odp,
+                                                'status'         => $c->odp->status,
+                                                'created_at'     => $c->odp->created_at?->toDateTimeString(),
+                                                'updated_at'     => $c->odp->updated_at?->toDateTimeString(),
+                                                'deleted_at'     => $c->odp->deleted_at?->toDateTimeString(),
+                                                'client_ftth'    => $c->odp->clientFtth ? [
+                                                    'id'           => $c->odp->clientFtth->id,
+                                                    'nama_client'  => $c->odp->clientFtth->nama_client,
+                                                    'alamat'       => $c->odp->clientFtth->alamat,
+                                                    'status'       => $c->odp->clientFtth->status,
+                                                    'created_at'   => $c->odp->clientFtth->created_at?->toDateTimeString(),
+                                                    'updated_at'   => $c->odp->clientFtth->updated_at?->toDateTimeString(),
+                                                    'deleted_at'   => $c->odp->clientFtth->deleted_at?->toDateTimeString(),
+                                                    'lokasi'       => $c->odp->clientFtth->lokasi ? [
+                                                        'id'           => $c->odp->clientFtth->lokasi->id,
+                                                        'nama_lokasi'  => $c->odp->clientFtth->lokasi->nama_lokasi,
+                                                        'deskripsi'    => $c->odp->clientFtth->lokasi->deskripsi,
+                                                        'latitude'     => $c->odp->clientFtth->lokasi->latitude,
+                                                        'longitude'    => $c->odp->clientFtth->lokasi->longitude,
+                                                        'status'       => $c->odp->clientFtth->lokasi->status,
+                                                    ] : null,
+                                                    'client'       => $c->odp->clientFtth->client ? [
+                                                        'id'           => $c->odp->clientFtth->client->id,
+                                                        'name'         => $c->odp->clientFtth->client->name,
+                                                        'phone'        => $c->odp->clientFtth->client->phone,
+                                                        'email'        => $c->odp->clientFtth->client->email,
+                                                        'address1'     => $c->odp->clientFtth->client->address1,
+                                                        'address2'     => $c->odp->clientFtth->client->address2,
+                                                        'city'         => $c->odp->clientFtth->client->city,
+                                                        'state'        => $c->odp->clientFtth->client->state,
+                                                        'postal_code'  => $c->odp->clientFtth->client->postal_code,
+                                                        'country_id'   => $c->odp->clientFtth->client->country_id,
+                                                        'status_id'    => $c->odp->clientFtth->client->status_id,
+                                                    ] : null,
+                                                    'company'      => $c->odp->clientFtth->company ? [
+                                                        'id'           => $c->odp->clientFtth->company->id,
+                                                        'name'         => $c->odp->clientFtth->company->name,
+                                                        'settings'     => $c->odp->clientFtth->company->settings,
+                                                    ] : null,
+                                                ] : null,
+                                            ] : null,
+                                        ];
+                                    })->toArray(),
+                                ];
+                            })->toArray(),
+                        ];
+                    })->toArray(),
+                ] : null,
+                'client'      => $c->client ? [
+                    'id'           => $this->encodePrimaryKey($c->client->id),
+                    'name'         => $c->client->name,
+                    'phone'        => $c->client->phone,
+                    'email'        => $c->client->email,
+                    'address1'     => $c->client->address1,
+                    'address2'     => $c->client->address2,
+                    'city'         => $c->client->city,
+                    'state'        => $c->client->state,
+                    'postal_code'  => $c->client->postal_code,
+                    'country_id'   => $c->client->country_id,
+                    'status_id'    => $c->client->status_id,
+                ] : null,
+                'company'     => $c->company ? [
+                    'id'           => $c->company->id,
+                    'name'         => $c->company->present()->name(),
+                    'settings'     => $c->company->settings,
+                ] : null,
+                'alamat'      => $c->alamat,
+                'status'      => $c->status,
+                'created_at'  => $c->created_at?->toDateTimeString(),
+                'updated_at'  => $c->updated_at?->toDateTimeString(),
+                'deleted_at'  => $c->deleted_at?->toDateTimeString(),
+            ];
+        })->all();
 
         return response()->json([
             'status' => 'success',
