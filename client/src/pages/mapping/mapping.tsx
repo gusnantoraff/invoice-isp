@@ -502,6 +502,8 @@ const MappingPage: React.FC = () => {
     return (!isNaN(lat) && !isNaN(lng)) ? [lat, lng] : null;
   };
 
+
+  // Menghitung Jarak
   const haversineDistance = (
     [lat1, lon1]: [number, number],
     [lat2, lon2]: [number, number]
@@ -522,6 +524,7 @@ const MappingPage: React.FC = () => {
     return R * c;
   };
 
+  // Membuat Garis Melengkung
   const createSmoothArc = (start: [number, number], end: [number, number], segments = 50): [number, number][] => {
     const [lat1, lng1] = start;
     const [lat2, lng2] = end;
