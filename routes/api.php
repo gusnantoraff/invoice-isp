@@ -141,6 +141,7 @@ use App\Http\Controllers\FoKabelTubeOdcController;
 use App\Http\Controllers\FoKabelCoreOdcController;
 use App\Http\Controllers\FoOdpController;
 use App\Http\Controllers\FoClientFtthController;
+use App\Http\Controllers\FtthStatisticController;
 
 Route::group(['middleware' => ['throttle:api', 'api_secret_check']], function () {
     Route::post('api/v1/signup', [AccountController::class, 'store'])->name('signup.submit');
@@ -235,6 +236,9 @@ Route::group(['middleware' => ['throttle:api', 'api_db', 'token_auth', 'locale']
     Route::patch('/fo-client-ftths/{id}/unarchive', [FoClientFtthController::class, 'unarchive']);
     Route::patch('/fo-client-ftths/{id}/restore', [FoClientFtthController::class, 'restore']);
     Route::post('/fo-client-ftths/bulk', [FoClientFtthController::class, 'bulk']);
+
+    Route::get('/ftth-statistics', [FtthStatisticController::class, 'index']);
+
 
     Route::get('/test-ftth', function () {
         return \App\Models\FoClientFtth::all();
