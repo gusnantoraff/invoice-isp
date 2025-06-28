@@ -33,7 +33,7 @@ export function Activity() {
   return (
     <Card
       title={t('recent_activity')}
-      className="h-96 relative"
+      className="h-[400px] relative"
       withoutBodyPadding
     >
       {isLoading && (

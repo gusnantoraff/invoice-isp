@@ -21,6 +21,7 @@ import { ModuleBitmask } from '../settings';
 import { UpcomingRecurringInvoices } from './components/UpcomingRecurringInvoices';
 import { useSocketEvent } from '$app/common/queries/sockets';
 import { $refetch } from '$app/common/hooks/useRefetch';
+import { FtthStatistics } from './components/FtthStatistik';
 
 export default function Dashboard() {
   const [t] = useTranslation();
@@ -40,6 +41,10 @@ export default function Dashboard() {
       <div className="grid grid-cols-12 gap-4 my-6">
         <div className="col-span-12 xl:col-span-6">
           <Activity />
+        </div>
+
+         <div className="col-span-12 xl:col-span-6">
+          <FtthStatistics />
         </div>
 
         <div className="col-span-12 xl:col-span-6">

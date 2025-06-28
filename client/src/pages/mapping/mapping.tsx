@@ -16,6 +16,7 @@ import { useTranslation } from 'react-i18next';
 import { Daerah, daerahJawa } from './utils/daerah';
 import { MapCenterUpdater } from './utils/MapZoomer';
 import { Polyline } from 'react-leaflet';
+import { useNavigate } from 'react-router-dom';
 
 type FormMode = 'client' | 'odp' | 'odc' | null;
 
@@ -404,6 +405,10 @@ const MappingPage: React.FC = () => {
   const [t] = useTranslation();
   const [selectedDaerah, setSelectedDaerah] = useState<Daerah | null>(null);
   const [mapCenter, setMapCenter] = useState<[number, number]>([-7.56526, 110.81653]);
+  const [showKabelModal, setShowKabelModal] = useState(false);
+  const navigate = useNavigate();
+
+
 
   const pages: Page[] = [{ name: t('Mapping'), href: '/map' }];
 
@@ -497,6 +502,54 @@ const MappingPage: React.FC = () => {
     return (!isNaN(lat) && !isNaN(lng)) ? [lat, lng] : null;
   };
 
+  const haversineDistance = (
+    [lat1, lon1]: [number, number],
+    [lat2, lon2]: [number, number]
+  ): number => {
+    const R = 6371; // Radius bumi dalam kilometer
+    const toRad = (deg: number) => deg * (Math.PI / 180);
+
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) *
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) ** 2;
+
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  const createSmoothArc = (start: [number, number], end: [number, number], segments = 50): [number, number][] => {
+    const [lat1, lng1] = start;
+    const [lat2, lng2] = end;
+
+    const midLat = (lat1 + lat2) / 2;
+    const midLng = (lng1 + lng2) / 2;
+
+    const dx = lng2 - lng1;
+    const dy = lat2 - lat1;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    // Vektor ortogonal untuk membuat elevasi ke atas
+    const offsetFactor = 0.4;
+    const normX = -dy / distance;
+    const normY = dx / distance;
+
+    const controlLat = midLat + normY * distance * offsetFactor;
+    const controlLng = midLng + normX * distance * offsetFactor;
+
+    const curvePoints: [number, number][] = [];
+    for (let t = 0; t <= 1; t += 1 / segments) {
+      const x = (1 - t) * (1 - t) * lng1 + 2 * (1 - t) * t * controlLng + t * t * lng2;
+      const y = (1 - t) * (1 - t) * lat1 + 2 * (1 - t) * t * controlLat + t * t * lat2;
+      curvePoints.push([y, x]);
+    }
+
+    return curvePoints;
+  };
 
   return (
     <Default title={t('Mapping')} breadcrumbs={pages}>
@@ -519,6 +572,12 @@ const MappingPage: React.FC = () => {
             onClick={() => setFormMode('odc' as FormMode)}
           >
             Add ODC
+          </button>
+          <button
+            className="bg-pink-600 text-white px-4 py-2 rounded"
+            onClick={() => setShowKabelModal(true)}
+          >
+            Add Kabel
           </button>
         </div>
 
@@ -693,31 +752,112 @@ const MappingPage: React.FC = () => {
             })}
 
           {clients.map((client) => {
-            console.log('Client:', client.nama_client);
-  console.log('ODP Lokasi:', client.odp?.lokasi);
-  console.log('ODC Lokasi:', client.odc?.lokasi);
             const clientPos = getLatLng(client);
             const odpPos = getLatLng(client.odp);
             const odcPos = getLatLng(client.odc);
 
-            const coords: [number, number][] = [];
+            if (!clientPos || !odpPos || !odcPos) return null;
 
-            if (odcPos) coords.push(odcPos);
-            if (odpPos) coords.push(odpPos);
-            if (clientPos) coords.push(clientPos);
+            const distance = haversineDistance(clientPos, odpPos);
 
-            if (coords.length >= 2) {
-              return (
+            return (
+              <>
+                {/* ODP → Client */}
                 <Polyline
-                  key={`line-${client.id}`}
-                  positions={coords}
-                  pathOptions={{ color: 'red', weight: 3 }}
-                />
-              );
-            }
-
-            return null;
+                  key={`line-odp-client-${client.id}`}
+                  positions={createSmoothArc(odpPos, clientPos)}
+                  pathOptions={{
+                    color: 'rgba(0, 0, 230, 0.6)',
+                    weight: 3,
+                  }}
+                >
+                  <Popup>
+                    <div>
+                      <strong>ODP ➝ Client</strong><br />
+                      Dari: {client.odp?.nama_odp}<br />
+                      Ke: {client.nama_client}<br />
+                      <span>Jarak: {distance.toFixed(2)} km</span>
+                    </div>
+                  </Popup>
+                </Polyline>
+              </>
+            );
           })}
+
+
+          {odps.map((odp) => {
+            const odpPos = getLatLng(odp);
+            const odc = odp.odc;
+            const odcPos = getLatLng(odc);
+
+            if (!odpPos || !odcPos) return null;
+
+            const distance = haversineDistance(odcPos, odpPos);
+
+            return (
+              <Polyline
+                key={`line-odc-odp-${odp.id}`}
+                positions={createSmoothArc(odcPos, odpPos)}
+                pathOptions={{
+                  color: 'rgba(0, 0, 230, 0.6)',
+                  weight: 3,
+                }}
+              >
+                <Popup>
+                  <div>
+                    <strong>ODC ➝ ODP</strong><br />
+                    Dari: {odc?.nama_odc || 'ODC'}<br />
+                    Ke: {odp?.nama_odp}<br />
+                    <span>Jarak: {distance.toFixed(2)} km</span>
+                  </div>
+                </Popup>
+              </Polyline>
+            );
+          })}
+
+          {/* Modal Kabel */}
+          {showKabelModal && (
+            <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black bg-opacity-50">
+              <div className="bg-white rounded-lg p-6 w-80 shadow-lg z-[1001]">
+                <h2 className="text-lg font-semibold mb-4 text-center">Pilih Jenis Kabel</h2>
+                <div className="flex flex-col gap-2">
+                  <button
+                    className="bg-blue-500 text-white px-4 py-2 rounded"
+                    onClick={() => {
+                      navigate('/fo-kabel-odcs/create');
+                      setShowKabelModal(false);
+                    }}
+                  >
+                    Kabel ODC
+                  </button>
+                  <button
+                    className="bg-green-500 text-white px-4 py-2 rounded"
+                    onClick={() => {
+                      navigate('/fo-kabel-core-odcs/create');
+                      setShowKabelModal(false);
+                    }}
+                  >
+                    Kabel Core ODC
+                  </button>
+                  <button
+                    className="bg-purple-600 text-white px-4 py-2 rounded"
+                    onClick={() => {
+                      navigate('/fo-kabel-tube-odcs/create');
+                      setShowKabelModal(false);
+                    }}
+                  >
+                    Kabel Tube ODC
+                  </button>
+                  <button
+                    className="mt-2 text-gray-600 hover:underline"
+                    onClick={() => setShowKabelModal(false)}
+                  >
+                    Batal
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Form Add */}
           {formMode && !editData && (
