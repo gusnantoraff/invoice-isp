@@ -130,9 +130,9 @@ export default function Overview() {
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* ODPs per ODC Chart */}
-          <Card title="ODPs per ODC Distribution" className="h-[500px]">
+          <Card title="ODPs per ODC Distribution" className="h-[550px]">
             <div className="p-4">
-              <ResponsiveContainer width="100%" height={400}>
+              <ResponsiveContainer width="100%" height={350}>
                 <BarChart data={odpsPerOdc} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis
@@ -163,9 +163,9 @@ export default function Overview() {
           </Card>
 
           {/* Clients per ODP Chart */}
-          <Card title="Clients per ODP Distribution" className="h-[500px]">
+          <Card title="Clients per ODP Distribution" className="h-[550px]">
             <div className="p-4">
-              <ResponsiveContainer width="100%" height={400}>
+              <ResponsiveContainer width="100%" height={350}>
                 <BarChart data={clientsPerOdp} margin={{ top: 20, right: 30, left: 20, bottom: 60 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                   <XAxis

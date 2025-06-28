@@ -136,9 +136,9 @@ export default function Utilization() {
         {/* Utilization Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
           {/* Core Utilization Chart */}
-          <Card title="Core Utilization Analysis" className="h-[500px]">
+          <Card title="Core Utilization Analysis" className="h-[550px]">
             <div className="p-4">
-              <ResponsiveContainer width="100%" height={400}>
+              <ResponsiveContainer width="100%" height={350}>
                 <PieChart>
                   <Pie
                     data={coreUtil}
@@ -174,9 +174,9 @@ export default function Utilization() {
           </Card>
 
           {/* Tube Utilization Chart */}
-          <Card title="Tube Utilization Analysis" className="h-[500px]">
+          <Card title="Tube Utilization Analysis" className="h-[550px]">
             <div className="p-4">
-              <ResponsiveContainer width="100%" height={400}>
+              <ResponsiveContainer width="100%" height={350}>
                 <PieChart>
                   <Pie
                     data={tubeUtil}
@@ -212,9 +212,9 @@ export default function Utilization() {
           </Card>
 
           {/* ODP Utilization Chart */}
-          <Card title="ODP Utilization Analysis" className="h-[500px]">
+          <Card title="ODP Utilization Analysis" className="h-[550px]">
             <div className="p-4">
-              <ResponsiveContainer width="100%" height={400}>
+              <ResponsiveContainer width="100%" height={350}>
                 <PieChart>
                   <Pie
                     data={odpUtil}

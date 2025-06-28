@@ -184,9 +184,9 @@ export default function Status() {
         {/* Status Charts */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Lokasi Status Chart */}
-          <Card title="Lokasi Status Distribution" className="h-[500px]">
+          <Card title="Lokasi Status Distribution" className="h-[550px]">
             <div className="p-4">
-              <ResponsiveContainer width="100%" height={400}>
+              <ResponsiveContainer width="100%" height={350}>
                 <PieChart>
                   <Pie
                     data={lokasiStatus}
@@ -222,9 +222,9 @@ export default function Status() {
           </Card>
 
           {/* ODC Status Chart */}
-          <Card title="ODC Status Distribution" className="h-[500px]">
+          <Card title="ODC Status Distribution" className="h-[550px]">
             <div className="p-4">
-              <ResponsiveContainer width="100%" height={400}>
+              <ResponsiveContainer width="100%" height={350}>
                 <PieChart>
                   <Pie
                     data={odcStatus}
@@ -260,9 +260,9 @@ export default function Status() {
           </Card>
 
           {/* ODP Status Chart */}
-          <Card title="ODP Status Distribution" className="h-[500px]">
+          <Card title="ODP Status Distribution" className="h-[550px]">
             <div className="p-4">
-              <ResponsiveContainer width="100%" height={400}>
+              <ResponsiveContainer width="100%" height={350}>
                 <PieChart>
                   <Pie
                     data={odpStatus}
@@ -298,9 +298,9 @@ export default function Status() {
           </Card>
 
           {/* Kabel Status Chart */}
-          <Card title="Kabel Status Distribution" className="h-[500px]">
+          <Card title="Kabel Status Distribution" className="h-[550px]">
             <div className="p-4">
-              <ResponsiveContainer width="100%" height={400}>
+              <ResponsiveContainer width="100%" height={350}>
                 <PieChart>
                   <Pie
                     data={kabelStatus}
