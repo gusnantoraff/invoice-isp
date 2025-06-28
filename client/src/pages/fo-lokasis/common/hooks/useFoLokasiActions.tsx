@@ -14,7 +14,6 @@ import {
 import { getEntityState } from '$app/common/helpers2';
 import { EntityState } from '$app/common/enums/entity-state';
 import { useFoLokasiBulkAction } from '$app/common/queries/foLokasi';
-import { toast } from '$app/common/helpers/toast/toast';
 
 export const useFoLokasiActions = (): Array<(res: any) => ReactElement> => {
     const [t] = useTranslation();

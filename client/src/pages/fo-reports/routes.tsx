@@ -19,5 +19,4 @@ export const foReportRoutes = (
 );
 
 // TypeScript module declaration for import resolution
-// @ts-ignore
 export type { };

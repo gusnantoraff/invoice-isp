@@ -8,7 +8,6 @@ import { MdArchive, MdRestore } from 'react-icons/md';
 import { getEntityState } from '$app/common/helpers2';
 import { EntityState } from '$app/common/enums/entity-state';
 import { useFoKabelOdcBulkAction } from '$app/common/queries/foKabelOdc';
-import { toast } from '$app/common/helpers/toast/toast';
 
 export const useFoKabelOdcActions = (): Array<(res: any) => ReactElement> => {
     const [t] = useTranslation();

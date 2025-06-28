@@ -28,11 +28,9 @@ const tabs: Tab[] = [
 
 export default function FTTHReport() {
   // State for summary data
-  const [summary, setSummary] = useState(dummySummary);
+  const [summary] = useState(dummySummary);
   // State for bar chart data
-  const [barData, setBarData] = useState(dummyBarData);
-  // State for table data
-  const [tableData, setTableData] = useState([]);
+  const [barData] = useState(dummyBarData);
   // State for active tab
   const [activeTabIndex, setActiveTabIndex] = useState(0);
 

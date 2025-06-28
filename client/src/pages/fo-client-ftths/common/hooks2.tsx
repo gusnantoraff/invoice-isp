@@ -82,31 +82,31 @@ export function useFoClientFtthColumns() {
             column: 'alamat',
             id: 'alamat',
             label: t('alamat'),
-            format: (val: string | number, _ftth: FoClientFtth) => val ?? '-',
+            format: (val: string | number) => val ?? '-',
         },
         {
             column: 'status',
             id: 'status',
             label: t('status'),
-            format: (val: string | number, _ftth: FoClientFtth) => t(val as string),
+            format: (val: string | number) => t(val as string),
         },
         {
             column: 'created_at',
             id: 'created_at',
             label: t('created_at'),
-            format: (val: string | number, _ftth: FoClientFtth) => date(val as string, dateFormat),
+            format: (val: string | number) => date(val as string, dateFormat),
         },
         {
             column: 'updated_at',
             id: 'updated_at',
             label: t('updated_at'),
-            format: (val: string | number, _ftth: FoClientFtth) => date(val as string, dateFormat),
+            format: (val: string | number) => date(val as string, dateFormat),
         },
         {
             column: 'deleted_at',
             id: 'deleted_at',
             label: t('deleted_at'),
-            format: (val: string | number, _ftth: FoClientFtth) => (val ? date(val as string, dateFormat) : '-'),
+            format: (val: string | number) => (val ? date(val as string, dateFormat) : '-'),
         },
     ];
 

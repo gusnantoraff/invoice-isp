@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from '$app/components/cards/Card';
 import { Spinner } from '$app/components/Spinner';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Legend } from 'recharts';
+import { Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { request } from '$app/common/helpers/request';
 import { endpoint } from '$app/common/helpers';
 import jsPDF from 'jspdf';

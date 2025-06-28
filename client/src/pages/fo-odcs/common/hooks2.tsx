@@ -68,7 +68,6 @@ export function useFoOdcColumns() {
     const { t } = useTranslation();
     const { dateFormat } = useCurrentCompanyDateFormats();
     const reactSettings = useReactSettings();
-    const navigate = useNavigate();
 
     const columns = [
         {

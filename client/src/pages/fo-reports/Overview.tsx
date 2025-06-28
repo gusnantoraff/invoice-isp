@@ -7,8 +7,6 @@ import { endpoint } from '$app/common/helpers';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042', '#0088FE', '#00C49F'];
-
 export default function Overview() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -77,7 +75,7 @@ export default function Overview() {
         });
         setOdpStatusPie(Object.entries(statusCounts).map(([name, value]) => ({ name, value })));
       })
-      .catch((err) => {
+      .catch(() => {
         setError('Failed to load FTTH data.');
       })
       .finally(() => setLoading(false));

@@ -223,6 +223,34 @@ export const keys = {
     path: '/api/v1/einvoice/validateEntity',
     dependencies: [],
   },
+  'fo-kabel-core-odcs': {
+    path: '/api/v1/fo-kabel-core-odcs',
+    dependencies: [],
+  },
+  'fo-kabel-tube-odcs': {
+    path: '/api/v1/fo-kabel-tube-odcs',
+    dependencies: [],
+  },
+  'fo-kabel-odcs': {
+    path: '/api/v1/fo-kabel-odcs',
+    dependencies: [],
+  },
+  'fo-odcs': {
+    path: '/api/v1/fo-odcs',
+    dependencies: [],
+  },
+  'fo-odps': {
+    path: '/api/v1/fo-odps',
+    dependencies: [],
+  },
+  'fo-client-ftths': {
+    path: '/api/v1/fo-client-ftths',
+    dependencies: [],
+  },
+  'fo-lokasis': {
+    path: '/api/v1/fo-lokasis',
+    dependencies: [],
+  },
 };
 
 export type RefetchKey = keyof typeof keys;

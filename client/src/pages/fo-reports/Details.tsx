@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Spinner } from '$app/components/Spinner';
 import { DataTable } from '$app/components/DataTable';
-import { Button } from '$app/components/forms/Button';
 import { request } from '$app/common/helpers/request';
 import { endpoint } from '$app/common/helpers';
 import Papa from 'papaparse';

@@ -84,7 +84,13 @@ export type ReactTableColumns =
   | 'expense'
   | 'recurringExpense'
   | 'clientDocument'
-  | 'transaction';
+  | 'transaction'
+  | 'fo_kabel_core_odc'
+  | 'fo_kabel_tube_odc'
+  | 'fo_odc'
+  | 'fo_odp'
+  | 'fo_lokasi'
+  | 'fo_kabel_odc';
 
 export const preferencesDefaults: Preferences = {
   dashboard_charts: {

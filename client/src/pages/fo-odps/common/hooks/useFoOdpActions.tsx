@@ -6,7 +6,6 @@ import { MdArchive, MdRestore } from 'react-icons/md';
 import { getEntityState } from '$app/common/helpers2';
 import { EntityState } from '$app/common/enums/entity-state';
 import { useFoOdpBulkAction } from '$app/common/queries/foOdp';
-import { toast } from '$app/common/helpers/toast/toast';
 
 export const useFoOdpActions = (): Array<(res: any) => ReactElement> => {
     const [t] = useTranslation();

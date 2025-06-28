@@ -94,10 +94,6 @@ export function AboutModal(props: Props) {
   const [isUpgradeLoadingModalOpen, setIsUpgradeLoadingModalOpen] =
     useState<boolean>(false);
 
-  const [systemInfo, setSystemInfo] = useState<SystemInfo | undefined>(
-    currentSystemInfo
-  );
-
   const handleClearCache = () => {
     if (!isFormBusy) {
       toast.processing();
@@ -247,13 +243,13 @@ export function AboutModal(props: Props) {
             <div className="flex flex-col">
               <span className="font-medium text-base mb-1">{t('system')}</span>
               <span>
-                {t('email')}: {systemInfo?.mail_mailer}
+                {t('email')}: {currentSystemInfo?.mail_mailer}
               </span>
               <span>
-                {t('queue')}: {systemInfo?.queue}
+                {t('queue')}: {currentSystemInfo?.queue}
               </span>
               <span>
-                {t('pdf')}: {systemInfo?.pdf_engine}
+                {t('pdf')}: {currentSystemInfo?.pdf_engine}
               </span>
             </div>
 
@@ -267,22 +263,22 @@ export function AboutModal(props: Props) {
                 {t('database_connection')}
               </span>
               <span>
-                {systemInfo?.simple_db_check ? t('passed') : t('failed')}
+                {currentSystemInfo?.simple_db_check ? t('passed') : t('failed')}
               </span>
             </div>
 
             <div>
               <Icon
-                element={systemInfo?.simple_db_check ? CheckCircle : MdWarning}
-                color={systemInfo?.simple_db_check ? 'green' : 'red'}
+                element={currentSystemInfo?.simple_db_check ? CheckCircle : MdWarning}
+                color={currentSystemInfo?.simple_db_check ? 'green' : 'red'}
                 size={25}
               />
             </div>
           </div>
 
-          {(Boolean(!systemInfo?.env_writable) ||
-            Boolean(systemInfo?.file_permissions !== 'Ok')) &&
-            Boolean(!systemInfo?.is_docker) && (
+          {(Boolean(!currentSystemInfo?.env_writable) ||
+            Boolean(currentSystemInfo?.file_permissions !== 'Ok')) &&
+            Boolean(!currentSystemInfo?.is_docker) && (
               <Div
                 className="flex justify-between items-center cursor-pointer py-1 px-3"
                 theme={{
@@ -303,9 +299,9 @@ export function AboutModal(props: Props) {
                   </span>
 
                   <span>
-                    {!systemInfo?.env_writable
+                    {!currentSystemInfo?.env_writable
                       ? t('env_not_writable')
-                      : systemInfo?.file_permissions}
+                      : currentSystemInfo?.file_permissions}
                   </span>
                 </div>
 
@@ -315,7 +311,7 @@ export function AboutModal(props: Props) {
               </Div>
             )}
 
-          {systemInfo?.pdf_engine !== 'SnapPDF PDF Generator' && (
+          {currentSystemInfo?.pdf_engine !== 'SnapPDF PDF Generator' && (
             <Div
               className="flex justify-between items-center cursor-pointer py-1 px-3"
               theme={{
@@ -344,7 +340,7 @@ export function AboutModal(props: Props) {
             </Div>
           )}
 
-          {Boolean(systemInfo?.exchange_rate_api_not_configured) && (
+          {Boolean(currentSystemInfo?.exchange_rate_api_not_configured) && (
             <Div
               className="flex justify-between items-center cursor-pointer py-1 px-3"
               theme={{

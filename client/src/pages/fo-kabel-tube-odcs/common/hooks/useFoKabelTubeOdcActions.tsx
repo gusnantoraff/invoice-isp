@@ -8,7 +8,6 @@ import { MdArchive, MdRestore } from 'react-icons/md';
 import { getEntityState } from '$app/common/helpers2';
 import { EntityState } from '$app/common/enums/entity-state';
 import { useFoKabelTubeOdcBulkAction } from '$app/common/queries/foKabelTubeOdc';
-import { toast } from '$app/common/helpers/toast/toast';
 
 export const useFoKabelTubeOdcActions = (): Array<
     (res: any) => ReactElement
