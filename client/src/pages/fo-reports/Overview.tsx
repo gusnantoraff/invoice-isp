@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card } from '$app/components/cards/Card';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Legend, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Legend } from 'recharts';
 import { Spinner } from '$app/components/Spinner';
 import { request } from '$app/common/helpers/request';
 import { endpoint } from '$app/common/helpers';

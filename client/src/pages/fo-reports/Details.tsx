@@ -6,7 +6,7 @@ import { endpoint } from '$app/common/helpers';
 import Papa from 'papaparse';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { ChevronDown, ChevronUp, Folder, Server, GitBranch, Layers, Grid, User, Users, MapPin, Activity } from 'react-feather';
+import { ChevronDown, ChevronUp, Folder, Server, GitBranch, Layers, MapPin, Activity } from 'react-feather';
 
 function flattenForCSV(lokasis: any[]) {
   // Flatten nested structure for CSV export
@@ -314,17 +314,17 @@ function LocationCard({ lokasi }: { lokasi: any }) {
           <div className="border-t pt-4 space-y-4">
             {/* ODCs */}
             {lokasi.odcs?.map((odc: any, idx: number) => (
-              <OdcCard key={odc.id || idx} odc={odc} lokasiName={lokasi.nama_lokasi} />
+              <OdcCard key={odc.id || idx} odc={odc} />
             ))}
 
             {/* Standalone ODPs */}
             {lokasi.odps?.map((odp: any, idx: number) => (
-              <OdpCard key={odp.id || idx} odp={odp} lokasiName={lokasi.nama_lokasi} />
+              <OdpCard key={odp.id || idx} odp={odp} />
             ))}
 
             {/* Standalone Clients */}
             {lokasi.client_ftths?.map((client: any, idx: number) => (
-              <ClientCard key={client.id || idx} client={client} lokasiName={lokasi.nama_lokasi} />
+              <ClientCard key={client.id || idx} client={client} />
             ))}
           </div>
         )}
@@ -334,7 +334,7 @@ function LocationCard({ lokasi }: { lokasi: any }) {
 }
 
 // ODC card component
-function OdcCard({ odc, lokasiName }: { odc: any; lokasiName: string }) {
+function OdcCard({ odc }: { odc: any }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -364,7 +364,7 @@ function OdcCard({ odc, lokasiName }: { odc: any; lokasiName: string }) {
       {expanded && (
         <div className="space-y-3">
           {odc.kabel_odcs?.map((kabel: any, idx: number) => (
-            <KabelCard key={kabel.id || idx} kabel={kabel} odcName={odc.nama_odc} lokasiName={lokasiName} />
+            <KabelCard key={kabel.id || idx} kabel={kabel} />
           ))}
         </div>
       )}
@@ -373,21 +373,19 @@ function OdcCard({ odc, lokasiName }: { odc: any; lokasiName: string }) {
 }
 
 // Kabel card component
-function KabelCard({ kabel, odcName, lokasiName }: { kabel: any; odcName: string; lokasiName: string }) {
+function KabelCard({ kabel }: { kabel: any }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="ml-6 border-l-2 border-yellow-200 pl-4">
+    <div className="ml-4 border-l-2 border-yellow-200 pl-4">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
           <div className="p-3 bg-yellow-100 rounded">
             <GitBranch size={18} className="text-yellow-600" />
           </div>
           <div>
-            <h5 className="font-medium text-gray-900">{kabel.nama_kabel}</h5>
-            <p className="text-sm text-gray-600">
-              {kabel.tipe_kabel} • {kabel.panjang_kabel}m • {kabel.jumlah_total_core} cores
-            </p>
+            <h6 className="font-medium text-gray-900">Kabel {kabel.nama_kabel}</h6>
+            <p className="text-sm text-gray-600">{kabel.kabel_tube_odcs?.length || 0} tubes</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -405,7 +403,7 @@ function KabelCard({ kabel, odcName, lokasiName }: { kabel: any; odcName: string
       {expanded && (
         <div className="space-y-3">
           {kabel.kabel_tube_odcs?.map((tube: any, idx: number) => (
-            <TubeCard key={tube.id || idx} tube={tube} kabelName={kabel.nama_kabel} odcName={odcName} lokasiName={lokasiName} />
+            <TubeCard key={tube.id || idx} tube={tube} />
           ))}
         </div>
       )}
@@ -414,7 +412,7 @@ function KabelCard({ kabel, odcName, lokasiName }: { kabel: any; odcName: string
 }
 
 // Tube card component
-function TubeCard({ tube, kabelName, odcName, lokasiName }: { tube: any; kabelName: string; odcName: string; lokasiName: string }) {
+function TubeCard({ tube }: { tube: any }) {
   const [expanded, setExpanded] = useState(false);
 
   return (
@@ -444,7 +442,7 @@ function TubeCard({ tube, kabelName, odcName, lokasiName }: { tube: any; kabelNa
       {expanded && (
         <div className="space-y-3">
           {tube.kabel_core_odcs?.map((core: any, idx: number) => (
-            <CoreCard key={core.id || idx} core={core} tubeName={tube.warna_tube} kabelName={kabelName} odcName={odcName} lokasiName={lokasiName} />
+            <CoreCard key={core.id || idx} core={core} />
           ))}
         </div>
       )}
@@ -453,69 +451,125 @@ function TubeCard({ tube, kabelName, odcName, lokasiName }: { tube: any; kabelNa
 }
 
 // Core card component
-function CoreCard({ core, tubeName, kabelName, odcName, lokasiName }: { core: any; tubeName: string; kabelName: string; odcName: string; lokasiName: string }) {
+function CoreCard({ core }: { core: any }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const handleExpandClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsExpanded(!isExpanded);
+  };
+
   return (
-    <div className="ml-6 border-l-2 border-red-200 pl-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-red-100 rounded">
-            <Grid size={18} className="text-red-600" />
+    <div className="ml-8 border-l-2 border-gray-200 pl-4 py-2">
+      <div className="bg-white rounded-lg border border-gray-200 shadow-sm">
+        <div className="flex items-center justify-between p-3">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center p-2">
+              <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
+            </div>
+            <div>
+              <h4 className="font-medium text-gray-900">Core {core.warna_core}</h4>
+              <p className="text-sm text-gray-500">ID: {core.id}</p>
+            </div>
           </div>
-          <div>
-            <h6 className="font-medium text-gray-900">Core {core.warna_core}</h6>
+          <div className="flex items-center space-x-2">
+            <StatusBadge status={core.status} />
             {core.odp && (
-              <div className="text-sm text-gray-600">
-                <span className="font-medium">ODP:</span> {core.odp.nama_odp}
-                {core.odp.client_ftth && (
-                  <span className="ml-2">
-                    <span className="font-medium">Client:</span> {core.odp.client_ftth.nama_client}
-                  </span>
+              <button
+                onClick={handleExpandClick}
+                className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                {isExpanded ? (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
                 )}
-              </div>
+              </button>
             )}
           </div>
         </div>
-        <StatusBadge status={core.status} />
+
+        {core.odp && isExpanded && (
+          <div className="border-t border-gray-100 p-3">
+            <OdpCard odp={core.odp} />
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 // ODP card component
-function OdpCard({ odp, lokasiName }: { odp: any; lokasiName: string }) {
+function OdpCard({ odp }: { odp: any }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const handleExpandClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsExpanded(!isExpanded);
+  };
+
   return (
-    <div className="ml-6 border-l-2 border-purple-200 pl-4 mb-4">
+    <div className="bg-blue-50 rounded-lg border border-blue-200 p-3">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-purple-100 rounded">
-            <Users size={18} className="text-purple-600" />
+        <div className="flex items-center space-x-3">
+          <div className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center p-1">
+            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
           </div>
           <div>
-            <h4 className="font-medium text-gray-900">{odp.nama_odp}</h4>
-            {odp.client_ftth && (
-              <p className="text-sm text-gray-600">Client: {odp.client_ftth.nama_client}</p>
-            )}
+            <h5 className="font-medium text-gray-900">ODP {odp.nama_odp}</h5>
+            <p className="text-sm text-gray-500">ID: {odp.id}</p>
           </div>
         </div>
-        <StatusBadge status={odp.status} />
+        <div className="flex items-center space-x-2">
+          <StatusBadge status={odp.status} />
+          {odp.client_ftth && (
+            <button
+              onClick={handleExpandClick}
+              className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              {isExpanded ? (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              )}
+            </button>
+          )}
+        </div>
       </div>
+
+      {odp.client_ftth && isExpanded && (
+        <div className="mt-3 pt-3 border-t border-blue-200">
+          <ClientCard client={odp.client_ftth} />
+        </div>
+      )}
     </div>
   );
 }
 
 // Client card component
-function ClientCard({ client, lokasiName }: { client: any; lokasiName: string }) {
+function ClientCard({ client }: { client: any }) {
   return (
-    <div className="ml-6 border-l-2 border-indigo-200 pl-4 mb-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-indigo-100 rounded">
-            <User size={18} className="text-indigo-600" />
-          </div>
-          <div>
-            <h4 className="font-medium text-gray-900">{client.nama_client}</h4>
-            <p className="text-sm text-gray-600">{client.alamat}</p>
-          </div>
+    <div className="bg-green-50 rounded-lg border border-green-200 p-3">
+      <div className="flex items-center space-x-3">
+        <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center p-1">
+          <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+        </div>
+        <div>
+          <h6 className="font-medium text-gray-900">{client.nama_client}</h6>
+          <p className="text-sm text-gray-500">{client.alamat}</p>
+          {client.client && (
+            <p className="text-xs text-gray-400">
+              Client: {client.client.name} • {client.client.phone}
+            </p>
+          )}
         </div>
         <StatusBadge status={client.status} />
       </div>
