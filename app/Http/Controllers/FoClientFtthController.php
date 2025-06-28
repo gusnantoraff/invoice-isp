@@ -94,6 +94,10 @@ class FoClientFtthController extends Controller
             'lokasi'      => $c->lokasi ? [
                 'id'           => $c->lokasi->id,
                 'nama_lokasi'  => $c->lokasi->nama_lokasi,
+                'latitude'  => $c->lokasi->latitude,
+                'longitude'  => $c->lokasi->longitude,
+                'deskripsi'  => $c->lokasi->deskripsi,
+
             ] : null,
             'odp'         => $c->odp ? [
                 'id'       => $c->odp->id,

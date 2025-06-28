@@ -101,6 +101,7 @@ class FoOdcController extends Controller
                     'nama_lokasi'  => $o->lokasi->nama_lokasi,
                     'latitude'     => $o->lokasi->latitude,
                     'longitude'    => $o->lokasi->longitude,
+                    'deskripsi'    => $o->lokasi->deskripsi,
                 ],
                 'nama_odc'      => $o->nama_odc,
                 'tipe_splitter' => $o->tipe_splitter,

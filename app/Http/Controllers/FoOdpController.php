@@ -123,6 +123,7 @@ class FoOdpController extends Controller
                     'nama_lokasi' => $o->lokasi->nama_lokasi,
                     'latitude'    => $o->lokasi->latitude,
                     'longitude'   => $o->lokasi->longitude,
+                    'deskripsi'   => $o->lokasi->deskripsi,
                 ] : null,
 
                 'kabel_core_odc' => $core ? [

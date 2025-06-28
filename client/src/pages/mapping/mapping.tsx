@@ -29,10 +29,10 @@ interface MarkerData {
   nama_client?: string;
   alamat?: string;
   odp_id?: string;
+  client_id: number;
   // odp specific
   nama_odp?: string;
   tipe_splitter?: string;
-
   kabel_core_odc_id?: string;
   nama_odc?: string;
 }
@@ -63,12 +63,14 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
     tipe_splitter: initialData?.tipe_splitter || '1:8',
     latitude: initialData?.latitude || '',
     longitude: initialData?.longitude || '',
+    client_id: initialData?.client_id || '',
   });
 
   const allowMapClick = !position && form.nama_lokasi.trim() === '' && form.nama.trim() === '';
 
   const [odpList, setOdpList] = useState<any[]>([]);
   const [odcCoreList, setOdcCoreList] = useState<any[]>([]);
+  const [clientList, setClientList] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -77,8 +79,12 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
 
       try {
         if (mode === 'client') {
-          const res = await axios.get('http://localhost:8000/api/v1/fo-odps', headers);
-          setOdpList(res.data.data);
+          const [odpRes, clientRes] = await Promise.all([
+            axios.get('http://localhost:8000/api/v1/fo-odps', headers),
+            axios.get('http://localhost:8000/api/v1/clients', headers),
+          ]);
+          setOdpList(odpRes.data.data);
+          setClientList(clientRes.data.data);
         } else if (mode === 'odp') {
           const res = await axios.get('http://localhost:8000/api/v1/fo-kabel-core-odcs', headers);
           setOdcCoreList(res.data.data);
@@ -197,9 +203,10 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
             'http://localhost:8000/api/v1/fo-client-ftths',
             {
               lokasi_id,
-              odp_id: form.odp_id,
+              odp_id: form.odp_id || null,
               nama_client: form.nama,
               alamat: form.alamat,
+              client_id: form.client_id || null,
             },
             headers
           );
@@ -294,8 +301,21 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
                   </option>
                 ))}
               </select>
+              <select
+                className="w-full border p-1"
+                value={form.client_id}
+                onChange={(e) => setForm({ ...form, client_id: e.target.value })}
+              >
+                <option value="">Pilih Client ID</option>
+                {clientList.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name || client.nama_client || `Client #${client.id}`}
+                  </option>
+                ))}
+              </select>
             </>
           )}
+
 
           {mode === 'odp' && (
             <>
@@ -547,6 +567,7 @@ const MappingPage: React.FC = () => {
                               nama_client: client.nama_client,
                               alamat: client.alamat,
                               odp_id: client.odp_id,
+                              client_id: client.client_id
                             }
                           })}
                         >
@@ -596,6 +617,7 @@ const MappingPage: React.FC = () => {
                               nama_odp: odp.nama_odp,
                               tipe_splitter: odp.tipe_splitter,
                               kabel_core_odc_id: odp.kabel_core_odc_id,
+                              client_id: 0
                             }
                           })}
                         >
@@ -624,7 +646,6 @@ const MappingPage: React.FC = () => {
                   <Popup>
                     <div className="text-sm">
                       <strong>ODC:</strong> {odc.nama_odc}<br />
-                      <strong>Jenis Kabel:</strong> {odc.jenis_kabel}<br />
                       <strong>Lokasi:</strong> {odc.lokasi.nama_lokasi}<br />
                       <strong>Deskripsi:</strong> {odc.lokasi.deskripsi}<br />
                       <div className="mt-2 flex gap-2">
@@ -640,6 +661,7 @@ const MappingPage: React.FC = () => {
                               latitude: odc.lokasi.latitude,
                               longitude: odc.lokasi.longitude,
                               nama_odc: odc.nama_odc,
+                              client_id: 0
                             }
                           })}
                         >
