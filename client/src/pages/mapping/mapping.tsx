@@ -15,6 +15,7 @@ import Select from 'react-select';
 import { useTranslation } from 'react-i18next';
 import { Daerah, daerahJawa } from './utils/daerah';
 import { MapCenterUpdater } from './utils/MapZoomer';
+import { Polyline } from 'react-leaflet';
 
 type FormMode = 'client' | 'odp' | 'odc' | null;
 
@@ -29,10 +30,10 @@ interface MarkerData {
   nama_client?: string;
   alamat?: string;
   odp_id?: string;
+  client_id: number;
   // odp specific
   nama_odp?: string;
   tipe_splitter?: string;
-
   kabel_core_odc_id?: string;
   nama_odc?: string;
 }
@@ -63,12 +64,14 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
     tipe_splitter: initialData?.tipe_splitter || '1:8',
     latitude: initialData?.latitude || '',
     longitude: initialData?.longitude || '',
+    client_id: initialData?.client_id || '',
   });
 
   const allowMapClick = !position && form.nama_lokasi.trim() === '' && form.nama.trim() === '';
 
   const [odpList, setOdpList] = useState<any[]>([]);
   const [odcCoreList, setOdcCoreList] = useState<any[]>([]);
+  const [clientList, setClientList] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -77,10 +80,14 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
 
       try {
         if (mode === 'client') {
-          const res = await axios.get('http://localhost:8000/api/v1/fo-odps', headers);
-          setOdpList(res.data.data);
+          const [odpRes, clientRes] = await Promise.all([
+            axios.get('http://localhost:8000/api/v1/fo-odps', headers),
+            axios.get('http://localhost:8000/api/v1/clients', headers),
+          ]);
+          setOdpList(odpRes.data.data);
+          setClientList(clientRes.data.data);
         } else if (mode === 'odp') {
-          const res = await axios.get('http://localhost:8000/api/v1/fo-kabel-core-odcs', headers);
+          const res = await axios.get('http://localhost:8000/api/v1/fo-kabel-core-odcs/no-odp', headers);
           setOdcCoreList(res.data.data);
         }
       } catch (error) {
@@ -197,9 +204,10 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
             'http://localhost:8000/api/v1/fo-client-ftths',
             {
               lokasi_id,
-              odp_id: form.odp_id,
+              odp_id: form.odp_id || null,
               nama_client: form.nama,
               alamat: form.alamat,
+              client_id: form.client_id || null,
             },
             headers
           );
@@ -294,8 +302,21 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
                   </option>
                 ))}
               </select>
+              <select
+                className="w-full border p-1"
+                value={form.client_id}
+                onChange={(e) => setForm({ ...form, client_id: e.target.value })}
+              >
+                <option value="">Pilih Client ID</option>
+                {clientList.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name || client.nama_client || `Client #${client.id}`}
+                  </option>
+                ))}
+              </select>
             </>
           )}
+
 
           {mode === 'odp' && (
             <>
@@ -469,6 +490,14 @@ const MappingPage: React.FC = () => {
     label: d.nama
   }));
 
+  const getLatLng = (item: any): [number, number] | null => {
+    if (!item?.lokasi) return null;
+    const lat = parseFloat(item.lokasi.latitude);
+    const lng = parseFloat(item.lokasi.longitude);
+    return (!isNaN(lat) && !isNaN(lng)) ? [lat, lng] : null;
+  };
+
+
   return (
     <Default title={t('Mapping')} breadcrumbs={pages}>
       <div className="flex items-center justify-between mb-4">
@@ -533,6 +562,8 @@ const MappingPage: React.FC = () => {
                     <div>
                       <b>Client:</b> {client.nama_client}<br />
                       <b>Alamat:</b> {client.alamat}<br />
+                      <b>ODC:</b> {client.odc?.nama_odc}<br />
+                      <b>ODP:</b> {client.odp?.nama_odp}<br />
                       <div className="mt-2 flex gap-2">
                         <button
                           className="bg-yellow-400 px-2 py-1 rounded text-xs"
@@ -547,6 +578,7 @@ const MappingPage: React.FC = () => {
                               nama_client: client.nama_client,
                               alamat: client.alamat,
                               odp_id: client.odp_id,
+                              client_id: client.client_id
                             }
                           })}
                         >
@@ -582,6 +614,7 @@ const MappingPage: React.FC = () => {
                       <strong>ODP:</strong> {odp.nama_odp}<br />
                       <strong>Lokasi:</strong> {odp.lokasi.nama_lokasi}<br />
                       <strong>Deskripsi:</strong> {odp.lokasi.deskripsi}<br />
+                      <strong>Terhubung ke ODC:</strong> {odp.odc?.nama_odc}<br />
                       <div className="mt-2 flex gap-2">
                         <button
                           className="bg-yellow-400 px-2 py-1 rounded text-xs"
@@ -596,6 +629,7 @@ const MappingPage: React.FC = () => {
                               nama_odp: odp.nama_odp,
                               tipe_splitter: odp.tipe_splitter,
                               kabel_core_odc_id: odp.kabel_core_odc_id,
+                              client_id: 0
                             }
                           })}
                         >
@@ -624,7 +658,6 @@ const MappingPage: React.FC = () => {
                   <Popup>
                     <div className="text-sm">
                       <strong>ODC:</strong> {odc.nama_odc}<br />
-                      <strong>Jenis Kabel:</strong> {odc.jenis_kabel}<br />
                       <strong>Lokasi:</strong> {odc.lokasi.nama_lokasi}<br />
                       <strong>Deskripsi:</strong> {odc.lokasi.deskripsi}<br />
                       <div className="mt-2 flex gap-2">
@@ -640,6 +673,7 @@ const MappingPage: React.FC = () => {
                               latitude: odc.lokasi.latitude,
                               longitude: odc.lokasi.longitude,
                               nama_odc: odc.nama_odc,
+                              client_id: 0
                             }
                           })}
                         >
@@ -658,6 +692,32 @@ const MappingPage: React.FC = () => {
               );
             })}
 
+          {clients.map((client) => {
+            console.log('Client:', client.nama_client);
+  console.log('ODP Lokasi:', client.odp?.lokasi);
+  console.log('ODC Lokasi:', client.odc?.lokasi);
+            const clientPos = getLatLng(client);
+            const odpPos = getLatLng(client.odp);
+            const odcPos = getLatLng(client.odc);
+
+            const coords: [number, number][] = [];
+
+            if (odcPos) coords.push(odcPos);
+            if (odpPos) coords.push(odpPos);
+            if (clientPos) coords.push(clientPos);
+
+            if (coords.length >= 2) {
+              return (
+                <Polyline
+                  key={`line-${client.id}`}
+                  positions={coords}
+                  pathOptions={{ color: 'red', weight: 3 }}
+                />
+              );
+            }
+
+            return null;
+          })}
 
           {/* Form Add */}
           {formMode && !editData && (

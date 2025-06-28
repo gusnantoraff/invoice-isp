@@ -203,6 +203,7 @@ Route::group(['middleware' => ['throttle:api', 'api_db', 'token_auth', 'locale']
     Route::post('/fo-kabel-tube-odcs/bulk', [FoKabelTubeOdcController::class, 'bulk']);
 
     Route::get('/fo-kabel-core-odcs', [FoKabelCoreOdcController::class, 'index']);
+    Route::get('/fo-kabel-core-odcs/no-odp', [FoKabelCoreOdcController::class, 'getKabelWithoutODP']);
     Route::post('/fo-kabel-core-odcs', [FoKabelCoreOdcController::class, 'store']);
     Route::get('/fo-kabel-core-odcs/{id}', [FoKabelCoreOdcController::class, 'show']);
     Route::put('/fo-kabel-core-odcs/{id}', [FoKabelCoreOdcController::class, 'update']);

@@ -9,6 +9,14 @@ class FoKabelCoreOdcController extends Controller
 {
     protected $model = FoKabelCoreOdc::class;
 
+
+    public function getKabelWithoutODP()
+    {
+        $availableCores = FoKabelCoreOdc::whereDoesntHave('odp')->get();
+        return response()->json(['data' => $availableCores]);
+    }
+
+
     /**
      * List all Kabel-Core-ODC entries with pagination, filtering, sorting, and status.
      *
@@ -18,7 +26,7 @@ class FoKabelCoreOdcController extends Controller
     {
         // 1) Parse the `status` parameter into an array
         $statusParam = $request->query('status', 'active');
-        $requested   = collect(explode(',', $statusParam))
+        $requested = collect(explode(',', $statusParam))
             ->map(fn($s) => trim(strtolower($s)))
             ->filter()
             ->unique()
@@ -93,35 +101,35 @@ class FoKabelCoreOdcController extends Controller
         // 8) Transform results into JSON structure
         $items = array_map(function ($c) {
             return [
-                'id'                => $c->id,
+                'id' => $c->id,
                 'kabel_tube_odc_id' => $c->kabel_tube_odc_id,
-                'kabel_tube_odc'    => [
-                    'id'         => $c->kabelTubeOdc->id,
+                'kabel_tube_odc' => [
+                    'id' => $c->kabelTubeOdc->id,
                     'warna_tube' => $c->kabelTubeOdc->warna_tube,
                 ],
-                'kabel_odc'         => [
-                    'id'          => $c->kabelTubeOdc->kabelOdc->id,
-                    'nama_kabel'  => $c->kabelTubeOdc->kabelOdc->nama_kabel,
+                'kabel_odc' => [
+                    'id' => $c->kabelTubeOdc->kabelOdc->id,
+                    'nama_kabel' => $c->kabelTubeOdc->kabelOdc->nama_kabel,
                 ],
-                'warna_core'        => $c->warna_core,
-                'status'            => $c->status,
-                'odp_ids'           => $c->odp ? [$c->odp->id] : [],
-                'created_at'        => $c->created_at->toDateTimeString(),
-                'updated_at'        => $c->updated_at->toDateTimeString(),
-                'deleted_at'        => $c->deleted_at?->toDateTimeString(),
+                'warna_core' => $c->warna_core,
+                'status' => $c->status,
+                'odp_ids' => $c->odp ? [$c->odp->id] : [],
+                'created_at' => $c->created_at->toDateTimeString(),
+                'updated_at' => $c->updated_at->toDateTimeString(),
+                'deleted_at' => $c->deleted_at?->toDateTimeString(),
             ];
         }, $paginator->items());
 
         return response()->json([
             'status' => 'success',
-            'data'   => $items,
-            'meta'   => [
+            'data' => $items,
+            'meta' => [
                 'current_page' => $paginator->currentPage(),
-                'per_page'     => $paginator->perPage(),
-                'total'        => $paginator->total(),
-                'last_page'    => $paginator->lastPage(),
-                'from'         => $paginator->firstItem(),
-                'to'           => $paginator->lastItem(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'last_page' => $paginator->lastPage(),
+                'from' => $paginator->firstItem(),
+                'to' => $paginator->lastItem(),
             ],
         ], 200);
     }
@@ -133,8 +141,8 @@ class FoKabelCoreOdcController extends Controller
     {
         $data = $request->validate([
             'kabel_tube_odc_id' => 'required|exists:fo_kabel_tube_odcs,id',
-            'warna_core'        => 'required|in:biru,jingga,hijau,coklat,abu_abu,putih,merah,hitam,kuning,ungu,merah_muda,aqua',
-            'status'            => 'sometimes|in:active,archived',
+            'warna_core' => 'required|in:biru,jingga,hijau,coklat,abu_abu,putih,merah,hitam,kuning,ungu,merah_muda,aqua',
+            'status' => 'sometimes|in:active,archived',
         ]);
 
         if (!isset($data['status'])) {
@@ -145,23 +153,23 @@ class FoKabelCoreOdcController extends Controller
         $c->load(['kabelTubeOdc.kabelOdc', 'odp']);
 
         return response()->json([
-            'status'  => 'success',
-            'data'    => [
-                'id'                => $c->id,
+            'status' => 'success',
+            'data' => [
+                'id' => $c->id,
                 'kabel_tube_odc_id' => $c->kabel_tube_odc_id,
-                'kabel_tube_odc'    => [
-                    'id'         => $c->kabelTubeOdc->id,
+                'kabel_tube_odc' => [
+                    'id' => $c->kabelTubeOdc->id,
                     'warna_tube' => $c->kabelTubeOdc->warna_tube,
                 ],
-                'kabel_odc'         => [
-                    'id'          => $c->kabelTubeOdc->kabelOdc->id,
-                    'nama_kabel'  => $c->kabelTubeOdc->kabelOdc->nama_kabel,
+                'kabel_odc' => [
+                    'id' => $c->kabelTubeOdc->kabelOdc->id,
+                    'nama_kabel' => $c->kabelTubeOdc->kabelOdc->nama_kabel,
                 ],
-                'warna_core'        => $c->warna_core,
-                'status'            => $c->status,
-                'odp_ids'           => $c->odp ? [$c->odp->id] : [],
-                'created_at'        => $c->created_at->toDateTimeString(),
-                'updated_at'        => $c->updated_at->toDateTimeString(),
+                'warna_core' => $c->warna_core,
+                'status' => $c->status,
+                'odp_ids' => $c->odp ? [$c->odp->id] : [],
+                'created_at' => $c->created_at->toDateTimeString(),
+                'updated_at' => $c->updated_at->toDateTimeString(),
             ],
             'message' => 'Core ODC created.',
         ], 201);
@@ -177,23 +185,23 @@ class FoKabelCoreOdcController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data'   => [
-                'id'                => $c->id,
+            'data' => [
+                'id' => $c->id,
                 'kabel_tube_odc_id' => $c->kabel_tube_odc_id,
-                'kabel_tube_odc'    => [
-                    'id'         => $c->kabelTubeOdc->id,
+                'kabel_tube_odc' => [
+                    'id' => $c->kabelTubeOdc->id,
                     'warna_tube' => $c->kabelTubeOdc->warna_tube,
                 ],
-                'kabel_odc'         => [
-                    'id'          => $c->kabelTubeOdc->kabelOdc->id,
-                    'nama_kabel'  => $c->kabelTubeOdc->kabelOdc->nama_kabel,
+                'kabel_odc' => [
+                    'id' => $c->kabelTubeOdc->kabelOdc->id,
+                    'nama_kabel' => $c->kabelTubeOdc->kabelOdc->nama_kabel,
                 ],
-                'warna_core'        => $c->warna_core,
-                'status'            => $c->status,
-                'odp_ids'           => $c->odp ? [$c->odp->id] : [],
-                'created_at'        => $c->created_at->toDateTimeString(),
-                'updated_at'        => $c->updated_at->toDateTimeString(),
-                'deleted_at'        => $c->deleted_at?->toDateTimeString(),
+                'warna_core' => $c->warna_core,
+                'status' => $c->status,
+                'odp_ids' => $c->odp ? [$c->odp->id] : [],
+                'created_at' => $c->created_at->toDateTimeString(),
+                'updated_at' => $c->updated_at->toDateTimeString(),
+                'deleted_at' => $c->deleted_at?->toDateTimeString(),
             ],
         ], 200);
     }
@@ -207,31 +215,31 @@ class FoKabelCoreOdcController extends Controller
 
         $data = $request->validate([
             'kabel_tube_odc_id' => 'sometimes|exists:fo_kabel_tube_odcs,id',
-            'warna_core'        => 'sometimes|in:biru,jingga,hijau,coklat,abu_abu,putih,merah,hitam,kuning,ungu,merah_muda,aqua',
-            'status'            => 'sometimes|in:active,archived',
+            'warna_core' => 'sometimes|in:biru,jingga,hijau,coklat,abu_abu,putih,merah,hitam,kuning,ungu,merah_muda,aqua',
+            'status' => 'sometimes|in:active,archived',
         ]);
 
         $c->update($data);
         $c->refresh()->load(['kabelTubeOdc.kabelOdc', 'odp']);
 
         return response()->json([
-            'status'  => 'success',
-            'data'    => [
-                'id'                => $c->id,
+            'status' => 'success',
+            'data' => [
+                'id' => $c->id,
                 'kabel_tube_odc_id' => $c->kabel_tube_odc_id,
-                'kabel_tube_odc'    => [
-                    'id'         => $c->kabelTubeOdc->id,
+                'kabel_tube_odc' => [
+                    'id' => $c->kabelTubeOdc->id,
                     'warna_tube' => $c->kabelTubeOdc->warna_tube,
                 ],
-                'kabel_odc'         => [
-                    'id'          => $c->kabelTubeOdc->kabelOdc->id,
-                    'nama_kabel'  => $c->kabelTubeOdc->kabelOdc->nama_kabel,
+                'kabel_odc' => [
+                    'id' => $c->kabelTubeOdc->kabelOdc->id,
+                    'nama_kabel' => $c->kabelTubeOdc->kabelOdc->nama_kabel,
                 ],
-                'warna_core'        => $c->warna_core,
-                'status'            => $c->status,
-                'odp_ids'           => $c->odp ? [$c->odp->id] : [],
-                'created_at'        => $c->created_at->toDateTimeString(),
-                'updated_at'        => $c->updated_at->toDateTimeString(),
+                'warna_core' => $c->warna_core,
+                'status' => $c->status,
+                'odp_ids' => $c->odp ? [$c->odp->id] : [],
+                'created_at' => $c->created_at->toDateTimeString(),
+                'updated_at' => $c->updated_at->toDateTimeString(),
             ],
             'message' => 'Core ODC updated.',
         ], 200);
@@ -248,7 +256,7 @@ class FoKabelCoreOdcController extends Controller
         $c->delete();
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Core ODC soft-deleted.',
         ], 200);
     }
@@ -264,7 +272,7 @@ class FoKabelCoreOdcController extends Controller
         $c->update(['status' => 'archived']);
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Core ODC archived.',
         ], 200);
     }
@@ -280,7 +288,7 @@ class FoKabelCoreOdcController extends Controller
         $c->update(['status' => 'active']);
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Core ODC set to active.',
         ], 200);
     }
@@ -296,7 +304,7 @@ class FoKabelCoreOdcController extends Controller
         $c->restore();
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => 'Core ODC restored from deletion.',
         ], 200);
     }
@@ -314,11 +322,11 @@ class FoKabelCoreOdcController extends Controller
     {
         $data = $request->validate([
             'action' => 'required|in:archive,delete,restore',
-            'ids'    => 'required|array|min:1',
-            'ids.*'  => 'integer|distinct',
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|distinct',
         ]);
 
-        $ids    = $data['ids'];
+        $ids = $data['ids'];
         $action = $data['action'];
 
         switch ($action) {
@@ -350,13 +358,13 @@ class FoKabelCoreOdcController extends Controller
             default:
                 // Should never happen due to validation
                 return response()->json([
-                    'status'  => 'error',
+                    'status' => 'error',
                     'message' => 'Invalid action.',
                 ], 422);
         }
 
         return response()->json([
-            'status'  => 'success',
+            'status' => 'success',
             'message' => $message,
         ], 200);
     }

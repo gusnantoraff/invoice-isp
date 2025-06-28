@@ -56,13 +56,13 @@ class FoClientFtthController extends Controller
             ->where('company_id', $companyId);
 
         // 3) Apply status filtering
-        $query->where(function($q) use ($statuses) {
+        $query->where(function ($q) use ($statuses) {
             if (in_array('deleted', $statuses, true)) {
                 $q->orWhereNotNull('deleted_at');
             }
-            $nonDeleted = array_intersect($statuses, ['active','archived']);
+            $nonDeleted = array_intersect($statuses, ['active', 'archived']);
             if (!empty($nonDeleted)) {
-                $q->orWhere(function($sub) use ($nonDeleted) {
+                $q->orWhere(function ($sub) use ($nonDeleted) {
                     $sub->whereNull('deleted_at')
                         ->whereIn('status', $nonDeleted);
                 });
@@ -72,28 +72,28 @@ class FoClientFtthController extends Controller
         // 4) Optional text filter on nama_client or alamat
         if ($request->filled('filter')) {
             $term = "%{$request->query('filter')}%";
-            $query->where(function($q) use ($term) {
+            $query->where(function ($q) use ($term) {
                 $q->where('nama_client', 'LIKE', $term)
-                  ->orWhere('alamat', 'LIKE', $term);
+                    ->orWhere('alamat', 'LIKE', $term);
             });
         }
 
         // 5) Optional sort param: column|asc or column|dsc
         if ($request->filled('sort')) {
             [$column, $dir] = array_pad(explode('|', $request->query('sort')), 2, null);
-            $dir = (strtolower($dir)==='dsc') ? 'desc' : 'asc';
-            $allowed = ['id','nama_client','created_at','updated_at','status'];
+            $dir = (strtolower($dir) === 'dsc') ? 'desc' : 'asc';
+            $allowed = ['id', 'nama_client', 'created_at', 'updated_at', 'status'];
             if (in_array($column, $allowed, true)) {
                 $query->orderBy($column, $dir);
             }
         } else {
-            $query->orderBy('id','desc');
+            $query->orderBy('id', 'desc');
         }
 
         // 6) Pagination
-        $perPage = max(1, (int)$request->query('per_page', 15));
+        $perPage = max(1, (int) $request->query('per_page', 15));
         $p = $query->paginate($perPage)
-                   ->appends($request->only(['filter','sort','per_page','status']));
+            ->appends($request->only(['filter', 'sort', 'per_page', 'status']));
 
         // 7) Transform result with comprehensive data
         $items = $p->map(function($c) {
@@ -276,14 +276,14 @@ class FoClientFtthController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data'   => $items,
-            'meta'   => [
+            'data' => $items,
+            'meta' => [
                 'current_page' => $p->currentPage(),
-                'per_page'     => $p->perPage(),
-                'total'        => $p->total(),
-                'last_page'    => $p->lastPage(),
-                'from'         => $p->firstItem(),
-                'to'           => $p->lastItem(),
+                'per_page' => $p->perPage(),
+                'total' => $p->total(),
+                'last_page' => $p->lastPage(),
+                'from' => $p->firstItem(),
+                'to' => $p->lastItem(),
             ],
         ], 200);
     }
@@ -298,12 +298,12 @@ class FoClientFtthController extends Controller
     {
         $companyId = auth()->user()->getCompany()?->id;
         $data = $request->validate([
-            'lokasi_id'    => 'required|exists:fo_lokasis,id',
-            'odp_id'       => 'required|exists:fo_odps,id',
-            'client_id'    => 'nullable',
-            'nama_client'  => 'nullable|string|max:255',
-            'alamat'       => 'nullable|string|max:255',
-            'status'       => 'sometimes|in:active,archived',
+            'lokasi_id' => 'required|exists:fo_lokasis,id',
+            'odp_id' => 'required|exists:fo_odps,id',
+            'client_id' => 'nullable',
+            'nama_client' => 'nullable|string|max:255',
+            'alamat' => 'nullable|string|max:255',
+            'status' => 'sometimes|in:active,archived',
         ]);
 
         // Auto-set company_id from authenticated user
@@ -341,17 +341,21 @@ class FoClientFtthController extends Controller
         $c->load(['lokasi', 'odp.kabelCoreOdc.kabelTubeOdc.kabelOdc.odc', 'client', 'company']);
 
         return response()->json([
-            'status'  => 'success',
-            'data'    => [
-                'id'           => $c->id,
-                'nama_client'  => $c->nama_client,
-                'lokasi'       => $c->lokasi ? [
-                    'id'           => $c->lokasi->id,
-                    'nama_lokasi'  => $c->lokasi->nama_lokasi,
+            'status' => 'success',
+            'data' => [
+                'id' => $c->id,
+                'nama_client' => $c->nama_client,
+                'lokasi' => $c->lokasi ? [
+                    'id' => $c->lokasi->id,
+                    'nama_lokasi' => $c->lokasi->nama_lokasi,
                 ] : null,
-                'odp'          => $c->odp ? [
-                    'id'           => $c->odp->id,
-                    'nama_odp'     => $c->odp->nama_odp,
+                'odp' => $c->odp ? [
+                    'id' => $c->odp->id,
+                    'nama_odp' => $c->odp->nama_odp,
+                ] : null,
+                'odc' => $c->odp?->kabelCoreOdc?->kabelTubeOdc?->kabelOdc?->odc ? [
+                    'id' => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->id,
+                    'nama_odc' => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->nama_odc,
                 ] : null,
                 'odc'          => $c->odp?->kabelCoreOdc?->kabelTubeOdc?->kabelOdc?->odc ? [
                     'id'           => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->id,
@@ -361,15 +365,15 @@ class FoClientFtthController extends Controller
                     'id'           => $this->encodePrimaryKey($c->client->id),
                     'name'         => $c->client->name,
                 ] : null,
-                'company'      => $c->company ? [
-                    'id'           => $c->company->id,
-                    'name'         => $c->company->present()->name(),
+                'company' => $c->company ? [
+                    'id' => $c->company->id,
+                    'name' => $c->company->present()->name(),
                 ] : null,
-                'alamat'       => $c->alamat,
-                'status'       => $c->status,
-                'created_at'   => $c->created_at ? $c->created_at->toDateTimeString() : null,
-                'updated_at'   => $c->updated_at ? $c->updated_at->toDateTimeString() : null,
-                'deleted_at'   => $c->deleted_at ? $c->deleted_at->toDateTimeString() : null,
+                'alamat' => $c->alamat,
+                'status' => $c->status,
+                'created_at' => $c->created_at ? $c->created_at->toDateTimeString() : null,
+                'updated_at' => $c->updated_at ? $c->updated_at->toDateTimeString() : null,
+                'deleted_at' => $c->deleted_at ? $c->deleted_at->toDateTimeString() : null,
             ],
             'message' => 'FTTH client created.',
         ], 201);
@@ -388,16 +392,20 @@ class FoClientFtthController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'data'   => [
-                'id'           => $c->id,
-                'nama_client'  => $c->nama_client,
-                'lokasi'       => $c->lokasi ? [
-                    'id'           => $c->lokasi->id,
-                    'nama_lokasi'  => $c->lokasi->nama_lokasi,
+            'data' => [
+                'id' => $c->id,
+                'nama_client' => $c->nama_client,
+                'lokasi' => $c->lokasi ? [
+                    'id' => $c->lokasi->id,
+                    'nama_lokasi' => $c->lokasi->nama_lokasi,
                 ] : null,
-                'odp'          => $c->odp ? [
-                    'id'           => $c->odp->id,
-                    'nama_odp'     => $c->odp->nama_odp,
+                'odp' => $c->odp ? [
+                    'id' => $c->odp->id,
+                    'nama_odp' => $c->odp->nama_odp,
+                ] : null,
+                'odc' => $c->odp?->kabelCoreOdc?->kabelTubeOdc?->kabelOdc?->odc ? [
+                    'id' => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->id,
+                    'nama_odc' => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->nama_odc,
                 ] : null,
                 'odc'          => $c->odp?->kabelCoreOdc?->kabelTubeOdc?->kabelOdc?->odc ? [
                     'id'           => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->id,
@@ -407,15 +415,15 @@ class FoClientFtthController extends Controller
                     'id'           => $this->encodePrimaryKey($c->client->id),
                     'name'         => $c->client->name,
                 ] : null,
-                'company'      => $c->company ? [
-                    'id'           => $c->company->id,
-                    'name'         => $c->company->present()->name(),
+                'company' => $c->company ? [
+                    'id' => $c->company->id,
+                    'name' => $c->company->present()->name(),
                 ] : null,
-                'alamat'       => $c->alamat,
-                'status'       => $c->status,
-                'created_at'   => $c->created_at ? $c->created_at->toDateTimeString() : null,
-                'updated_at'   => $c->updated_at ? $c->updated_at->toDateTimeString() : null,
-                'deleted_at'   => $c->deleted_at ? $c->deleted_at->toDateTimeString() : null,
+                'alamat' => $c->alamat,
+                'status' => $c->status,
+                'created_at' => $c->created_at ? $c->created_at->toDateTimeString() : null,
+                'updated_at' => $c->updated_at ? $c->updated_at->toDateTimeString() : null,
+                'deleted_at' => $c->deleted_at ? $c->deleted_at->toDateTimeString() : null,
             ],
         ], 200);
     }
@@ -431,12 +439,12 @@ class FoClientFtthController extends Controller
         $c = FoClientFtth::withTrashed()->where('company_id', $companyId)->findOrFail($id);
 
         $data = $request->validate([
-            'lokasi_id'    => 'sometimes|exists:fo_lokasis,id',
-            'odp_id'       => 'sometimes|exists:fo_odps,id',
-            'client_id'    => 'nullable',
-            'nama_client'  => 'nullable|string|max:255',
-            'alamat'       => 'nullable|string|max:255',
-            'status'       => 'sometimes|in:active,archived',
+            'lokasi_id' => 'sometimes|exists:fo_lokasis,id',
+            'odp_id' => 'sometimes|exists:fo_odps,id',
+            'client_id' => 'nullable',
+            'nama_client' => 'nullable|string|max:255',
+            'alamat' => 'nullable|string|max:255',
+            'status' => 'sometimes|in:active,archived',
         ]);
 
         // If client_id is being updated, decode hashed client_id if provided
@@ -462,17 +470,21 @@ class FoClientFtthController extends Controller
         $c->refresh()->load(['lokasi', 'odp.kabelCoreOdc.kabelTubeOdc.kabelOdc.odc', 'client', 'company']);
 
         return response()->json([
-            'status'  => 'success',
-            'data'    => [
-                'id'           => $c->id,
-                'nama_client'  => $c->nama_client,
-                'lokasi'       => $c->lokasi ? [
-                    'id'           => $c->lokasi->id,
-                    'nama_lokasi'  => $c->lokasi->nama_lokasi,
+            'status' => 'success',
+            'data' => [
+                'id' => $c->id,
+                'nama_client' => $c->nama_client,
+                'lokasi' => $c->lokasi ? [
+                    'id' => $c->lokasi->id,
+                    'nama_lokasi' => $c->lokasi->nama_lokasi,
                 ] : null,
-                'odp'          => $c->odp ? [
-                    'id'           => $c->odp->id,
-                    'nama_odp'     => $c->odp->nama_odp,
+                'odp' => $c->odp ? [
+                    'id' => $c->odp->id,
+                    'nama_odp' => $c->odp->nama_odp,
+                ] : null,
+                'odc' => $c->odp?->kabelCoreOdc?->kabelTubeOdc?->kabelOdc?->odc ? [
+                    'id' => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->id,
+                    'nama_odc' => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->nama_odc,
                 ] : null,
                 'odc'          => $c->odp?->kabelCoreOdc?->kabelTubeOdc?->kabelOdc?->odc ? [
                     'id'           => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->id,
@@ -482,15 +494,15 @@ class FoClientFtthController extends Controller
                     'id'           => $this->encodePrimaryKey($c->client->id),
                     'name'         => $c->client->name,
                 ] : null,
-                'company'      => $c->company ? [
-                    'id'           => $c->company->id,
-                    'name'         => $c->company->present()->name(),
+                'company' => $c->company ? [
+                    'id' => $c->company->id,
+                    'name' => $c->company->present()->name(),
                 ] : null,
-                'alamat'       => $c->alamat,
-                'status'       => $c->status,
-                'created_at'   => $c->created_at ? $c->created_at->toDateTimeString() : null,
-                'updated_at'   => $c->updated_at ? $c->updated_at->toDateTimeString() : null,
-                'deleted_at'   => $c->deleted_at ? $c->deleted_at->toDateTimeString() : null,
+                'alamat' => $c->alamat,
+                'status' => $c->status,
+                'created_at' => $c->created_at ? $c->created_at->toDateTimeString() : null,
+                'updated_at' => $c->updated_at ? $c->updated_at->toDateTimeString() : null,
+                'deleted_at' => $c->deleted_at ? $c->deleted_at->toDateTimeString() : null,
             ],
             'message' => 'FTTH client updated.',
         ], 200);
@@ -508,8 +520,8 @@ class FoClientFtthController extends Controller
         $c->delete();
 
         return response()->json([
-            'status'  => 'success',
-            'data'    => [
+            'status' => 'success',
+            'data' => [
                 'id' => $c->id,
             ],
             'message' => 'FTTH client soft-deleted.',
@@ -529,17 +541,21 @@ class FoClientFtthController extends Controller
         $c->refresh()->load(['lokasi', 'odp.kabelCoreOdc.kabelTubeOdc.kabelOdc.odc', 'client', 'company']);
 
         return response()->json([
-            'status'  => 'success',
-            'data'    => [
-                'id'           => $c->id,
-                'nama_client'  => $c->nama_client,
-                'lokasi'       => $c->lokasi ? [
-                    'id'           => $c->lokasi->id,
-                    'nama_lokasi'  => $c->lokasi->nama_lokasi,
+            'status' => 'success',
+            'data' => [
+                'id' => $c->id,
+                'nama_client' => $c->nama_client,
+                'lokasi' => $c->lokasi ? [
+                    'id' => $c->lokasi->id,
+                    'nama_lokasi' => $c->lokasi->nama_lokasi,
                 ] : null,
-                'odp'          => $c->odp ? [
-                    'id'           => $c->odp->id,
-                    'nama_odp'     => $c->odp->nama_odp,
+                'odp' => $c->odp ? [
+                    'id' => $c->odp->id,
+                    'nama_odp' => $c->odp->nama_odp,
+                ] : null,
+                'odc' => $c->odp?->kabelCoreOdc?->kabelTubeOdc?->kabelOdc?->odc ? [
+                    'id' => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->id,
+                    'nama_odc' => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->nama_odc,
                 ] : null,
                 'odc'          => $c->odp?->kabelCoreOdc?->kabelTubeOdc?->kabelOdc?->odc ? [
                     'id'           => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->id,
@@ -549,15 +565,15 @@ class FoClientFtthController extends Controller
                     'id'           => $this->encodePrimaryKey($c->client->id),
                     'name'         => $c->client->name,
                 ] : null,
-                'company'      => $c->company ? [
-                    'id'           => $c->company->id,
-                    'name'         => $c->company->present()->name(),
+                'company' => $c->company ? [
+                    'id' => $c->company->id,
+                    'name' => $c->company->present()->name(),
                 ] : null,
-                'alamat'       => $c->alamat,
-                'status'       => $c->status,
-                'created_at'   => $c->created_at ? $c->created_at->toDateTimeString() : null,
-                'updated_at'   => $c->updated_at ? $c->updated_at->toDateTimeString() : null,
-                'deleted_at'   => $c->deleted_at ? $c->deleted_at->toDateTimeString() : null,
+                'alamat' => $c->alamat,
+                'status' => $c->status,
+                'created_at' => $c->created_at ? $c->created_at->toDateTimeString() : null,
+                'updated_at' => $c->updated_at ? $c->updated_at->toDateTimeString() : null,
+                'deleted_at' => $c->deleted_at ? $c->deleted_at->toDateTimeString() : null,
             ],
             'message' => 'FTTH client archived.',
         ], 200);
@@ -576,17 +592,21 @@ class FoClientFtthController extends Controller
         $c->refresh()->load(['lokasi', 'odp.kabelCoreOdc.kabelTubeOdc.kabelOdc.odc', 'client', 'company']);
 
         return response()->json([
-            'status'  => 'success',
-            'data'    => [
-                'id'           => $c->id,
-                'nama_client'  => $c->nama_client,
-                'lokasi'       => $c->lokasi ? [
-                    'id'           => $c->lokasi->id,
-                    'nama_lokasi'  => $c->lokasi->nama_lokasi,
+            'status' => 'success',
+            'data' => [
+                'id' => $c->id,
+                'nama_client' => $c->nama_client,
+                'lokasi' => $c->lokasi ? [
+                    'id' => $c->lokasi->id,
+                    'nama_lokasi' => $c->lokasi->nama_lokasi,
                 ] : null,
-                'odp'          => $c->odp ? [
-                    'id'           => $c->odp->id,
-                    'nama_odp'     => $c->odp->nama_odp,
+                'odp' => $c->odp ? [
+                    'id' => $c->odp->id,
+                    'nama_odp' => $c->odp->nama_odp,
+                ] : null,
+                'odc' => $c->odp?->kabelCoreOdc?->kabelTubeOdc?->kabelOdc?->odc ? [
+                    'id' => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->id,
+                    'nama_odc' => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->nama_odc,
                 ] : null,
                 'odc'          => $c->odp?->kabelCoreOdc?->kabelTubeOdc?->kabelOdc?->odc ? [
                     'id'           => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->id,
@@ -596,15 +616,15 @@ class FoClientFtthController extends Controller
                     'id'           => $this->encodePrimaryKey($c->client->id),
                     'name'         => $c->client->name,
                 ] : null,
-                'company'      => $c->company ? [
-                    'id'           => $c->company->id,
-                    'name'         => $c->company->present()->name(),
+                'company' => $c->company ? [
+                    'id' => $c->company->id,
+                    'name' => $c->company->present()->name(),
                 ] : null,
-                'alamat'       => $c->alamat,
-                'status'       => $c->status,
-                'created_at'   => $c->created_at ? $c->created_at->toDateTimeString() : null,
-                'updated_at'   => $c->updated_at ? $c->updated_at->toDateTimeString() : null,
-                'deleted_at'   => $c->deleted_at ? $c->deleted_at->toDateTimeString() : null,
+                'alamat' => $c->alamat,
+                'status' => $c->status,
+                'created_at' => $c->created_at ? $c->created_at->toDateTimeString() : null,
+                'updated_at' => $c->updated_at ? $c->updated_at->toDateTimeString() : null,
+                'deleted_at' => $c->deleted_at ? $c->deleted_at->toDateTimeString() : null,
             ],
             'message' => 'FTTH client set to active.',
         ], 200);
@@ -623,17 +643,21 @@ class FoClientFtthController extends Controller
         $c->refresh()->load(['lokasi', 'odp.kabelCoreOdc.kabelTubeOdc.kabelOdc.odc', 'client', 'company']);
 
         return response()->json([
-            'status'  => 'success',
-            'data'    => [
-                'id'           => $c->id,
-                'nama_client'  => $c->nama_client,
-                'lokasi'       => $c->lokasi ? [
-                    'id'           => $c->lokasi->id,
-                    'nama_lokasi'  => $c->lokasi->nama_lokasi,
+            'status' => 'success',
+            'data' => [
+                'id' => $c->id,
+                'nama_client' => $c->nama_client,
+                'lokasi' => $c->lokasi ? [
+                    'id' => $c->lokasi->id,
+                    'nama_lokasi' => $c->lokasi->nama_lokasi,
                 ] : null,
-                'odp'          => $c->odp ? [
-                    'id'           => $c->odp->id,
-                    'nama_odp'     => $c->odp->nama_odp,
+                'odp' => $c->odp ? [
+                    'id' => $c->odp->id,
+                    'nama_odp' => $c->odp->nama_odp,
+                ] : null,
+                'odc' => $c->odp?->kabelCoreOdc?->kabelTubeOdc?->kabelOdc?->odc ? [
+                    'id' => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->id,
+                    'nama_odc' => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->nama_odc,
                 ] : null,
                 'odc'          => $c->odp?->kabelCoreOdc?->kabelTubeOdc?->kabelOdc?->odc ? [
                     'id'           => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->id,
@@ -643,15 +667,15 @@ class FoClientFtthController extends Controller
                     'id'           => $this->encodePrimaryKey($c->client->id),
                     'name'         => $c->client->name,
                 ] : null,
-                'company'      => $c->company ? [
-                    'id'           => $c->company->id,
-                    'name'         => $c->company->present()->name(),
+                'company' => $c->company ? [
+                    'id' => $c->company->id,
+                    'name' => $c->company->present()->name(),
                 ] : null,
-                'alamat'       => $c->alamat,
-                'status'       => $c->status,
-                'created_at'   => $c->created_at ? $c->created_at->toDateTimeString() : null,
-                'updated_at'   => $c->updated_at ? $c->updated_at->toDateTimeString() : null,
-                'deleted_at'   => $c->deleted_at ? $c->deleted_at->toDateTimeString() : null,
+                'alamat' => $c->alamat,
+                'status' => $c->status,
+                'created_at' => $c->created_at ? $c->created_at->toDateTimeString() : null,
+                'updated_at' => $c->updated_at ? $c->updated_at->toDateTimeString() : null,
+                'deleted_at' => $c->deleted_at ? $c->deleted_at->toDateTimeString() : null,
             ],
             'message' => 'FTTH client restored from deletion.',
         ], 200);
@@ -671,11 +695,11 @@ class FoClientFtthController extends Controller
         $companyId = auth()->user()->getCompany()?->id;
         $data = $request->validate([
             'action' => 'required|in:archive,delete,restore',
-            'ids'    => 'required|array|min:1',
-            'ids.*'  => 'integer|distinct',
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|distinct',
         ]);
 
-        $ids    = $data['ids'];
+        $ids = $data['ids'];
         $action = $data['action'];
         $message = '';
         $affected = [];
@@ -716,22 +740,26 @@ class FoClientFtthController extends Controller
             default:
                 // Should never happen due to validation
                 return response()->json([
-                    'status'  => 'error',
+                    'status' => 'error',
                     'message' => 'Invalid action.',
                 ], 422);
         }
 
         $data = $affected->map(function ($c) {
             return [
-                'id'           => $c->id,
-                'nama_client'  => $c->nama_client,
-                'lokasi'       => $c->lokasi ? [
-                    'id'           => $c->lokasi->id,
-                    'nama_lokasi'  => $c->lokasi->nama_lokasi,
+                'id' => $c->id,
+                'nama_client' => $c->nama_client,
+                'lokasi' => $c->lokasi ? [
+                    'id' => $c->lokasi->id,
+                    'nama_lokasi' => $c->lokasi->nama_lokasi,
                 ] : null,
-                'odp'          => $c->odp ? [
-                    'id'           => $c->odp->id,
-                    'nama_odp'     => $c->odp->nama_odp,
+                'odp' => $c->odp ? [
+                    'id' => $c->odp->id,
+                    'nama_odp' => $c->odp->nama_odp,
+                ] : null,
+                'odc' => $c->odp?->kabelCoreOdc?->kabelTubeOdc?->kabelOdc?->odc ? [
+                    'id' => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->id,
+                    'nama_odc' => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->nama_odc,
                 ] : null,
                 'odc'          => $c->odp?->kabelCoreOdc?->kabelTubeOdc?->kabelOdc?->odc ? [
                     'id'           => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->id,
@@ -741,21 +769,21 @@ class FoClientFtthController extends Controller
                     'id'           => $this->encodePrimaryKey($c->client->id),
                     'name'         => $c->client->name,
                 ] : null,
-                'company'      => $c->company ? [
-                    'id'           => $c->company->id,
-                    'name'         => $c->company->present()->name(),
+                'company' => $c->company ? [
+                    'id' => $c->company->id,
+                    'name' => $c->company->present()->name(),
                 ] : null,
-                'alamat'       => $c->alamat,
-                'status'       => $c->status,
-                'created_at'   => $c->created_at ? $c->created_at->toDateTimeString() : null,
-                'updated_at'   => $c->updated_at ? $c->updated_at->toDateTimeString() : null,
-                'deleted_at'   => $c->deleted_at ? $c->deleted_at->toDateTimeString() : null,
+                'alamat' => $c->alamat,
+                'status' => $c->status,
+                'created_at' => $c->created_at ? $c->created_at->toDateTimeString() : null,
+                'updated_at' => $c->updated_at ? $c->updated_at->toDateTimeString() : null,
+                'deleted_at' => $c->deleted_at ? $c->deleted_at->toDateTimeString() : null,
             ];
         });
 
         return response()->json([
-            'status'  => 'success',
-            'data'    => $data,
+            'status' => 'success',
+            'data' => $data,
             'message' => $message,
         ], 200);
     }
