@@ -27,6 +27,7 @@ export default function Show() {
                 <Element leftSide={t('nama_client')}>{data.nama_client}</Element>
                 <Element leftSide={t('lokasi')}>{data.lokasi?.nama_lokasi}</Element>
                 <Element leftSide={t('odp')}>{data.odp?.nama_odp}</Element>
+                <Element leftSide={t('odc')}>{data.odc?.nama_odc}</Element>
                 <Element leftSide={t('client')}>{data.client?.name}</Element>
                 <Element leftSide={t('company')}>{data.company?.name}</Element>
                 <Element leftSide={t('alamat')}>{data.alamat}</Element>

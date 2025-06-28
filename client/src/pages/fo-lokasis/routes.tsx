@@ -1,7 +1,6 @@
 import { Route } from 'react-router-dom';
 import { lazy } from 'react';
 
-const FoLokasi = lazy(() => import('$app/pages/fo-lokasis/FoLokasi'));
 const FoLokasis = lazy(() => import('$app/pages/fo-lokasis/index/FoLokasis'));
 const Create = lazy(() => import('$app/pages/fo-lokasis/create/Create'));
 const Edit = lazy(() => import('$app/pages/fo-lokasis/edit/Edit'));

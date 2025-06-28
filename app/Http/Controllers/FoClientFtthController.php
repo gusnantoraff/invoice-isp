@@ -44,7 +44,7 @@ class FoClientFtthController extends Controller
 
         // 2) Start query: include trashed to handle "deleted" status
         $query = FoClientFtth::withTrashed()
-            ->with(['lokasi', 'odp', 'client', 'company'])
+            ->with(['lokasi', 'odp.kabelCoreOdc.kabelTubeOdc.kabelOdc.odc', 'client', 'company'])
             ->where('company_id', $companyId);
 
         // 3) Apply status filtering
@@ -98,6 +98,10 @@ class FoClientFtthController extends Controller
             'odp'         => $c->odp ? [
                 'id'       => $c->odp->id,
                 'nama_odp' => $c->odp->nama_odp,
+            ] : null,
+            'odc'         => $c->odp?->kabelCoreOdc?->kabelTubeOdc?->kabelOdc?->odc ? [
+                'id'       => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->id,
+                'nama_odc' => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->nama_odc,
             ] : null,
             'client'      => $c->client ? [
                 'id'   => $this->encodePrimaryKey($c->client->id),
@@ -179,7 +183,7 @@ class FoClientFtthController extends Controller
         }
 
         $c = FoClientFtth::create($data);
-        $c->load(['lokasi', 'odp', 'client', 'company']);
+        $c->load(['lokasi', 'odp.kabelCoreOdc.kabelTubeOdc.kabelOdc.odc', 'client', 'company']);
 
         return response()->json([
             'status'  => 'success',
@@ -193,6 +197,10 @@ class FoClientFtthController extends Controller
                 'odp'          => $c->odp ? [
                     'id'           => $c->odp->id,
                     'nama_odp'     => $c->odp->nama_odp,
+                ] : null,
+                'odc'          => $c->odp?->kabelCoreOdc?->kabelTubeOdc?->kabelOdc?->odc ? [
+                    'id'           => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->id,
+                    'nama_odc'     => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->nama_odc,
                 ] : null,
                 'client'       => $c->client ? [
                     'id'           => $this->encodePrimaryKey($c->client->id),
@@ -221,7 +229,7 @@ class FoClientFtthController extends Controller
     {
         $companyId = auth()->user()->getCompany()?->id;
         $c = FoClientFtth::withTrashed()->where('company_id', $companyId)->findOrFail($id);
-        $c->load(['lokasi', 'odp', 'client', 'company']);
+        $c->load(['lokasi', 'odp.kabelCoreOdc.kabelTubeOdc.kabelOdc.odc', 'client', 'company']);
 
         return response()->json([
             'status' => 'success',
@@ -235,6 +243,10 @@ class FoClientFtthController extends Controller
                 'odp'          => $c->odp ? [
                     'id'           => $c->odp->id,
                     'nama_odp'     => $c->odp->nama_odp,
+                ] : null,
+                'odc'          => $c->odp?->kabelCoreOdc?->kabelTubeOdc?->kabelOdc?->odc ? [
+                    'id'           => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->id,
+                    'nama_odc'     => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->nama_odc,
                 ] : null,
                 'client'       => $c->client ? [
                     'id'           => $this->encodePrimaryKey($c->client->id),
@@ -292,7 +304,7 @@ class FoClientFtthController extends Controller
         }
 
         $c->update($data);
-        $c->refresh()->load(['lokasi', 'odp', 'client', 'company']);
+        $c->refresh()->load(['lokasi', 'odp.kabelCoreOdc.kabelTubeOdc.kabelOdc.odc', 'client', 'company']);
 
         return response()->json([
             'status'  => 'success',
@@ -306,6 +318,10 @@ class FoClientFtthController extends Controller
                 'odp'          => $c->odp ? [
                     'id'           => $c->odp->id,
                     'nama_odp'     => $c->odp->nama_odp,
+                ] : null,
+                'odc'          => $c->odp?->kabelCoreOdc?->kabelTubeOdc?->kabelOdc?->odc ? [
+                    'id'           => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->id,
+                    'nama_odc'     => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->nama_odc,
                 ] : null,
                 'client'       => $c->client ? [
                     'id'           => $this->encodePrimaryKey($c->client->id),
@@ -355,7 +371,7 @@ class FoClientFtthController extends Controller
         $companyId = auth()->user()->getCompany()?->id;
         $c = FoClientFtth::withTrashed()->where('company_id', $companyId)->findOrFail($id);
         $c->update(['status' => 'archived']);
-        $c->refresh()->load(['lokasi', 'odp', 'client', 'company']);
+        $c->refresh()->load(['lokasi', 'odp.kabelCoreOdc.kabelTubeOdc.kabelOdc.odc', 'client', 'company']);
 
         return response()->json([
             'status'  => 'success',
@@ -369,6 +385,10 @@ class FoClientFtthController extends Controller
                 'odp'          => $c->odp ? [
                     'id'           => $c->odp->id,
                     'nama_odp'     => $c->odp->nama_odp,
+                ] : null,
+                'odc'          => $c->odp?->kabelCoreOdc?->kabelTubeOdc?->kabelOdc?->odc ? [
+                    'id'           => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->id,
+                    'nama_odc'     => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->nama_odc,
                 ] : null,
                 'client'       => $c->client ? [
                     'id'           => $this->encodePrimaryKey($c->client->id),
@@ -398,7 +418,7 @@ class FoClientFtthController extends Controller
         $companyId = auth()->user()->getCompany()?->id;
         $c = FoClientFtth::withTrashed()->where('company_id', $companyId)->findOrFail($id);
         $c->update(['status' => 'active']);
-        $c->refresh()->load(['lokasi', 'odp', 'client', 'company']);
+        $c->refresh()->load(['lokasi', 'odp.kabelCoreOdc.kabelTubeOdc.kabelOdc.odc', 'client', 'company']);
 
         return response()->json([
             'status'  => 'success',
@@ -412,6 +432,10 @@ class FoClientFtthController extends Controller
                 'odp'          => $c->odp ? [
                     'id'           => $c->odp->id,
                     'nama_odp'     => $c->odp->nama_odp,
+                ] : null,
+                'odc'          => $c->odp?->kabelCoreOdc?->kabelTubeOdc?->kabelOdc?->odc ? [
+                    'id'           => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->id,
+                    'nama_odc'     => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->nama_odc,
                 ] : null,
                 'client'       => $c->client ? [
                     'id'           => $this->encodePrimaryKey($c->client->id),
@@ -441,7 +465,7 @@ class FoClientFtthController extends Controller
         $companyId = auth()->user()->getCompany()?->id;
         $c = FoClientFtth::onlyTrashed()->where('company_id', $companyId)->findOrFail($id);
         $c->restore();
-        $c->refresh()->load(['lokasi', 'odp', 'client', 'company']);
+        $c->refresh()->load(['lokasi', 'odp.kabelCoreOdc.kabelTubeOdc.kabelOdc.odc', 'client', 'company']);
 
         return response()->json([
             'status'  => 'success',
@@ -455,6 +479,10 @@ class FoClientFtthController extends Controller
                 'odp'          => $c->odp ? [
                     'id'           => $c->odp->id,
                     'nama_odp'     => $c->odp->nama_odp,
+                ] : null,
+                'odc'          => $c->odp?->kabelCoreOdc?->kabelTubeOdc?->kabelOdc?->odc ? [
+                    'id'           => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->id,
+                    'nama_odc'     => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->nama_odc,
                 ] : null,
                 'client'       => $c->client ? [
                     'id'           => $this->encodePrimaryKey($c->client->id),
@@ -549,6 +577,10 @@ class FoClientFtthController extends Controller
                 'odp'          => $c->odp ? [
                     'id'           => $c->odp->id,
                     'nama_odp'     => $c->odp->nama_odp,
+                ] : null,
+                'odc'          => $c->odp?->kabelCoreOdc?->kabelTubeOdc?->kabelOdc?->odc ? [
+                    'id'           => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->id,
+                    'nama_odc'     => $c->odp->kabelCoreOdc->kabelTubeOdc->kabelOdc->odc->nama_odc,
                 ] : null,
                 'client'       => $c->client ? [
                     'id'           => $this->encodePrimaryKey($c->client->id),

@@ -9,6 +9,7 @@ export interface FoClientFtth {
     nama_client: string | null;
     lokasi: { id: string; nama_lokasi: string } | null;
     odp: { id: string; nama_odp: string } | null;
+    odc: { id: string; nama_odc: string } | null;
     client: { id: string; name: string } | null;
     company: { id: string; name: string } | null;
     alamat: string | null;
@@ -22,6 +23,7 @@ export const defaultColumns: string[] = [
     'nama_client',
     'lokasi',
     'odp',
+    'odc',
     'client',
     'company',
     'alamat',
@@ -65,6 +67,12 @@ export function useFoClientFtthColumns() {
             id: 'odp',
             label: t('odp'),
             format: (_val: string | number, ftth: FoClientFtth) => ftth.odp?.nama_odp ?? '-',
+        },
+        {
+            column: 'odc',
+            id: 'odc',
+            label: t('odc'),
+            format: (_val: string | number, ftth: FoClientFtth) => ftth.odc?.nama_odc ?? '-',
         },
         {
             column: 'client',

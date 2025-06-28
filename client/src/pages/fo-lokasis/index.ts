@@ -7,7 +7,6 @@
  *
  * @license https://www.elastic.co/licensing/elastic-license
  */
-export * from './FoLokasi';
 export * from './index/FoLokasis';
 export * from './edit/Edit';
 export * from './create/Create';
