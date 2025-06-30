@@ -97,7 +97,7 @@ class SendScheduledMessageJob implements ShouldQueue
             'every_minute' => $now->copy()->addMinute(),
             'daily' => $now->copy()->addDay(),
             'weekly' => $now->copy()->addWeek(),
-            'monthly' => $now->copy()->addMonth(),
+            'monthly' => $now->copy()->addMonthsNoOverflow(1),
             'yearly' => $now->copy()->addYear(),
             default => $now->copy()->addDay(),
         };

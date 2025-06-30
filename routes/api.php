@@ -143,6 +143,8 @@ use App\Http\Controllers\FoOdpController;
 use App\Http\Controllers\FoClientFtthController;
 use App\Http\Controllers\FtthStatisticController;
 
+use App\Http\Controllers\FilterLokasiController;
+
 Route::group(['middleware' => ['throttle:api', 'api_secret_check']], function () {
     Route::post('api/v1/signup', [AccountController::class, 'store'])->name('signup.submit');
     Route::post('api/v1/oauth_login', [LoginController::class, 'oauthApiLogin']);
@@ -238,6 +240,9 @@ Route::group(['middleware' => ['throttle:api', 'api_db', 'token_auth', 'locale']
     Route::post('/fo-client-ftths/bulk', [FoClientFtthController::class, 'bulk']);
 
     Route::get('/ftth-statistics', [FtthStatisticController::class, 'index']);
+    Route::get('/filter-lokasi', [FilterLokasiController::class, 'index']);
+    Route::get('/filter-lokasi/statistik', [FilterLokasiController::class, 'statistikPerDaerah']);
+
 
     Route::get('/test-ftth', function () {
         return \App\Models\FoClientFtth::all();
@@ -559,7 +564,7 @@ Route::group(['middleware' => ['throttle:api', 'api_db', 'token_auth', 'locale']
     Route::prefix('devices')->controller(DevicesController::class)->group(function () {
         Route::get('/', 'getAllDevices');
         Route::post('/', 'addDevice');
-        Route::put('/{id}','updateDevice');
+        Route::put('/{id}', 'updateDevice');
         Route::post('/{id}/connect', 'connectDevice');
         Route::post('/{id}/disconnect', 'disconnectDevice');
         Route::delete('/{id}', 'deleteDevice');
@@ -600,7 +605,6 @@ Route::group(['middleware' => ['throttle:api', 'api_db', 'token_auth', 'locale']
 
 Route::post('webhook/message', action: [WhatsAppWebhookController::class, 'handleMessage']);
 Route::post('webhook/session', action: [WhatsAppWebhookController::class, 'handleSession']);
-
 
 
 Route::post('api/v1/sms_reset', [TwilioController::class, 'generate2faResetCode'])->name('sms_reset.generate')->middleware('throttle:3,1');

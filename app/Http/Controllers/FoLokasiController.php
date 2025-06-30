@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 
 use App\Models\FoLokasi;
 use Illuminate\Http\Request;
+use App\Services\Mapping\GeocodeService;
 
 class FoLokasiController extends Controller
 {
@@ -154,6 +155,8 @@ class FoLokasiController extends Controller
         }
 
         $lokasi = FoLokasi::create($data);
+
+        GeocodeService::reverseAndSave($data['latitude'], $data['longitude']);
 
         return response()->json([
             'status' => 'success',

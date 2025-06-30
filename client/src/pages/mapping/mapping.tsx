@@ -13,7 +13,6 @@ import 'leaflet/dist/leaflet.css';
 import axios from 'axios';
 import Select from 'react-select';
 import { useTranslation } from 'react-i18next';
-import { Daerah, daerahJawa } from './utils/daerah';
 import { MapCenterUpdater } from './utils/MapZoomer';
 import { Polyline } from 'react-leaflet';
 import { useNavigate } from 'react-router-dom';
@@ -254,142 +253,176 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
         <h3 className="font-semibold mb-2">
           {editingId ? mode === 'client' ? 'Edit Client' : mode === 'odp' ? 'Edit ODP' : 'Edit ODC' : mode === 'client' ? 'Tambah Client' : mode === 'odp' ? 'Tambah ODP' : 'Tambah ODC'}</h3>
         <p className="mb-2 text-xs text-gray-600">Klik peta untuk memilih lokasi atau edit latitude dan longitude di bawah</p>
-        <form onSubmit={handleSubmit} className="space-y-2 text-sm">
-          <input
-            type="text"
-            className="w-full border p-1"
-            placeholder="Nama Lokasi"
-            value={form.nama_lokasi}
-            onChange={(e) => setForm({ ...form, nama_lokasi: e.target.value })}
-            required
-          />
-          <input
-            type="text"
-            className="w-full border p-1"
-            placeholder="Deskripsi Lokasi"
-            value={form.deskripsi}
-            onChange={(e) => setForm({ ...form, deskripsi: e.target.value })}
-          />
-          <input
-            type="text"
-            className="w-full border p-1"
-            placeholder={
-              mode === 'client' ? 'Nama Client' : mode === 'odp' ? 'Nama ODP' : 'Nama ODC'
-            }
-            value={form.nama}
-            onChange={(e) => setForm({ ...form, nama: e.target.value })}
-            required
-          />
-
-          {mode === 'client' && (
-            <>
+        <div className="max-h-[60vh] overflow-y-auto px-4">
+          <form onSubmit={handleSubmit} className="space-y-3 text-sm">
+            <div>
+              <label className="block mb-1">Nama Lokasi</label>
               <input
                 type="text"
                 className="w-full border p-1"
-                placeholder="Alamat"
-                value={form.alamat}
-                onChange={(e) => setForm({ ...form, alamat: e.target.value })}
+                placeholder="Nama Lokasi"
+                value={form.nama_lokasi}
+                onChange={(e) => setForm({ ...form, nama_lokasi: e.target.value })}
+                required
               />
-              <select
+            </div>
+
+            <div>
+              <label className="block mb-1">Deskripsi Lokasi</label>
+              <input
+                type="text"
                 className="w-full border p-1"
-                value={form.odp_id}
-                onChange={(e) => setForm({ ...form, odp_id: e.target.value })}
+                placeholder="Deskripsi Lokasi"
+                value={form.deskripsi}
+                onChange={(e) => setForm({ ...form, deskripsi: e.target.value })}
+              />
+            </div>
+
+            <div>
+              <label className="block mb-1">
+                {mode === 'client' ? 'Nama Client' : mode === 'odp' ? 'Nama ODP' : 'Nama ODC'}
+              </label>
+              <input
+                type="text"
+                className="w-full border p-1"
+                placeholder="Nama"
+                value={form.nama}
+                onChange={(e) => setForm({ ...form, nama: e.target.value })}
                 required
-              >
-                <option value="">Pilih ODP</option>
-                {odpList.map((odp) => (
-                  <option key={odp.id} value={odp.id}>
-                    {odp.nama_odp}
-                  </option>
-                ))}
-              </select>
-              <select
-                className="w-full border p-1"
-                value={form.client_id}
-                onChange={(e) => setForm({ ...form, client_id: e.target.value })}
-              >
-                <option value="">Pilih Client ID</option>
-                {clientList.map((client) => (
-                  <option key={client.id} value={client.id}>
-                    {client.name || client.nama_client || `Client #${client.id}`}
-                  </option>
-                ))}
-              </select>
-            </>
-          )}
+              />
+            </div>
 
+            {mode === 'client' && (
+              <>
+                <div>
+                  <label className="block mb-1">Alamat</label>
+                  <input
+                    type="text"
+                    className="w-full border p-1"
+                    placeholder="Alamat"
+                    value={form.alamat}
+                    onChange={(e) => setForm({ ...form, alamat: e.target.value })}
+                  />
+                </div>
 
-          {mode === 'odp' && (
-            <>
-              <select
-                className="w-full border p-1"
-                value={form.kabel_core_odc_id}
-                onChange={(e) => setForm({ ...form, kabel_core_odc_id: e.target.value })}
-                required
-              >
-                <option value="">Pilih Kabel Core ODC</option>
-                {odcCoreList.map((core) => (
-                  <option key={core.id} value={core.id}>
-                    {core.warna_core}
-                  </option>
-                ))}
-              </select>
-              <select
-                className="w-full border p-1"
-                value={form.tipe_splitter}
-                onChange={(e) => setForm({ ...form, tipe_splitter: e.target.value })}
-              >
-                <option value="1:8">1:8</option>
-                <option value="1:16">1:16</option>
-                <option value="1:32">1:32</option>
-              </select>
-            </>
-          )}
+                <div>
+                  <label className="block mb-1">ODP</label>
+                  <select
+                    className="w-full border p-1"
+                    value={form.odp_id}
+                    onChange={(e) => setForm({ ...form, odp_id: e.target.value })}
+                    required
+                  >
+                    <option value="">Pilih ODP</option>
+                    {odpList.map((odp) => (
+                      <option key={odp.id} value={odp.id}>
+                        {odp.nama_odp}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-          {mode === 'odc' && (
-            <>
-              <select
-                className="w-full border p-1"
-                value={form.tipe_splitter}
-                onChange={(e) => setForm({ ...form, tipe_splitter: e.target.value })}
-              >
-                <option value="1:8">1:8</option>
-                <option value="1:16">1:16</option>
-                <option value="1:32">1:32</option>
-              </select>
-            </>
-          )}
+                <div>
+                  <label className="block mb-1">Client ID</label>
+                  <select
+                    className="w-full border p-1"
+                    value={form.client_id}
+                    onChange={(e) => setForm({ ...form, client_id: e.target.value })}
+                  >
+                    <option value="">Pilih Client ID</option>
+                    {clientList.map((client) => (
+                      <option key={client.id} value={client.id}>
+                        {client.name || client.nama_client || `Client #${client.id}`}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            )}
 
-          <div className="flex gap-2">
-            <input
-              type="number"
-              step="any"
-              className="w-1/2 border p-1"
-              placeholder="Latitude"
-              value={form.latitude}
-              onChange={(e) => handleLatLongChange('latitude', e.target.value)}
-              required
-            />
-            <input
-              type="number"
-              step="any"
-              className="w-1/2 border p-1"
-              placeholder="Longitude"
-              value={form.longitude}
-              onChange={(e) => handleLatLongChange('longitude', e.target.value)}
-              required
-            />
-          </div>
+            {mode === 'odp' && (
+              <>
+                <div>
+                  <label className="block mb-1">Kabel Core ODC</label>
+                  <select
+                    className="w-full border p-1"
+                    value={form.kabel_core_odc_id}
+                    onChange={(e) => setForm({ ...form, kabel_core_odc_id: e.target.value })}
+                    required
+                  >
+                    <option value="">Pilih Kabel Core ODC</option>
+                    {odcCoreList.map((core) => (
+                      <option key={core.id} value={core.id}>
+                        {core.warna_core}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-          <div className="flex gap-2 justify-end pt-2">
-            <button type="button" className="bg-gray-300 px-2 py-1 rounded" onClick={onCancel}>
-              Batal
-            </button>
-            <button type="submit" className="bg-blue-600 text-white px-2 py-1 rounded">
-              Simpan
-            </button>
-          </div>
-        </form>
+                <div>
+                  <label className="block mb-1">Tipe Splitter</label>
+                  <select
+                    className="w-full border p-1"
+                    value={form.tipe_splitter}
+                    onChange={(e) => setForm({ ...form, tipe_splitter: e.target.value })}
+                  >
+                    <option value="1:8">1:8</option>
+                    <option value="1:16">1:16</option>
+                    <option value="1:32">1:32</option>
+                  </select>
+                </div>
+              </>
+            )}
+
+            {mode === 'odc' && (
+              <div>
+                <label className="block mb-1">Tipe Splitter</label>
+                <select
+                  className="w-full border p-1"
+                  value={form.tipe_splitter}
+                  onChange={(e) => setForm({ ...form, tipe_splitter: e.target.value })}
+                >
+                  <option value="1:8">1:8</option>
+                  <option value="1:16">1:16</option>
+                  <option value="1:32">1:32</option>
+                </select>
+              </div>
+            )}
+
+            <div>
+              <label className="block mb-1">Koordinat</label>
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  step="any"
+                  className="w-1/2 border p-1"
+                  placeholder="Latitude"
+                  value={form.latitude}
+                  onChange={(e) => handleLatLongChange('latitude', e.target.value)}
+                  required
+                />
+                <input
+                  type="number"
+                  step="any"
+                  className="w-1/2 border p-1"
+                  placeholder="Longitude"
+                  value={form.longitude}
+                  onChange={(e) => handleLatLongChange('longitude', e.target.value)}
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end pt-2">
+              <button type="button" className="bg-gray-300 px-2 py-1 rounded" onClick={onCancel}>
+                Batal
+              </button>
+              <button type="submit" className="bg-blue-600 text-white px-2 py-1 rounded">
+                Simpan
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </>
   );
@@ -403,37 +436,134 @@ const MappingPage: React.FC = () => {
   const [odcs, setOdcs] = useState<any[]>([]);
   const [editData, setEditData] = useState<{ mode: 'client' | 'odp' | 'odc'; data: MarkerData; } | null>(null);
   const [t] = useTranslation();
-  const [selectedDaerah, setSelectedDaerah] = useState<Daerah | null>(null);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([-7.56526, 110.81653]);
+  const [selectedProvinsi, setSelectedProvinsi] = useState('');
+  const [selectedKota, setSelectedKota] = useState('');
+  const [selectedCenter, setSelectedCenter] = useState<[number, number] | null>(null);
   const [showKabelModal, setShowKabelModal] = useState(false);
   const navigate = useNavigate();
+  const [filterLokasi, setFilterLokasi] = useState<any[]>([]);
+  const [statistikData, setStatistikData] = useState<any[]>([]);
+  const [jumlahData, setJumlahData] = useState<{ client: number; odp: number; odc: number } | null>(null);
 
 
+  // Default CENTER MAP
+  const mapDefaultCenter: [number, number] = [-7.56526, 110.81653];
 
   const pages: Page[] = [{ name: t('Mapping'), href: '/map' }];
 
+  // GET DATA CLIENT,ODP,ODC DARI API
   const fetchData = async () => {
+    const token = localStorage.getItem('X-API-TOKEN');
+    const headers = { headers: { 'X-API-TOKEN': token || '' } };
+
+    const [clientRes, odpRes, odcRes] = await Promise.all([
+      axios.get('http://localhost:8000/api/v1/fo-client-ftths', headers),
+      axios.get('http://localhost:8000/api/v1/fo-odps', headers),
+      axios.get('http://localhost:8000/api/v1/fo-odcs', headers),
+    ]);
+
+    setClients(clientRes.data.data);
+    setOdps(odpRes.data.data);
+    setOdcs(odcRes.data.data);
+  };
+
+  // GET DATA FILTER DARI API
+  const fetchFilterLokasi = async () => {
     try {
       const token = localStorage.getItem('X-API-TOKEN');
       const headers = { headers: { 'X-API-TOKEN': token || '' } };
 
-      const [clientsRes, odpsRes, odcsRes] = await Promise.all([
-        axios.get('http://localhost:8000/api/v1/fo-client-ftths', headers),
-        axios.get('http://localhost:8000/api/v1/fo-odps', headers),
-        axios.get('http://localhost:8000/api/v1/fo-odcs', headers),
-      ]);
-
-      setClients(clientsRes.data.data ?? []);
-      setOdps(odpsRes.data.data ?? []);
-      setOdcs(odcsRes.data.data ?? []);
-    } catch (error) {
-      console.error('Gagal mengambil data client/odp:', error);
+      const res = await axios.get('http://localhost:8000/api/v1/filter-lokasi', headers);
+      setFilterLokasi(res.data.data);
+    } catch (err) {
+      console.error('Gagal fetch filter lokasi:', err);
     }
   };
 
+  const fetchStatistikData = async () => {
+    try {
+      const token = localStorage.getItem('X-API-TOKEN');
+      const headers = { headers: { 'X-API-TOKEN': token || '' } };
+
+      const res = await axios.get('http://localhost:8000/api/v1/filter-lokasi/statistik', headers);
+      setStatistikData(res.data.data);
+    } catch (err) {
+      console.error('Gagal fetch statistik lokasi:', err);
+    }
+  };
+
+
   useEffect(() => {
     fetchData();
+    fetchFilterLokasi();
+    fetchStatistikData();
   }, []);
+
+  const provinsiOptionsFormatted = Array.from(
+    new Set(filterLokasi.map(l => l.provinsi).filter(Boolean))
+  ).map(p => ({ value: p, label: p }));
+
+  const kotaOptionsFormatted = Array.from(
+    new Set(filterLokasi
+      .filter(l => !selectedProvinsi || l.provinsi === selectedProvinsi)
+      .map(l => l.kota)
+      .filter(Boolean))
+  ).map(k => ({ value: k, label: k }));
+
+  const updateJumlahByFilter = (prov: string, kota?: string) => {
+    const match = statistikData.find(s =>
+      s.provinsi === prov && (!kota || s.kota === kota)
+    );
+
+    if (match) {
+      setJumlahData({
+        client: match.total_client || 0,
+        odp: match.total_odp || 0,
+        odc: match.total_odc || 0,
+      });
+    } else {
+      setJumlahData(null);
+    }
+  };
+
+  const getTotalByProvinsi = (provinsi: string) => {
+    const filtered = statistikData.filter(s => s.provinsi === provinsi);
+
+    return {
+      client: filtered.reduce((sum, item) => sum + (item.total_client || 0), 0),
+      odp: filtered.reduce((sum, item) => sum + (item.total_odp || 0), 0),
+      odc: filtered.reduce((sum, item) => sum + (item.total_odc || 0), 0),
+    };
+  };
+
+  const handleProvinsiChange = (prov: string) => {
+    setSelectedProvinsi(prov);
+    setSelectedKota('');
+
+    const total = getTotalByProvinsi(prov);
+    setJumlahData(total);
+
+    const target = filterLokasi.find(l => l.provinsi === prov);
+    if (target?.latitude && target?.longitude) {
+      setSelectedCenter([parseFloat(target.latitude), parseFloat(target.longitude)]);
+    } else {
+      setSelectedCenter(mapDefaultCenter);
+    }
+  };
+
+  const handleKotaChange = (kota: string) => {
+    setSelectedKota(kota);
+    updateJumlahByFilter(selectedProvinsi || '', kota);
+
+    const target = filterLokasi.find(
+      l => l.kota === kota && (!selectedProvinsi || l.provinsi === selectedProvinsi)
+    );
+    if (target?.latitude && target?.longitude) {
+      setSelectedCenter([parseFloat(target.latitude), parseFloat(target.longitude)]);
+    } else {
+      setSelectedCenter(mapDefaultCenter);
+    }
+  };
 
   const handleDelete = async (mode: 'client' | 'odp' | 'odc', id: number, lokasi_id: number) => {
     if (!window.confirm('Yakin ingin menghapus data ini?')) return;
@@ -490,11 +620,6 @@ const MappingPage: React.FC = () => {
     shadowSize: [41, 41],
   });
 
-  const options = daerahJawa.map((d) => ({
-    value: d.nama,
-    label: d.nama
-  }));
-
   const getLatLng = (item: any): [number, number] | null => {
     if (!item?.lokasi) return null;
     const lat = parseFloat(item.lokasi.latitude);
@@ -525,7 +650,7 @@ const MappingPage: React.FC = () => {
   };
 
   // Membuat Garis Melengkung
-  const createSmoothArc = (start: [number, number], end: [number, number], segments = 50): [number, number][] => {
+  const createSmoothArc = (start: [number, number], end: [number, number], segments = 10): [number, number][] => {
     const [lat1, lng1] = start;
     const [lat2, lng2] = end;
 
@@ -536,7 +661,7 @@ const MappingPage: React.FC = () => {
     const dy = lat2 - lat1;
     const distance = Math.sqrt(dx * dx + dy * dy);
 
-    // Vektor ortogonal untuk membuat elevasi ke atas
+    // untuk membuat lengkungan ke atas
     const offsetFactor = 0.4;
     const normX = -dy / distance;
     const normY = dx / distance;
@@ -583,30 +708,40 @@ const MappingPage: React.FC = () => {
             Add Kabel
           </button>
         </div>
+        <div className="flex gap-4 w-full max-w-2xl">
+          <div className="w-1/2">
+            <Select
+              placeholder="Pilih Provinsi"
+              options={provinsiOptionsFormatted}
+              value={provinsiOptionsFormatted.find(opt => opt.value === selectedProvinsi) || null}
+              onChange={(e) => handleProvinsiChange(e?.value || '')}
+              isClearable
+            />
+          </div>
 
-        <div className="w-48">
-          <Select
-            options={options}
-            value={selectedDaerah ? { value: selectedDaerah.nama, label: selectedDaerah.nama } : null}
-            onChange={(selectedOption) => {
-              const daerah = daerahJawa.find(d => d.nama === selectedOption?.value) || null;
-              setSelectedDaerah(daerah);
-
-              if (daerah) {
-                const centerLat = (daerah.zona_latitude[0] + daerah.zona_latitude[1]) / 2;
-                const centerLng = (daerah.zona_longitude[0] + daerah.zona_longitude[1]) / 2;
-                setMapCenter([centerLat, centerLng]);
-              }
-            }}
-            placeholder="Pilih Daerah..."
-            isClearable
-          />
+          <div className="w-1/2">
+            <Select
+              placeholder="Pilih Kota/Kab"
+              options={kotaOptionsFormatted}
+              value={kotaOptionsFormatted.find(opt => opt.value === selectedKota) || null}
+              onChange={(e) => handleKotaChange(e?.value || '')}
+              isClearable
+            />
+          </div>
         </div>
       </div>
 
       <div className="h-[80vh] relative z-0">
-        <MapContainer center={mapCenter} zoom={13} className="h-full w-full">
-          <MapCenterUpdater center={mapCenter} />
+        {(selectedProvinsi || selectedKota) && jumlahData && (
+          <div className="absolute top-4 right-4 z-[999] bg-white rounded shadow-md p-4 w-64">
+            <h3 className="text-lg font-semibold mb-2">Statistik Daerah</h3>
+            <p><b>Jumlah Client:</b> {jumlahData.client}</p>
+            <p><b>Jumlah ODP:</b> {jumlahData.odp}</p>
+            <p><b>Jumlah ODC:</b> {jumlahData.odc}</p>
+          </div>
+        )}
+        <MapContainer center={mapDefaultCenter} zoom={13} className="h-full w-full">
+          <MapCenterUpdater center={selectedCenter || mapDefaultCenter} />
           <TileLayer
             attribution="&copy; OpenStreetMap contributors"
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -626,11 +761,32 @@ const MappingPage: React.FC = () => {
                       <b>Alamat:</b> {client.alamat}<br />
                       <b>ODC:</b> {client.odc?.nama_odc}<br />
                       <b>ODP:</b> {client.odp?.nama_odp}<br />
+                      <b>Total Tagihan:</b>{' '}
+                      {client.client?.invoices
+                        ? client.client.invoices.reduce((total: number, inv: { amount: string; }) => total + parseFloat(inv.amount), 0).toLocaleString('id-ID', {
+                          style: 'currency',
+                          currency: 'IDR',
+                        })
+                        : 'Rp0'}
+                      <br />
+                      <b>Nama Paket:</b>{' '}
+                      {client.client?.invoices?.length > 0 && client.client.invoices[0].line_items?.length > 0
+                        ? client.client.invoices[0].line_items[0].product_key
+                        : '-'}
+                      <br />
+                      <b>Status Invoice:</b>{' '}
+                      {client.client?.invoices?.length > 0
+                        ? client.client.invoices[0].status_id === 4
+                          ? 'Lunas'
+                          : 'Belum Lunas'
+                        : '-'}
+                      <br />
                       <div className="mt-2 flex gap-2">
                         <button
                           className="bg-yellow-400 px-2 py-1 rounded text-xs"
                           onClick={() => setEditData({
-                            mode: 'client', data: {
+                            mode: 'client',
+                            data: {
                               id: client.id,
                               lokasi_id: client.lokasi.id,
                               nama_lokasi: client.lokasi.nama_lokasi,
@@ -771,7 +927,7 @@ const MappingPage: React.FC = () => {
                   positions={createSmoothArc(odpPos, clientPos)}
                   pathOptions={{
                     color: 'rgba(0, 0, 230, 0.6)',
-                    weight: 3,
+                    weight: 2,
                   }}
                 >
                   <Popup>
@@ -803,7 +959,7 @@ const MappingPage: React.FC = () => {
                 positions={createSmoothArc(odcPos, odpPos)}
                 pathOptions={{
                   color: 'rgba(0, 0, 230, 0.6)',
-                  weight: 3,
+                  weight: 2,
                 }}
               >
                 <Popup>
@@ -834,15 +990,6 @@ const MappingPage: React.FC = () => {
                     Kabel ODC
                   </button>
                   <button
-                    className="bg-green-500 text-white px-4 py-2 rounded"
-                    onClick={() => {
-                      navigate('/fo-kabel-core-odcs/create');
-                      setShowKabelModal(false);
-                    }}
-                  >
-                    Kabel Core ODC
-                  </button>
-                  <button
                     className="bg-purple-600 text-white px-4 py-2 rounded"
                     onClick={() => {
                       navigate('/fo-kabel-tube-odcs/create');
@@ -850,6 +997,15 @@ const MappingPage: React.FC = () => {
                     }}
                   >
                     Kabel Tube ODC
+                  </button>
+                  <button
+                    className="bg-green-500 text-white px-4 py-2 rounded"
+                    onClick={() => {
+                      navigate('/fo-kabel-core-odcs/create');
+                      setShowKabelModal(false);
+                    }}
+                  >
+                    Kabel Core ODC
                   </button>
                   <button
                     className="mt-2 text-gray-600 hover:underline"
@@ -894,6 +1050,3 @@ const MappingPage: React.FC = () => {
 };
 
 export default MappingPage;
-
-
-
