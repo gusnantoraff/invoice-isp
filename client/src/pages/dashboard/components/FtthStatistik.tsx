@@ -16,12 +16,13 @@ interface FtthStat {
 export function FtthStatistics() {
     const [t] = useTranslation();
     const [stats, setStats] = useState<FtthStat | null>(null);
+    const API_BASE_URL = 'http://localhost:8000';
 
     useEffect(() => {
         const token = localStorage.getItem('X-API-TOKEN') ?? '';
 
         axios
-            .get('http://localhost:8000/api/v1/ftth-statistics', {
+            .get(`${API_BASE_URL}/api/v1/ftth-statistics`, {
                 headers: {
                     'X-API-TOKEN': token,
                 },

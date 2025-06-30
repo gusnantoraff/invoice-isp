@@ -72,6 +72,7 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
   const [odpList, setOdpList] = useState<any[]>([]);
   const [odcCoreList, setOdcCoreList] = useState<any[]>([]);
   const [clientList, setClientList] = useState<any[]>([]);
+  const API_BASE_URL = 'http://localhost:8000';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -81,13 +82,13 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
       try {
         if (mode === 'client') {
           const [odpRes, clientRes] = await Promise.all([
-            axios.get('http://localhost:8000/api/v1/fo-odps', headers),
-            axios.get('http://localhost:8000/api/v1/clients', headers),
+            axios.get(`${API_BASE_URL}/api/v1/fo-odps`, headers),
+            axios.get(`${API_BASE_URL}/api/v1/clients`, headers),
           ]);
           setOdpList(odpRes.data.data);
           setClientList(clientRes.data.data);
         } else if (mode === 'odp') {
-          const res = await axios.get('http://localhost:8000/api/v1/fo-kabel-core-odcs/no-odp', headers);
+          const res = await axios.get(`${API_BASE_URL}/api/v1/fo-kabel-core-odcs/no-odp`, headers);
           setOdcCoreList(res.data.data);
         }
       } catch (error) {
@@ -140,7 +141,7 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
 
       if (editingId) {
         await axios.put(
-          `http://localhost:8000/api/v1/fo-lokasis/${initialData?.lokasi_id}`,
+          `${API_BASE_URL}/api/v1/fo-lokasis/${initialData?.lokasi_id}`,
           {
             nama_lokasi: form.nama_lokasi,
             deskripsi: form.deskripsi,
@@ -152,7 +153,7 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
 
         if (mode === 'client') {
           await axios.put(
-            `http://localhost:8000/api/v1/fo-client-ftths/${editingId}`,
+            `${API_BASE_URL}/api/v1/fo-client-ftths/${editingId}`,
             {
               lokasi_id: initialData?.lokasi_id,
               odp_id: form.odp_id,
@@ -163,7 +164,7 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
           );
         } else if (mode === 'odp') {
           await axios.put(
-            `http://localhost:8000/api/v1/fo-odps/${editingId}`,
+            `${API_BASE_URL}/api/v1/fo-odps/${editingId}`,
             {
               lokasi_id: initialData?.lokasi_id,
               kabel_core_odc_id: form.kabel_core_odc_id,
@@ -174,7 +175,7 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
           );
         } else if (mode === 'odc') {
           await axios.put(
-            `http://localhost:8000/api/v1/fo-odcs/${editingId}`,
+            `${API_BASE_URL}/api/v1/fo-odcs/${editingId}`,
             {
               lokasi_id: initialData?.lokasi_id,
               nama_odc: form.nama,
@@ -187,7 +188,7 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
         window.alert('Data berhasil diperbarui.');
       } else {
         const lokasiRes = await axios.post(
-          'http://localhost:8000/api/v1/fo-lokasis',
+          '${API_BASE_URL}/api/v1/fo-lokasis',
           {
             nama_lokasi: form.nama_lokasi,
             deskripsi: form.deskripsi,
@@ -201,7 +202,7 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
 
         if (mode === 'client') {
           await axios.post(
-            'http://localhost:8000/api/v1/fo-client-ftths',
+            '${API_BASE_URL}/api/v1/fo-client-ftths',
             {
               lokasi_id,
               odp_id: form.odp_id || null,
@@ -213,7 +214,7 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
           );
         } else if (mode === 'odp') {
           await axios.post(
-            'http://localhost:8000/api/v1/fo-odps',
+            '${API_BASE_URL}/api/v1/fo-odps',
             {
               lokasi_id,
               kabel_core_odc_id: form.kabel_core_odc_id,
@@ -224,7 +225,7 @@ const AddMarkerForm: React.FC<AddMarkerFormProps> = ({ mode, onSave, onCancel, i
           );
         } else if (mode === 'odc') {
           await axios.post(
-            'http://localhost:8000/api/v1/fo-odcs',
+            `${API_BASE_URL}/api/v1/fo-odcs`,
             {
               lokasi_id,
               nama_odc: form.nama,
@@ -444,7 +445,8 @@ const MappingPage: React.FC = () => {
   const [filterLokasi, setFilterLokasi] = useState<any[]>([]);
   const [statistikData, setStatistikData] = useState<any[]>([]);
   const [jumlahData, setJumlahData] = useState<{ client: number; odp: number; odc: number } | null>(null);
-
+  
+  const API_BASE_URL = 'http://localhost:8000';
 
   // Default CENTER MAP
   const mapDefaultCenter: [number, number] = [-7.56526, 110.81653];
@@ -457,9 +459,9 @@ const MappingPage: React.FC = () => {
     const headers = { headers: { 'X-API-TOKEN': token || '' } };
 
     const [clientRes, odpRes, odcRes] = await Promise.all([
-      axios.get('http://localhost:8000/api/v1/fo-client-ftths', headers),
-      axios.get('http://localhost:8000/api/v1/fo-odps', headers),
-      axios.get('http://localhost:8000/api/v1/fo-odcs', headers),
+      axios.get(`${API_BASE_URL}/api/v1/fo-client-ftths`, headers),
+      axios.get(`${API_BASE_URL}/api/v1/fo-odps`, headers),
+      axios.get(`${API_BASE_URL}/api/v1/fo-odcs`, headers),
     ]);
 
     setClients(clientRes.data.data);
@@ -473,7 +475,7 @@ const MappingPage: React.FC = () => {
       const token = localStorage.getItem('X-API-TOKEN');
       const headers = { headers: { 'X-API-TOKEN': token || '' } };
 
-      const res = await axios.get('http://localhost:8000/api/v1/filter-lokasi', headers);
+      const res = await axios.get(`${API_BASE_URL}/api/v1/filter-lokasi`, headers);
       setFilterLokasi(res.data.data);
     } catch (err) {
       console.error('Gagal fetch filter lokasi:', err);
@@ -485,7 +487,7 @@ const MappingPage: React.FC = () => {
       const token = localStorage.getItem('X-API-TOKEN');
       const headers = { headers: { 'X-API-TOKEN': token || '' } };
 
-      const res = await axios.get('http://localhost:8000/api/v1/filter-lokasi/statistik', headers);
+      const res = await axios.get(`${API_BASE_URL}/api/v1/filter-lokasi/statistik`, headers);
       setStatistikData(res.data.data);
     } catch (err) {
       console.error('Gagal fetch statistik lokasi:', err);
@@ -574,15 +576,15 @@ const MappingPage: React.FC = () => {
 
       // Hapus data client/odp
       if (mode === 'client') {
-        await axios.delete(`http://localhost:8000/api/v1/fo-client-ftths/${id}`, headers);
+        await axios.delete(`${API_BASE_URL}/api/v1/fo-client-ftths/${id}`, headers);
       } else if (mode === 'odp') {
-        await axios.delete(`http://localhost:8000/api/v1/fo-odps/${id}`, headers);
+        await axios.delete(`${API_BASE_URL}/api/v1/fo-odps/${id}`, headers);
       } else if (mode === 'odc') {
-        await axios.delete(`http://localhost:8000/api/v1/fo-odcs/${id}`, headers);
+        await axios.delete(`${API_BASE_URL}/api/v1/fo-odcs/${id}`, headers);
       }
 
       // Hapus lokasi terkait
-      await axios.delete(`http://localhost:8000/api/v1/fo-lokasis/${lokasi_id}`, headers);
+      await axios.delete(`${API_BASE_URL}/api/v1/fo-lokasis/${lokasi_id}`, headers);
 
       alert('Data berhasil dihapus.');
       fetchData();
