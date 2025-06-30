@@ -30,6 +30,8 @@ export default function WAChatbot() {
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [isListModalOpen, setIsListModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const chatsPerPage = 5;
 
   const navigate = useNavigate();
 
@@ -117,6 +119,14 @@ export default function WAChatbot() {
     { name: t("Chatbot"), href: `/wa-gateway/chatbot/${deviceId}` },
   ];
 
+  const indexOfLastChat = currentPage * chatsPerPage;
+  const indexOfFirstChat = indexOfLastChat - chatsPerPage;
+  const currentChatbot = chats.slice(indexOfFirstChat, indexOfLastChat);
+  const totalPages = Math.ceil(chats.length / chatsPerPage);
+
+  const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+  const handleNext = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+
   return (
     <Default title={t("Daftar Chat")} breadcrumbs={pages}>
       <div className="p-4">
@@ -151,7 +161,7 @@ export default function WAChatbot() {
               </thead>
               <tbody>
                 {chats.length > 0 ? (
-                  chats.map((chat, index) => (
+                  currentChatbot.map((chat, index) => (
                     <tr key={chat.id} className="border-t hover:bg-gray-50">
                       <td className="p-3">{index + 1}</td>
                       <td className="p-3">{chat.device?.phone || "-"}</td>
@@ -194,6 +204,25 @@ export default function WAChatbot() {
                 )}
               </tbody>
             </table>
+            <div className="flex justify-between items-center p-4 border-t">
+              <button
+                onClick={handlePrev}
+                disabled={currentPage === 1}
+                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+              >
+                Sebelumnya
+              </button>
+              <span>
+                Halaman {currentPage} dari {totalPages}
+              </span>
+              <button
+                onClick={handleNext}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+              >
+                Selanjutnya
+              </button>
+            </div>
           </div>
         )}
 

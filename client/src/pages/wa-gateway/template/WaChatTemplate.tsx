@@ -25,6 +25,8 @@ export default function WaChatTemplate() {
     const [content, setContent] = useState("");
     const [submitLoading, setSubmitLoading] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const chatsPerPage = 5;
 
     const navigate = useNavigate();
 
@@ -152,6 +154,14 @@ export default function WaChatTemplate() {
             });
     };
 
+    const indexOfLastChat = currentPage * chatsPerPage;
+    const indexOfFirstChat = indexOfLastChat - chatsPerPage;
+    const currentTemplates = templates.slice(indexOfFirstChat, indexOfLastChat);
+    const totalPages = Math.ceil(templates.length / chatsPerPage);
+
+    const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
+    const handleNext = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+
     return (
         <Default title={t("Template Pesan WhatsApp")} breadcrumbs={pages}>
             <div className="p-4">
@@ -180,45 +190,66 @@ export default function WaChatTemplate() {
                     ) : templates.length === 0 ? (
                         <div className="p-4 text-gray-500">{t("Tidak ada template.")}</div>
                     ) : (
-                        <table className="min-w-full text-sm">
-                            <thead className="bg-gray-100 text-left">
-                                <tr>
-                                    <th className="p-3">#</th>
-                                    <th className="p-3">{t("Nama Template")}</th>
-                                    <th className="p-3">{t("Isi Pesan")}</th>
-                                    <th className="p-3 text-center">{t("Aksi")}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {templates.map((template, idx) => (
-                                    <tr key={template.id} className="border-t hover:bg-gray-50">
-                                        <td className="p-3 text-center">{idx + 1}</td>
-                                        <td className="p-3 font-medium">{template.title}</td>
-                                        <td className="p-3 max-w-xs truncate">{template.content}</td>
-                                        <td className="p-3 text-center space-x-1">
-                                            <button
-                                                onClick={() => navigate(`/wa-gateway/chat/template/detail/${template.id}`)}
-                                                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
-                                            >
-                                                {t("Detail")}
-                                            </button>
-                                            <button
-                                                onClick={() => openEditModal(template)}
-                                                className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm"
-                                            >
-                                                {t("Edit")}
-                                            </button>
-                                            <button
-                                                onClick={() => handleDelete(template.id)}
-                                                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
-                                            >
-                                                {t("Hapus")}
-                                            </button>
-                                        </td>
+                        <>
+                            <table className="min-w-full text-sm">
+                                <thead className="bg-gray-100 text-left">
+                                    <tr>
+                                        <th className="p-3">#</th>
+                                        <th className="p-3">{t("Nama Template")}</th>
+                                        <th className="p-3">{t("Isi Pesan")}</th>
+                                        <th className="p-3 text-center">{t("Aksi")}</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {currentTemplates.map((template, idx) => (
+                                        <tr key={template.id} className="border-t hover:bg-gray-50">
+                                            <td className="p-3 text-center">{idx + 1}</td>
+                                            <td className="p-3 font-medium">{template.title}</td>
+                                            <td className="p-3 max-w-xs truncate">{template.content}</td>
+                                            <td className="p-3 text-center space-x-1">
+                                                <button
+                                                    onClick={() => navigate(`/wa-gateway/chat/template/detail/${template.id}`)}
+                                                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
+                                                >
+                                                    {t("Detail")}
+                                                </button>
+                                                <button
+                                                    onClick={() => openEditModal(template)}
+                                                    className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm"
+                                                >
+                                                    {t("Edit")}
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(template.id)}
+                                                    className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-sm"
+                                                >
+                                                    {t("Hapus")}
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                            <div className="flex justify-between items-center p-4 border-t">
+                                <button
+                                    onClick={handlePrev}
+                                    disabled={currentPage === 1}
+                                    className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+                                >
+                                    Sebelumnya
+                                </button>
+                                <span>
+                                    Halaman {currentPage} dari {totalPages}
+                                </span>
+                                <button
+                                    onClick={handleNext}
+                                    disabled={currentPage === totalPages}
+                                    className="px-3 py-1 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50"
+                                >
+                                    Selanjutnya
+                                </button>
+                            </div>
+                        </>
                     )}
                 </div>
 

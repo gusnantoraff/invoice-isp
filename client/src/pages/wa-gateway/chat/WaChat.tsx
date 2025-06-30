@@ -4,6 +4,7 @@ import { Default } from "$app/components/layouts/Default";
 import { Page } from "$app/components/Breadcrumbs";
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from "react-router-dom";
+import { MdSearch } from "react-icons/md";
 
 interface Chat {
   id: number;
@@ -30,6 +31,9 @@ export default function WAChat() {
 
   const navigate = useNavigate();
   const { deviceId } = useParams<{ deviceId: string }>();
+
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   const pages: Page[] = [
     { name: t('WhatsApp Gateway'), href: '/wa-gateway' },
@@ -78,6 +82,14 @@ export default function WAChat() {
     }
   };
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchKeyword(e.target.value.toLowerCase());
+  };
+
+  const toggleSortOrder = () => {
+    setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+  };
+
   const statusLabel = (status: string) => {
     switch (status) {
       case 'sent':
@@ -101,10 +113,21 @@ export default function WAChat() {
     });
   };
 
-  const indexOfLastChat = currentPage * chatsPerPage;
-  const indexOfFirstChat = indexOfLastChat - chatsPerPage;
-  const currentChats = chats.slice(indexOfFirstChat, indexOfLastChat);
-  const totalPages = Math.ceil(chats.length / chatsPerPage);
+  const filteredChats = chats.filter((chat) =>
+    `${chat.message ?? ''} ${chat.client?.phone ?? ''}`.toLowerCase().includes(searchKeyword)
+  );
+
+  const sortedChats = [...filteredChats].sort((a, b) => {
+    const dateA = new Date(a.created_at).getTime();
+    const dateB = new Date(b.created_at).getTime();
+    return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+  });
+
+  const totalPages = Math.ceil(sortedChats.length / chatsPerPage);
+  const currentChats = sortedChats.slice(
+    (currentPage - 1) * chatsPerPage,
+    currentPage * chatsPerPage
+  );
 
   const handlePrev = () => setCurrentPage((prev) => Math.max(prev - 1, 1));
   const handleNext = () => setCurrentPage((prev) => Math.min(prev + 1, totalPages));
@@ -133,7 +156,19 @@ export default function WAChat() {
               Kirim Pesan
             </button>
           </div>
-          <h2 className="text-lg font-semibold">History Pesan</h2>
+          <div className="flex justify-between items-center mt-2">
+            <h2 className="text-lg font-semibold">History Pesan</h2>
+            <div className="relative w-[300px]">
+              <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-xl" />
+              <input
+                type="text"
+                placeholder="Cari pesan atau nomor WA"
+                value={searchKeyword}
+                onChange={handleSearchChange}
+                className="border pl-10 pr-3 py-2 rounded w-full"
+              />
+            </div>
+          </div>
         </div>
         <div className="bg-white shadow rounded-lg overflow-hidden">
           {loading ? (
@@ -150,7 +185,9 @@ export default function WAChat() {
                     <th className="p-3">Nomor WA Client</th>
                     <th className="p-3">Pesan</th>
                     <th className="p-3">Status</th>
-                    <th className="p-3">Waktu</th>
+                    <th className="p-3 cursor-pointer" onClick={toggleSortOrder}>
+                      Waktu {sortOrder === 'asc' ? '\u2191' : '\u2193'}
+                    </th>
                     <th className="p-3">Aksi</th>
                   </tr>
                 </thead>
