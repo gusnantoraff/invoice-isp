@@ -84,7 +84,7 @@ export default function Edit() {
 
     const pages = [
         { name: t('FO Kabel Tube ODC')!, href: '/fo-kabel-tube-odcs' },
-        { name: t('edit_tube_odc')!, href: `/fo-kabel-tube-odcs/${id}/edit` },
+        { name: t('edit tube odc')!, href: `/fo-kabel-tube-odcs/${id}/edit` },
     ];
 
     if (!form.kabel_odc_id && !form.warna_tube) {
@@ -93,7 +93,7 @@ export default function Edit() {
 
     return (
         <Default
-            title={t('edit_tube_odc')!}
+            title={t('edit tube odc')!}
             breadcrumbs={pages}
             disableSaveButton={isBusy}
             onSaveClick={handleSave}

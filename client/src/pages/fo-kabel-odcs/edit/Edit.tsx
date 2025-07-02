@@ -90,12 +90,12 @@ export default function Edit() {
 
     const pages = [
         { name: t('FO Kabel ODC')!, href: '/fo-kabel-odcs' },
-        { name: t('edit_kabel_odc')!, href: `/fo-kabel-odcs/${id}/edit` },
+        { name: t('edit kabel odc')!, href: `/fo-kabel-odcs/${id}/edit` },
     ];
 
     return (
         <Default
-            title={t('edit_kabel_odc')!}
+            title={t('edit kabel odc')!}
             breadcrumbs={pages}
             disableSaveButton={isBusy}
             onSaveClick={handleSave}

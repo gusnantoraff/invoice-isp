@@ -40,11 +40,11 @@ export function CreateFoOdc({ values, setValues, lokasis, errors }: Props) {
     return (
         <Card
             title={t(
-                values.create_new_lokasi ? 'new_lokasi_and_odc' : 'new_odc'
+                values.create_new_lokasi ? 'new lokasi and odc' : 'new odc'
             )}
         >
             {/* Create New Lokasi Toggle */}
-            <Element leftSide={t('create_new_lokasi')}>
+            <Element leftSide={t('create new lokasi')}>
                 <Checkbox
                     checked={values.create_new_lokasi}
                     onChange={(e: { target: { checked: boolean } }) =>
@@ -56,7 +56,7 @@ export function CreateFoOdc({ values, setValues, lokasis, errors }: Props) {
             {/* Lokasi Fields */}
             {values.create_new_lokasi ? (
                 <>
-                    <Element leftSide={t('nama_lokasi')} required>
+                    <Element leftSide={t('nama lokasi')} required>
                         <InputField
                             required
                             value={values.lokasi_name}
@@ -105,7 +105,7 @@ export function CreateFoOdc({ values, setValues, lokasis, errors }: Props) {
                         onValueChange={(v) => onChange('lokasi_id', v)}
                         errorMessage={errors?.errors.lokasi_id}
                     >
-                        <option value="">{t('select_lokasi')}</option>
+                        <option value="">{t('select lokasi')}</option>
                         {lokasis.map((l) => (
                             <option key={l.id} value={l.id.toString()}>
                                 {l.nama_lokasi}
@@ -116,7 +116,7 @@ export function CreateFoOdc({ values, setValues, lokasis, errors }: Props) {
             )}
 
             {/* ODC Fields */}
-            <Element leftSide={t('nama_odc')} required>
+            <Element leftSide={t('nama odc')} required>
                 <InputField
                     required
                     value={values.nama_odc}
@@ -125,7 +125,7 @@ export function CreateFoOdc({ values, setValues, lokasis, errors }: Props) {
                 />
             </Element>
 
-            <Element leftSide={t('tipe_splitter')} required>
+            <Element leftSide={t('tipe splitter')} required>
                 <SelectField
                     required
                     value={values.tipe_splitter}

@@ -6,7 +6,8 @@ import { endpoint } from '$app/common/helpers';
 import Papa from 'papaparse';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
-import { ChevronDown, ChevronUp, Folder, Server, GitBranch, Layers, MapPin, Activity } from 'react-feather';
+import { ChevronDown, ChevronUp, Folder, Server, GitBranch, Layers, MapPin, Activity, Filter } from 'react-feather';
+import { SelectField } from '$app/components/forms/SelectField';
 
 function flattenForCSV(lokasis: any[]) {
   // Flatten nested structure for CSV export
@@ -19,6 +20,9 @@ function flattenForCSV(lokasis: any[]) {
       lokasi_deskripsi: lokasi.deskripsi,
       lokasi_lat: lokasi.latitude,
       lokasi_lng: lokasi.longitude,
+      lokasi_city: lokasi.city,
+      lokasi_province: lokasi.province,
+      lokasi_country: lokasi.country,
       lokasi_status: lokasi.status,
       odc: '',
       odc_tipe_splitter: '',
@@ -48,6 +52,9 @@ function flattenForCSV(lokasis: any[]) {
         lokasi_deskripsi: lokasi.deskripsi,
         lokasi_lat: lokasi.latitude,
         lokasi_lng: lokasi.longitude,
+        lokasi_city: lokasi.city,
+        lokasi_province: lokasi.province,
+        lokasi_country: lokasi.country,
         lokasi_status: lokasi.status,
         odc: odc.nama_odc,
         odc_tipe_splitter: odc.tipe_splitter,
@@ -77,6 +84,9 @@ function flattenForCSV(lokasis: any[]) {
           lokasi_deskripsi: lokasi.deskripsi,
           lokasi_lat: lokasi.latitude,
           lokasi_lng: lokasi.longitude,
+          lokasi_city: lokasi.city,
+          lokasi_province: lokasi.province,
+          lokasi_country: lokasi.country,
           lokasi_status: lokasi.status,
           odc: odc.nama_odc,
           odc_tipe_splitter: odc.tipe_splitter,
@@ -106,6 +116,9 @@ function flattenForCSV(lokasis: any[]) {
             lokasi_deskripsi: lokasi.deskripsi,
             lokasi_lat: lokasi.latitude,
             lokasi_lng: lokasi.longitude,
+            lokasi_city: lokasi.city,
+            lokasi_province: lokasi.province,
+            lokasi_country: lokasi.country,
             lokasi_status: lokasi.status,
             odc: odc.nama_odc,
             odc_tipe_splitter: odc.tipe_splitter,
@@ -135,6 +148,9 @@ function flattenForCSV(lokasis: any[]) {
               lokasi_deskripsi: lokasi.deskripsi,
               lokasi_lat: lokasi.latitude,
               lokasi_lng: lokasi.longitude,
+              lokasi_city: lokasi.city,
+              lokasi_province: lokasi.province,
+              lokasi_country: lokasi.country,
               lokasi_status: lokasi.status,
               odc: odc.nama_odc,
               odc_tipe_splitter: odc.tipe_splitter,
@@ -168,6 +184,9 @@ function flattenForCSV(lokasis: any[]) {
         lokasi_deskripsi: lokasi.deskripsi,
         lokasi_lat: lokasi.latitude,
         lokasi_lng: lokasi.longitude,
+        lokasi_city: lokasi.city,
+        lokasi_province: lokasi.province,
+        lokasi_country: lokasi.country,
         lokasi_status: lokasi.status,
         odc: '',
         odc_tipe_splitter: '',
@@ -198,6 +217,9 @@ function flattenForCSV(lokasis: any[]) {
         lokasi_deskripsi: lokasi.deskripsi,
         lokasi_lat: lokasi.latitude,
         lokasi_lng: lokasi.longitude,
+        lokasi_city: lokasi.city,
+        lokasi_province: lokasi.province,
+        lokasi_country: lokasi.country,
         lokasi_status: lokasi.status,
         odc: '',
         odc_tipe_splitter: '',
@@ -307,6 +329,15 @@ function LocationCard({ lokasi }: { lokasi: any }) {
         <div className="flex items-center gap-2 text-sm text-gray-600 mb-4">
           <MapPin size={16} />
           <span>Lat: {lokasi.latitude}, Lng: {lokasi.longitude}</span>
+          {lokasi.city && (
+            <span className="text-blue-600">• {lokasi.city}</span>
+          )}
+          {lokasi.province && (
+            <span className="text-green-600">• {lokasi.province}</span>
+          )}
+          {lokasi.country && (
+            <span className="text-purple-600">• {lokasi.country}</span>
+          )}
         </div>
 
         {/* Expanded content */}
@@ -581,20 +612,143 @@ export default function Details() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lokasis, setLokasis] = useState<any[]>([]);
+  const [filteredLokasis, setFilteredLokasis] = useState<any[]>([]);
+  const [selectedCountry, setSelectedCountry] = useState<string>('');
+  const [selectedProvince, setSelectedProvince] = useState<string>('');
+  const [selectedCity, setSelectedCity] = useState<string>('');
+  const [groupBy, setGroupBy] = useState<'location' | 'city' | 'province' | 'country'>('location');
+
+    // Get unique values for filters - only compute after data is loaded
+  const countries = React.useMemo(() => {
+    const result = [...new Set(lokasis.map(l => l.country).filter(Boolean))].sort();
+    console.log('Countries found:', result);
+    return result;
+  }, [lokasis]);
+
+  const provinces = React.useMemo(() => {
+    // Filter provinces based on selected country
+    let filteredLokasis = lokasis;
+    if (selectedCountry) {
+      filteredLokasis = lokasis.filter(l => l.country === selectedCountry);
+    }
+    const result = [...new Set(filteredLokasis.map(l => l.province).filter(Boolean))].sort();
+    console.log('Provinces found for country', selectedCountry, ':', result);
+    return result;
+  }, [lokasis, selectedCountry]);
+
+  const cities = React.useMemo(() => {
+    // Filter cities based on selected country and province
+    let filteredLokasis = lokasis;
+    if (selectedCountry) {
+      filteredLokasis = filteredLokasis.filter(l => l.country === selectedCountry);
+    }
+    if (selectedProvince) {
+      filteredLokasis = filteredLokasis.filter(l => l.province === selectedProvince);
+    }
+    const result = [...new Set(filteredLokasis.map(l => l.city).filter(Boolean))].sort();
+    console.log('Cities found for country', selectedCountry, 'province', selectedProvince, ':', result);
+    return result;
+  }, [lokasis, selectedCountry, selectedProvince]);
 
   useEffect(() => {
     setLoading(true);
     setError(null);
     request('GET', endpoint('/api/v1/ftth-statistics'))
       .then((response) => {
+        console.log('FTTH Statistics Response:', response.data.data.detailed);
         setLokasis(response.data.data.detailed);
       })
-      .catch(() => setError('Failed to load FTTH details.'))
+      .catch((error) => {
+        console.error('Error loading FTTH details:', error);
+        setError('Failed to load FTTH details.');
+      })
       .finally(() => setLoading(false));
   }, []);
 
+  // Filter data based on selected filters
+  useEffect(() => {
+    let filtered = lokasis;
+
+    if (selectedCountry) {
+      filtered = filtered.filter(l => l.country === selectedCountry);
+    }
+    if (selectedProvince) {
+      filtered = filtered.filter(l => l.province === selectedProvince);
+    }
+    if (selectedCity) {
+      filtered = filtered.filter(l => l.city === selectedCity);
+    }
+
+    setFilteredLokasis(filtered);
+  }, [lokasis, selectedCountry, selectedProvince, selectedCity]);
+
+  // Group data based on selected grouping
+  const groupedData = React.useMemo(() => {
+    interface GroupData {
+      key: string;
+      title: string;
+      subtitle: string;
+      data: any[];
+    }
+
+    if (groupBy === 'location') {
+      return filteredLokasis.map(lokasi => ({
+        key: lokasi.nama_lokasi,
+        title: lokasi.nama_lokasi,
+        subtitle: lokasi.deskripsi,
+        data: [lokasi]
+      })) as GroupData[];
+    } else if (groupBy === 'city') {
+      const grouped = filteredLokasis.reduce((acc, lokasi) => {
+        const city = lokasi.city || 'Unknown City';
+        if (!acc[city]) {
+          acc[city] = {
+            key: city,
+            title: city,
+            subtitle: `${lokasi.province || 'Unknown Province'}, ${lokasi.country || 'Unknown Country'}`,
+            data: []
+          };
+        }
+        acc[city].data.push(lokasi);
+        return acc;
+      }, {} as Record<string, GroupData>);
+      return Object.values(grouped);
+    } else if (groupBy === 'province') {
+      const grouped = filteredLokasis.reduce((acc, lokasi) => {
+        const province = lokasi.province || 'Unknown Province';
+        if (!acc[province]) {
+          acc[province] = {
+            key: province,
+            title: province,
+            subtitle: lokasi.country || 'Unknown Country',
+            data: []
+          };
+        }
+        acc[province].data.push(lokasi);
+        return acc;
+      }, {} as Record<string, GroupData>);
+      return Object.values(grouped);
+    } else if (groupBy === 'country') {
+      const grouped = filteredLokasis.reduce((acc, lokasi) => {
+        const country = lokasi.country || 'Unknown Country';
+        if (!acc[country]) {
+          acc[country] = {
+            key: country,
+            title: country,
+            subtitle: `${acc[country]?.data?.length || 0} locations`,
+            data: []
+          };
+        }
+        acc[country].data.push(lokasi);
+        return acc;
+      }, {} as Record<string, GroupData>);
+      return Object.values(grouped);
+    }
+    return [] as GroupData[];
+  }, [filteredLokasis, groupBy]);
+
   const handleExportCSV = () => {
-    const csv = Papa.unparse(flattenForCSV(lokasis));
+    const csv = Papa.unparse(flattenForCSV(filteredLokasis));
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -616,6 +770,24 @@ export default function Details() {
     const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
     pdf.save('ftth-details.pdf');
+  };
+
+  const clearFilters = () => {
+    setSelectedCountry('');
+    setSelectedProvince('');
+    setSelectedCity('');
+  };
+
+  // Reset dependent filters when parent filter changes
+  const handleCountryChange = (country: string) => {
+    setSelectedCountry(country);
+    setSelectedProvince(''); // Reset province when country changes
+    setSelectedCity(''); // Reset city when country changes
+  };
+
+  const handleProvinceChange = (province: string) => {
+    setSelectedProvince(province);
+    setSelectedCity(''); // Reset city when province changes
   };
 
   if (loading) return <Spinner />;
@@ -644,10 +816,117 @@ export default function Details() {
         </div>
       </div>
 
+      {/* Geographic Filters */}
+      <Card className="mb-6">
+        <div className="p-4">
+          <div className="flex items-center gap-2 mb-4">
+            <Filter className="w-5 h-5 text-gray-500" />
+            <h3 className="text-lg font-medium text-gray-900">Geographic Filters</h3>
+          </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Group By</label>
+              <SelectField
+                value={groupBy}
+                onValueChange={(value) => setGroupBy(value as any)}
+              >
+                <option value="location">By Location</option>
+                <option value="city">By City</option>
+                <option value="province">By Province</option>
+                <option value="country">By Country</option>
+              </SelectField>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+              <SelectField
+                value={selectedCountry}
+                onValueChange={handleCountryChange}
+              >
+                <option value="">All Countries</option>
+                {countries.map(country => (
+                  <option key={country} value={country}>{country}</option>
+                ))}
+              </SelectField>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Province
+                {!selectedCountry && (
+                  <span className="text-xs text-gray-500 ml-1">(Select country first)</span>
+                )}
+              </label>
+              <SelectField
+                value={selectedProvince}
+                onValueChange={handleProvinceChange}
+                disabled={!selectedCountry}
+              >
+                <option value="">
+                  {selectedCountry ? 'All Provinces' : 'Select country first'}
+                </option>
+                {provinces.map(province => (
+                  <option key={province} value={province}>{province}</option>
+                ))}
+              </SelectField>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                City
+                {!selectedProvince && (
+                  <span className="text-xs text-gray-500 ml-1">(Select province first)</span>
+                )}
+              </label>
+              <SelectField
+                value={selectedCity}
+                onValueChange={setSelectedCity}
+                disabled={!selectedProvince}
+              >
+                <option value="">
+                  {selectedProvince ? 'All Cities' : 'Select province first'}
+                </option>
+                {cities.map(city => (
+                  <option key={city} value={city}>{city}</option>
+                ))}
+              </SelectField>
+            </div>
+          </div>
+
+          <div className="flex justify-between items-center mt-4">
+            <div className="text-sm text-gray-600">
+              Showing {filteredLokasis.length} of {lokasis.length} locations
+            </div>
+            <button
+              onClick={clearFilters}
+              className="px-3 py-1 text-sm bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors"
+            >
+              Clear Filters
+            </button>
+          </div>
+        </div>
+      </Card>
+
       <div id="ftth-details-dashboard">
         <div className="space-y-6">
-          {lokasis.map((lokasi, idx) => (
-            <LocationCard key={lokasi.id || idx} lokasi={lokasi} />
+          {groupedData.map((group: any, idx) => (
+            <div key={group.key || idx} className="bg-white rounded-lg border border-gray-200 shadow-sm">
+              <div className="p-4 border-b border-gray-200 bg-gray-50">
+                <h3 className="text-lg font-semibold text-gray-900">{group.title}</h3>
+                <p className="text-sm text-gray-600">{group.subtitle}</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  {group.data.length} location{group.data.length !== 1 ? 's' : ''}
+                </p>
+              </div>
+              <div className="p-4">
+                <div className="space-y-4">
+                  {group.data.map((lokasi: any, lokasiIdx: number) => (
+                    <LocationCard key={lokasi.id || lokasiIdx} lokasi={lokasi} />
+                  ))}
+                </div>
+              </div>
+            </div>
           ))}
         </div>
       </div>

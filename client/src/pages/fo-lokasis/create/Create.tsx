@@ -21,6 +21,10 @@ interface FoLokasi {
     deskripsi?: string;
     latitude: number;
     longitude: number;
+    city?: string;
+    province?: string;
+    country?: string;
+    geocoded_at?: string;
 }
 
 export default function Create() {

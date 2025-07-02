@@ -12,6 +12,10 @@ interface FoLokasi {
     deskripsi?: string;
     latitude: number;
     longitude: number;
+    city?: string;
+    province?: string;
+    country?: string;
+    geocoded_at?: string;
 }
 
 interface Props {
@@ -34,8 +38,8 @@ export function CreateFoLokasi(props: Props) {
     };
 
     return (
-        <Card title={t('new_lokasi')}>
-            <Element leftSide={t('nama_lokasi')} required>
+        <Card title={t('New Lokasi')}>
+            <Element leftSide={t('nama lokasi')} required>
                 <InputField
                     required
                     value={foLokasi.nama_lokasi}
@@ -80,6 +84,44 @@ export function CreateFoLokasi(props: Props) {
                     errorMessage={errors?.errors.longitude}
                 />
             </Element>
+
+            {/* Geocoding Note */}
+            <Element leftSide={t('Note')}>
+                <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded">
+                    <p>
+                        <strong>Geocoding:</strong> Geographic information (city, province, country) is not automatically retrieved.
+                        After saving, you can click the &quot;Force Geocode&quot; or &quot;Re-geocode&quot; button in the location list to get geographic information from coordinates.
+                    </p>
+                </div>
+            </Element>
+
+            {/* Geographic Information Display */}
+            {(foLokasi.city || foLokasi.province || foLokasi.country) && (
+                <Element leftSide={t('Geographic Information')}>
+                    <div className="space-y-2">
+                        {foLokasi.city && (
+                            <div className="text-sm">
+                                <span className="font-medium">City:</span> {foLokasi.city}
+                            </div>
+                        )}
+                        {foLokasi.province && (
+                            <div className="text-sm">
+                                <span className="font-medium">Province:</span> {foLokasi.province}
+                            </div>
+                        )}
+                        {foLokasi.country && (
+                            <div className="text-sm">
+                                <span className="font-medium">Country:</span> {foLokasi.country}
+                            </div>
+                        )}
+                        {foLokasi.geocoded_at && (
+                            <div className="text-xs text-gray-500">
+                                Geocoded: {new Date(foLokasi.geocoded_at).toLocaleString()}
+                            </div>
+                        )}
+                    </div>
+                </Element>
+            )}
         </Card>
     );
 }

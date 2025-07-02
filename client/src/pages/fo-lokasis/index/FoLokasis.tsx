@@ -6,7 +6,7 @@ import { useTitle } from '$app/common/hooks/useTitle';
 import { Page } from '$app/components/Breadcrumbs';
 import { Default } from '$app/components/layouts/Default';
 import { DataTable2, DataTableColumns } from '$app/components/DataTable2';
-// import { useFoLokasiBulkActions } from '../common/hooks/useFoLokasiBulkActions';
+import { useFoLokasiBulkActions } from '../common/hooks/useFoLokasiBulkActions';
 import { useFoLokasiActions } from '../common/hooks/useFoLokasiActions';
 
 interface FoLokasi {
@@ -15,6 +15,10 @@ interface FoLokasi {
     deskripsi: string | null;
     latitude: number;
     longitude: number;
+    city?: string;
+    province?: string;
+    country?: string;
+    geocoded_at?: string;
     odcs?: { id: string; nama_odc: string }[];
     odps?: { id: string; nama_odp: string }[];
     clients?: { id: string; nama_client: string }[];
@@ -64,6 +68,19 @@ export default function FoLokasis() {
             label: 'Jumlah Client',
             format: (_f, resource) => `${resource.clients?.length ?? 0} Client`,
         },
+        {
+            id: 'geocoding',
+            label: 'Geocoding Status',
+            format: (_f, resource) => {
+                if (!resource.latitude || !resource.longitude) {
+                    return <span className="text-gray-500">No coordinates</span>;
+                }
+                if (resource.geocoded_at) {
+                    return <span className="text-green-600">✓ Geocoded ({resource.city || 'No city'})</span>;
+                }
+                return <span className="text-orange-600">⚠ Needs geocoding</span>;
+            },
+        },
     ];
 
     return (
@@ -77,7 +94,7 @@ export default function FoLokasis() {
                 linkToEdit="/fo-lokasis/:id/edit"
                 withResourcefulActions
                 bulkRoute="/api/v1/fo-lokasis/bulk"
-                // customBulkActions={useFoLokasiBulkActions()}
+                customBulkActions={useFoLokasiBulkActions()}
                 customActions={useFoLokasiActions()}
                 withoutDefaultBulkActions={false}
             />

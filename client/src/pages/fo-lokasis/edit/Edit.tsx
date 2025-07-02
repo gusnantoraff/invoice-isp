@@ -21,6 +21,10 @@ interface FoLokasi {
     deskripsi?: string;
     latitude: number;
     longitude: number;
+    city?: string;
+    province?: string;
+    country?: string;
+    geocoded_at?: string;
     status: 'active' | 'archived';
     archived_at?: number;
     deleted_at?: string;
@@ -60,7 +64,7 @@ export default function Edit() {
 
         request('PUT', endpoint(`/api/v1/fo-lokasis/${id}`), lokasi)
             .then(() => {
-                toast.success('updated_fo_lokasi');
+                toast.success('FO Lokasi Updated');
 
                 // Invalidate related queries
                 queryClient.invalidateQueries(['/api/v1/fo-lokasis']);
@@ -83,12 +87,12 @@ export default function Edit() {
 
     const pages = [
         { name: t('FO Lokasi')!, href: '/fo-lokasis' },
-        { name: t('edit_fo_lokasi')!, href: `/fo-lokasis/${id}/edit` },
+        { name: t('Edit FO Lokasi')!, href: `/fo-lokasis/${id}/edit` },
     ];
 
     return (
         <Default
-            title={t('edit_fo_lokasi')!}
+            title={t('Edit FO Lokasi')!}
             breadcrumbs={pages}
             disableSaveButton={isBusy}
             onSaveClick={handleSave}

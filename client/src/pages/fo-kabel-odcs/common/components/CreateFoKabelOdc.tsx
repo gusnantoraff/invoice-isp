@@ -39,15 +39,15 @@ export function CreateFoKabelOdc(props: Props) {
     };
 
     return (
-        <Card title={t('new_kabel_odc')}>
-            <Element leftSide={t('nama_odc')} required>
+        <Card title={t('new kabel odc')}>
+            <Element leftSide={t('nama odc')} required>
                 <SelectField
                     required
                     value={form.odc_id || ''}
                     onValueChange={(v) => change('odc_id', parseInt(v))}
                     errorMessage={errors?.errors.odc_id}
                 >
-                    <option value="">{t('select_odc')}</option>
+                    <option value="">{t('select odc')}</option>
                     {odcs.map((o) => (
                         <option key={o.id} value={o.id}>
                             {o.nama_odc}
@@ -56,7 +56,7 @@ export function CreateFoKabelOdc(props: Props) {
                 </SelectField>
             </Element>
 
-            <Element leftSide={t('nama_kabel')} required>
+            <Element leftSide={t('nama kabel')} required>
                 <InputField
                     required
                     value={form.nama_kabel}
@@ -65,7 +65,7 @@ export function CreateFoKabelOdc(props: Props) {
                 />
             </Element>
 
-            <Element leftSide={t('tipe_kabel')} required>
+            <Element leftSide={t('tipe kabel')} required>
                 <SelectField
                     required
                     value={form.tipe_kabel}
@@ -77,7 +77,7 @@ export function CreateFoKabelOdc(props: Props) {
                 </SelectField>
             </Element>
 
-            <Element leftSide={t('panjang_kabel')} required>
+            <Element leftSide={t('panjang kabel')} required>
                 <InputField
                     type="number"
                     required
@@ -89,7 +89,7 @@ export function CreateFoKabelOdc(props: Props) {
                 />
             </Element>
 
-            <Element leftSide={t('jumlah_tube')} required>
+            <Element leftSide={t('jumlah tube')} required>
                 <SelectField
                     required
                     customSelector
@@ -111,7 +111,7 @@ export function CreateFoKabelOdc(props: Props) {
                 </SelectField>
             </Element>
 
-            <Element leftSide={t('jumlah_core_in_tube')} required>
+            <Element leftSide={t('jumlah core in tube')} required>
                 <SelectField
                     required
                     customSelector

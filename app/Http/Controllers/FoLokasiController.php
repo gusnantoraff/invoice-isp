@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 
 use App\Models\FoLokasi;
 use Illuminate\Http\Request;
-use App\Services\Mapping\GeocodeService;
+
 
 class FoLokasiController extends Controller
 {
@@ -24,7 +24,7 @@ class FoLokasiController extends Controller
      */
     public function index(Request $request)
     {
-        // 1) Parse the “status” parameter (comma‐separated)
+        // 1) Parse the "status" parameter (comma‐separated)
         $statusParam = $request->query('status', 'active');
         $requested = collect(explode(',', $statusParam))
             ->map(fn($s) => trim(strtolower($s)))
@@ -39,17 +39,17 @@ class FoLokasiController extends Controller
             $statuses = ['active'];
         }
 
-        // 2) Base query including trashed so we can handle “deleted”
+        // 2) Base query including trashed so we can handle "deleted"
         $query = FoLokasi::withTrashed();
 
         // 3) Filter by status:
         $query->where(function ($q) use ($statuses) {
-            // a) If “deleted” is requested, include soft‐deleted rows
+            // a) If "deleted" is requested, include soft‐deleted rows
             if (in_array('deleted', $statuses, true)) {
                 $q->orWhereNotNull('deleted_at');
             }
 
-            // b) If “active” or “archived” is requested, include rows where deleted_at IS NULL AND status matches
+            // b) If "active" or "archived" is requested, include rows where deleted_at IS NULL AND status matches
             $nonDeleted = array_values(array_intersect($statuses, ['active', 'archived']));
             if (!empty($nonDeleted)) {
                 $q->orWhere(function ($sub) use ($nonDeleted) {
@@ -68,7 +68,7 @@ class FoLokasiController extends Controller
             });
         }
 
-        // 5) Optional sorting: “sort=column|asc” or “sort=column|dsc”
+        // 5) Optional sorting: "sort=column|asc" or "sort=column|dsc"
         if ($request->filled('sort')) {
             [$column, $dir] = array_pad(explode('|', $request->query('sort')), 2, null);
             $dir = (strtolower($dir) === 'dsc') ? 'desc' : 'asc';
@@ -101,6 +101,10 @@ class FoLokasiController extends Controller
                 'deskripsi'     => $l->deskripsi,
                 'latitude'      => $l->latitude,
                 'longitude'     => $l->longitude,
+                'city'          => $l->city,
+                'province'      => $l->province,
+                'country'       => $l->country,
+                'geocoded_at'   => $l->geocoded_at?->toDateTimeString(),
                 'status'        => $l->status,
                 'odcs'          => $l->odcs->map(fn($o) => [
                     'id'        => $o->id,
@@ -149,14 +153,12 @@ class FoLokasiController extends Controller
             'status'       => 'sometimes|in:active,archived',
         ]);
 
-        // Default to “active” if not provided
+        // Default to "active" if not provided
         if (! isset($data['status'])) {
             $data['status'] = 'active';
         }
 
         $lokasi = FoLokasi::create($data);
-
-        GeocodeService::reverseAndSave($data['latitude'], $data['longitude']);
 
         return response()->json([
             'status' => 'success',
@@ -166,11 +168,15 @@ class FoLokasiController extends Controller
                 'deskripsi'     => $lokasi->deskripsi,
                 'latitude'      => $lokasi->latitude,
                 'longitude'     => $lokasi->longitude,
+                'city'          => $lokasi->city,
+                'province'      => $lokasi->province,
+                'country'       => $lokasi->country,
+                'geocoded_at'   => $lokasi->geocoded_at?->toDateTimeString(),
                 'status'        => $lokasi->status,
                 'created_at'    => $lokasi->created_at->toDateTimeString(),
                 'updated_at'    => $lokasi->updated_at->toDateTimeString(),
             ],
-            'message' => 'Lokasi created.',
+            'message' => 'Lokasi created successfully. Use the geocode button to get geographic information.',
         ], 201);
     }
 
@@ -181,7 +187,7 @@ class FoLokasiController extends Controller
      */
     public function show($id)
     {
-        // Include trashed so that “deleted” entries can still be retrieved
+        // Include trashed so that "deleted" entries can still be retrieved
         $lokasi = FoLokasi::withTrashed()->findOrFail($id);
 
         // Eager‐load related models
@@ -195,6 +201,10 @@ class FoLokasiController extends Controller
                 'deskripsi'     => $lokasi->deskripsi,
                 'latitude'      => $lokasi->latitude,
                 'longitude'     => $lokasi->longitude,
+                'city'          => $lokasi->city,
+                'province'      => $lokasi->province,
+                'country'       => $lokasi->country,
+                'geocoded_at'   => $lokasi->geocoded_at?->toDateTimeString(),
                 'status'        => $lokasi->status,
                 'odcs'          => $lokasi->odcs->map(fn($o) => [
                     'id'        => $o->id,
@@ -242,11 +252,15 @@ class FoLokasiController extends Controller
                 'deskripsi'     => $lokasi->deskripsi,
                 'latitude'      => $lokasi->latitude,
                 'longitude'     => $lokasi->longitude,
+                'city'          => $lokasi->city,
+                'province'      => $lokasi->province,
+                'country'       => $lokasi->country,
+                'geocoded_at'   => $lokasi->geocoded_at?->toDateTimeString(),
                 'status'        => $lokasi->status,
                 'created_at'    => $lokasi->created_at->toDateTimeString(),
                 'updated_at'    => $lokasi->updated_at->toDateTimeString(),
             ],
-            'message' => 'Lokasi updated.',
+            'message' => 'Lokasi updated successfully. Use the geocode button to update geographic information if coordinates changed.',
         ], 200);
     }
 
@@ -371,6 +385,72 @@ class FoLokasiController extends Controller
         return response()->json([
             'status'  => 'success',
             'message' => $message,
+        ], 200);
+    }
+
+    /**
+     * Force geocode a specific location.
+     *
+     * POST /api/v1/fo-lokasis/{id}/geocode
+     */
+    public function geocode($id)
+    {
+        $lokasi = FoLokasi::withTrashed()->findOrFail($id);
+
+        if ($lokasi->forceGeocode()) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Location geocoded successfully.',
+                'data' => [
+                    'city' => $lokasi->city,
+                    'province' => $lokasi->province,
+                    'country' => $lokasi->country,
+                    'geocoded_at' => $lokasi->geocoded_at?->toDateTimeString(),
+                ]
+            ], 200);
+        } else {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to geocode location. Check coordinates and try again.',
+            ], 422);
+        }
+    }
+
+    /**
+     * Bulk geocode multiple locations.
+     *
+     * POST /api/v1/fo-lokasis/bulk-geocode
+     */
+    public function bulkGeocode(Request $request)
+    {
+        $data = $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:fo_lokasis,id',
+        ]);
+
+        $ids = $data['ids'];
+        $successCount = 0;
+        $errorCount = 0;
+
+        foreach ($ids as $id) {
+            $lokasi = FoLokasi::withTrashed()->find($id);
+            if ($lokasi && $lokasi->forceGeocode()) {
+                $successCount++;
+            } else {
+                $errorCount++;
+            }
+            // Add delay to respect rate limits
+            usleep(2000000); // 2 seconds
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Bulk geocoding completed.',
+            'data' => [
+                'total' => count($ids),
+                'success' => $successCount,
+                'failed' => $errorCount
+            ],
         ], 200);
     }
 }

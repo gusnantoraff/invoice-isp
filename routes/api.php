@@ -171,6 +171,8 @@ Route::group(['middleware' => ['throttle:api', 'api_db', 'token_auth', 'locale']
     Route::patch('/fo-lokasis/{id}/unarchive', [FoLokasiController::class, 'unarchive']);
     Route::patch('/fo-lokasis/{id}/restore', [FoLokasiController::class, 'restore']);
     Route::post('/fo-lokasis/bulk', [FoLokasiController::class, 'bulk']);
+    Route::post('/fo-lokasis/{id}/geocode', [FoLokasiController::class, 'geocode']);
+    Route::post('/fo-lokasis/bulk-geocode', [FoLokasiController::class, 'bulkGeocode']);
 
     Route::get('/fo-odcs', [FoOdcController::class, 'index']);
     Route::post('/fo-odcs', [FoOdcController::class, 'store']);

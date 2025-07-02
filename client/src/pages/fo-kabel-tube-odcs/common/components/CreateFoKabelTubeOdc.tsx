@@ -51,7 +51,7 @@ export function CreateFoKabelTubeOdc({ form, setForm, errors, odcs }: Props) {
     };
 
     return (
-        <Card title={t('new_tube_odc')}>
+        <Card title={t('new tube odc')}>
             <Element leftSide={t('kabel_odc')} required>
                 <SelectField
                     required

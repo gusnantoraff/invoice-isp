@@ -375,7 +375,8 @@ export function Default(props: Props) {
                 location.pathname.startsWith('/fo-kabel-tube-odcs') ||
                 location.pathname.startsWith('/fo-kabel-core-odcs') ||
                 location.pathname.startsWith('/fo-odps') ||
-                location.pathname.startsWith('/fo-client-ftths'),
+                location.pathname.startsWith('/fo-client-ftths') ||
+                location.pathname.startsWith('/fo-reports'),
             visible:
                 hasPermission('view_product') ||
                 hasPermission('create_product') ||
